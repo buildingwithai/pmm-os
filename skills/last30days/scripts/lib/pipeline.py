@@ -12,6 +12,7 @@ from shutil import which
 from typing import Any
 
 from . import (
+    arxiv,
     bird_x,
     bluesky,
     dates,
@@ -25,7 +26,9 @@ from . import (
     hiring_signals,
     instagram,
     jobs,
+    linkedin,
     normalize,
+    permission_preflight,
     perplexity,
     pinterest,
     planner,
@@ -39,9 +42,12 @@ from . import (
     schema,
     signals,
     snippet,
+    stocktwits,
+    techmeme,
     threads,
     tiktok,
     truthsocial,
+    trustpilot,
     xai_x,
     xiaohongshu_api,
     xquik,
@@ -63,10 +69,13 @@ SEARCH_ALIAS = {
     "truth": "truthsocial",
     "web": "grounding",
     "xhs": "xiaohongshu",
-    "xquik": "xquik",
+    "xquik": "x",  # xquik is a backend of the single "x" source, not its own source
 }
 
-MAX_SOURCE_FETCHES: dict[str, int] = {"x": 2, "jobs": 1}
+# trustpilot is capped at 1: every subquery would use the identical company
+# identifier, so N streams are pure redundancy -- and each extra stream risks
+# its own WAF-cookie Chrome harvest.
+MAX_SOURCE_FETCHES: dict[str, int] = {"x": 2, "jobs": 1, "linkedin": 1, "stocktwits": 1, "trustpilot": 1}
 
 # Per-handle result caps for the X handle-search lanes. The FROM lane (the
 # subject's own timeline) is the single best source for a person topic, so it
@@ -75,6 +84,10 @@ MAX_SOURCE_FETCHES: dict[str, int] = {"x": 2, "jobs": 1}
 FROM_LANE_COUNT_PER = 8
 MENTION_LANE_COUNT_PER = 5
 RELATED_HANDLE_COUNT_PER = 3
+
+
+def _has_perplexity_provider(config: dict[str, Any]) -> bool:
+    return bool(config.get("PERPLEXITY_API_KEY") or config.get("OPENROUTER_API_KEY"))
 
 MOCK_AVAILABLE_SOURCES = [
     "reddit",
@@ -92,9 +105,12 @@ MOCK_AVAILABLE_SOURCES = [
     "perplexity",
     "threads",
     "pinterest",
-    "xquik",
     "digg",
+    "arxiv",
+    "techmeme",
+    "trustpilot",
     "jobs",
+    "linkedin",
 ]
 
 
@@ -109,22 +125,57 @@ def normalize_requested_sources(sources: list[str] | None) -> list[str] | None:
     return normalized
 
 
-def available_sources(config: dict[str, Any], requested_sources: list[str] | None = None) -> list[str]:
+def available_sources(
+    config: dict[str, Any],
+    requested_sources: list[str] | None = None,
+    *,
+    x_pending: bool | None = None,
+    local_only: bool = False,
+) -> list[str]:
+    """List the sources the next run can serve.
+
+    ``local_only=True`` is the safe/diagnose flavor (doctor's permission
+    block): availability is answered from local evidence only, so the X
+    check never spawns xurl's live ``whoami`` network call. Research-time
+    callers keep the default live semantics.
+    """
     available: list[str] = []
     # reddit_public needs no API key - always available
     available.append("reddit")
     if config.get("SCRAPECREATORS_API_KEY"):
         available.extend(["tiktok", "instagram"])
-    if env.get_x_source(config):
+    if env.get_x_source(config, local_only=local_only):
         available.append("x")
+    else:
+        # Safe inspection (--diagnose/--preflight) skips browser-cookie
+        # extraction, so get_x_source is None even though a real run would
+        # authenticate X via FROM_BROWSER. Report it as available so consumers
+        # of available_sources (SKILL.md ACTIVE_SOURCES_LIST) don't under-report.
+        # diagnose() precomputes the predicate and passes it via x_pending to
+        # avoid evaluating it twice in one diagnose() call.
+        if x_pending is None:
+            x_pending = env.x_pending_browser_auth(config)
+        if x_pending:
+            available.append("x")
     if which("yt-dlp") or env.is_youtube_sc_available(config):
         available.append("youtube")
     available.extend(["hackernews", "polymarket"])
+    # StockTwits is gated to ticker/crypto topics only (flag set in run()).
+    if config.get("_financial_topic"):
+        available.append("stocktwits")
     # GitHub is reachable via the unauthenticated REST tier too, so it is
     # available even without a token/gh CLI (a token only raises rate limits).
     available.append("github")
     if which("digg-pp-cli"):
         available.append("digg")
+    # arXiv is default-on when its Printing Press CLI is installed (zero auth).
+    # The adapter relevance-and-recency gates so it stays quiet off-topic.
+    if which("arxiv-pp-cli"):
+        available.append("arxiv")
+    # Techmeme is default-on when its CLI is installed (zero auth; sub-second
+    # local sync before each run's first search).
+    if which("techmeme-pp-cli"):
+        available.append("techmeme")
     if env.is_bluesky_available(config):
         available.append("bluesky")
     if env.is_truthsocial_available(config):
@@ -141,28 +192,63 @@ def available_sources(config: dict[str, Any], requested_sources: list[str] | Non
         available.append("jobs")
     # Perplexity Sonar: opt-in additive source via INCLUDE_SOURCES=perplexity
     include_sources = (config.get("INCLUDE_SOURCES") or "").lower().split(",")
-    if config.get("OPENROUTER_API_KEY") and (
+    if _has_perplexity_provider(config) and (
         "perplexity" in include_sources or (requested_sources and "perplexity" in requested_sources)
     ):
         available.append("perplexity")
+    # LinkedIn: opt-in additive source via INCLUDE_SOURCES=linkedin (same
+    # consent pattern as Perplexity). Unlike tiktok/instagram, which are
+    # offered during SKILL.md Step 0 onboarding, LinkedIn is power-user-only
+    # and must not silently activate for existing SCRAPECREATORS_API_KEY
+    # holders.
+    if config.get("SCRAPECREATORS_API_KEY") and (
+        "linkedin" in include_sources or (requested_sources and "linkedin" in requested_sources)
+    ):
+        available.append("linkedin")
+    # Trustpilot: opt-in additive source via INCLUDE_SOURCES=trustpilot (same
+    # consent pattern as Perplexity/LinkedIn). Off by default -- unlike arXiv and
+    # Techmeme, which are zero-auth, it can spawn a one-time headless-Chrome WAF
+    # cookie harvest on a brand topic, so activating it is the user's choice.
+    if which("trustpilot-pp-cli") and (
+        "trustpilot" in include_sources or (requested_sources and "trustpilot" in requested_sources)
+    ):
+        available.append("trustpilot")
     if requested_sources and "xiaohongshu" in requested_sources and env.is_xiaohongshu_available(config):
         available.append("xiaohongshu")
-    if env.is_threads_available(config):
+    # Threads: opt-in via INCLUDE_SOURCES (same pattern as perplexity/linkedin).
+    # Was auto-on with the key; gated so the onboarding "Everything" tier is a
+    # real choice vs the "Recommended" (TikTok/Instagram) tier.
+    if env.is_threads_available(config) and (
+        "threads" in include_sources or (requested_sources and "threads" in requested_sources)
+    ):
         available.append("threads")
-    if requested_sources and "pinterest" in requested_sources and env.is_pinterest_available(config):
+    # Pinterest: opt-in via INCLUDE_SOURCES. Previously read requested_sources
+    # only, so a persisted INCLUDE_SOURCES=pinterest never activated it; now it
+    # honors both the per-run --sources list and the saved config.
+    if env.is_pinterest_available(config) and (
+        "pinterest" in include_sources or (requested_sources and "pinterest" in requested_sources)
+    ):
         available.append("pinterest")
-    if env.is_xquik_available(config):
-        available.append("xquik")
+    # xquik is a backend of the single "x" source (see env.x_backend_chain),
+    # not a separate parallel source — registered via the "x" entry above.
     exclude = {s.strip().lower() for s in (config.get("EXCLUDE_SOURCES") or "").split(",") if s.strip()}
     if exclude:
         available = [s for s in available if s not in exclude]
     return available
 
 
-def diagnose(config: dict[str, Any], requested_sources: list[str] | None = None) -> dict[str, Any]:
+def diagnose(
+    config: dict[str, Any],
+    requested_sources: list[str] | None = None,
+    *,
+    safe: bool = False,
+) -> dict[str, Any]:
     requested_sources = normalize_requested_sources(requested_sources)
     google_key = _google_key(config)
-    x_status = env.get_x_source_status(config, probe=True)
+    x_status = env.get_x_source_status(config, probe=not safe)
+    # Compute once and reuse for both the diag flag and available_sources below.
+    # safe=True (doctor/--diagnose/--preflight) must stay network-free.
+    x_pending = env.x_pending_browser_auth(config, local_only=safe)
     native_web_backend = None
     if config.get("BRAVE_API_KEY"):
         native_web_backend = "brave"
@@ -177,21 +263,68 @@ def diagnose(config: dict[str, Any], requested_sources: list[str] | None = None)
         "openai": bool(config.get("OPENAI_API_KEY")) and config.get("OPENAI_AUTH_STATUS") == env.AUTH_STATUS_OK,
         "xai": bool(config.get("XAI_API_KEY")),
         "openrouter": bool(config.get("OPENROUTER_API_KEY")),
+        "perplexity": bool(config.get("PERPLEXITY_API_KEY")),
     }
-    return {
+    reasoning_provider_available = any(
+        providers_status[name] for name in ("google", "openai", "xai", "openrouter")
+    )
+    external_commands = {
+        "yt-dlp": bool(which("yt-dlp")),
+        "digg-pp-cli": bool(which("digg-pp-cli")),
+        "arxiv-pp-cli": bool(which("arxiv-pp-cli")),
+        "techmeme-pp-cli": bool(which("techmeme-pp-cli")),
+        "trustpilot-pp-cli": bool(which("trustpilot-pp-cli")),
+        "gh": bool(which("gh")),
+    }
+    credential_destinations = {
+        "global_env": str(env.CONFIG_FILE) if env.CONFIG_FILE else None,
+    }
+    browser_cookies = {
+        "mode": config.get("_BROWSER_COOKIE_MODE", "off"),
+        "browsers": list(config.get("_BROWSER_COOKIE_BROWSERS") or []),
+        "reads_values": False if safe else config.get("_BROWSER_COOKIE_MODE") == "read",
+    }
+    ignored_project_keys = list(config.get("_IGNORED_PROJECT_CONFIG_KEYS") or [])
+    ignored_endpoint_overrides = [
+        key for key in ignored_project_keys if key in permission_preflight.ENDPOINT_OVERRIDE_KEYS
+    ]
+    local_writes: list[dict[str, str]] = []
+    if config.get("LAST30DAYS_MEMORY_DIR"):
+        local_writes.append({"kind": "report", "path": str(config.get("LAST30DAYS_MEMORY_DIR"))})
+    diag = {
         "providers": providers_status,
-        "local_mode": not any(providers_status.values()),
+        "local_mode": not reasoning_provider_available,
         "reasoning_provider": (config.get("LAST30DAYS_REASONING_PROVIDER") or "auto").lower(),
         "x_backend": x_status["source"],
         "bird_installed": x_status["bird_installed"],
         "bird_authenticated": x_status["bird_authenticated"],
         "bird_username": x_status["bird_username"],
+        "x_pending_browser_auth": x_pending,
+        "xquik_available": x_status.get("xquik_available", False),
+        "xquik_working": x_status.get("xquik_working"),
+        "xquik_status": x_status.get("xquik_status", ""),
         "native_web_backend": native_web_backend,
         "native_search": env.is_native_search(config),
         "has_scrapecreators": bool(config.get("SCRAPECREATORS_API_KEY")),
         "has_github": bool(config.get("GITHUB_TOKEN") or which("gh")),
-        "available_sources": available_sources(config, requested_sources),
+        # safe=True (doctor/--diagnose/--preflight) must stay network-free:
+        # answer X availability from local evidence only. x_pending is
+        # precomputed by diagnose() to avoid double evaluation.
+        "available_sources": available_sources(
+            config, requested_sources, x_pending=x_pending, local_only=safe
+        ),
+        "safe": safe,
+        "config_source": config.get("_CONFIG_SOURCE"),
+        "ignored_project_config": config.get("_IGNORED_PROJECT_CONFIG"),
+        "ignored_project_config_keys": ignored_project_keys,
+        "ignored_endpoint_overrides": ignored_endpoint_overrides,
+        "browser_cookies": browser_cookies,
+        "external_commands": external_commands,
+        "credential_destinations": credential_destinations,
+        "local_writes": local_writes,
     }
+    diag["permission_preflight"] = permission_preflight.build(config, diag)
+    return diag
 
 
 def _inner_max_workers(stream_count: int, *, internal_subrun: bool) -> int:
@@ -225,12 +358,19 @@ def run(
     as_of_date: str | None = None,
     github_user: str | None = None,
     github_repos: list[str] | None = None,
+    trustpilot_domain: str | None = None,
+    trustpilot_domain_is_hint: bool = False,
     hiring_signals_mode: bool = False,
     internal_subrun: bool = False,
 ) -> schema.Report:
     settings = DEPTH_SETTINGS[depth]
     requested_sources = normalize_requested_sources(requested_sources)
     from_date, to_date = dates.get_date_range(lookback_days, as_of_date=as_of_date)
+
+    # Gate StockTwits to ticker/crypto topics. Single chokepoint: when False,
+    # available_sources() never registers stocktwits, so the planner can't
+    # assign it (eligible_sources = available ∩ capabilities).
+    config["_financial_topic"] = stocktwits.is_financial_topic(topic)
 
     if mock:
         runtime = providers.mock_runtime(config, depth)
@@ -372,6 +512,12 @@ def run(
         except Exception as exc:
             bundle.errors_by_source["github"] = f"Person-mode failed: {exc}"
 
+    # Trustpilot session warm-up happens inside search_trustpilot at the
+    # first (capped, single) fetch -- lazily, so it never delays the other
+    # sources' streams and never fires for runs whose plan fetches no
+    # Trustpilot. The module-level lock in lib/trustpilot.py serializes
+    # concurrent vs-mode sub-runs so they never race Chrome harvests.
+
     # Thread-safe set prevents redundant fetches after a source returns 429
     rate_limited_sources: set[str] = set()
     rate_limit_lock = threading.Lock()
@@ -420,6 +566,8 @@ def run(
                         tiktok_hashtags=tiktok_hashtags,
                         tiktok_creators=tiktok_creators,
                         ig_creators=ig_creators,
+                        trustpilot_domain=trustpilot_domain,
+                        trustpilot_domain_is_hint=trustpilot_domain_is_hint,
                     )
                 ] = (subquery, source)
 
@@ -635,7 +783,13 @@ def _finalize_items_by_source(
             # relevance. Backfill survivors that arrived without one so the
             # transcript budget lands on videos the brief actually shows
             # (#542).
-            youtube_yt.backfill_transcripts(items, topic=topic, depth=depth)
+            sc_token = (
+                config.get("SCRAPECREATORS_API_KEY")
+                if config and env.is_youtube_sc_available(config) else None
+            )
+            youtube_yt.backfill_transcripts(
+                items, topic=topic, depth=depth, token=sc_token,
+            )
         # Post-merge topic-relevance filter for Polymarket: comparison queries
         # fan out into per-entity subqueries ("Hermes", "OpenClaw") whose topic
         # is too narrow for Gamma API to filter meaningfully. Re-validating the
@@ -809,7 +963,9 @@ def _run_supplemental_searches(
 
     from_date, to_date = date_range
 
-    # Convert SourceItems to dicts for entity_extract
+    # Convert SourceItems to dicts for entity_extract. All X items (whatever
+    # backend fetched them — bird, xai, xurl, xquik) land under the single "x"
+    # slug, so this reads the whole X corpus.
     x_dicts = [
         {"author_handle": item.author or "", "text": item.body or ""}
         for item in bundle.items_by_source.get("x", [])
@@ -855,13 +1011,41 @@ def _run_supplemental_searches(
     if not handles and not related_handles:
         return
 
-    # Check if X is rate-limited
-    if "x" in rate_limited_sources:
-        return
+    # Pick the X handle-search backend: the first handle-capable backend in the
+    # chain (bird or xquik). These supplemental from:/mentions lanes are
+    # complementary to the topic search, so when the topic primary can't run
+    # them (xai/xurl have no handle-lane implementation) but a capable backend
+    # is available, use it rather than skipping Phase 2. bird scrapes X GraphQL
+    # with the user's browser cookies; xquik runs the same lanes over its REST
+    # API. All items land under the single "x" slug.
+    x_slug = "x"
+    chain = env.x_backend_chain(config)
+    # Trust an explicit runtime backend as the head of the chain.
+    pinned = runtime.x_search_backend
+    if pinned:
+        chain = [pinned] + [b for b in chain if b != pinned]
+    primary = next((b for b in chain if b in ("bird", "xquik")), None)
 
-    backend = runtime.x_search_backend or env.get_x_source(config)
-    if backend != "bird":
-        return  # Handle search only works with Bird CLI
+    if primary == "bird":
+        def _from_lane(hs: list, count: int) -> list:
+            return bird_x.search_handles(hs, topic, from_date, count_per=count)
+
+        def _about_lane(hs: list, count: int) -> list:
+            return bird_x.search_mentions(hs, from_date, count_per=count)
+    elif primary == "xquik":
+        xquik_token = env.get_xquik_token(config)
+
+        def _from_lane(hs: list, count: int) -> list:
+            return xquik.search_handles(hs, topic, from_date, to_date, count_per=count, token=xquik_token)
+
+        def _about_lane(hs: list, count: int) -> list:
+            return xquik.search_mentions(hs, from_date, to_date, topic=topic, count_per=count, token=xquik_token)
+    else:
+        return  # primary X backend has no handle-lane support (xai/xurl) or none configured
+
+    # Skip if the X source is rate-limited.
+    if x_slug in rate_limited_sources:
+        return
 
     # Collect existing URLs for deduplication
     existing_urls = {
@@ -883,27 +1067,27 @@ def _run_supplemental_searches(
         from_items: list = []
         about_items: list = []
         try:
-            from_items = bird_x.search_handles(handles, topic, from_date, count_per=FROM_LANE_COUNT_PER)
+            from_items = _from_lane(handles, FROM_LANE_COUNT_PER)
         except Exception as exc:
             print(f"[Pipeline] Phase 2 FROM-lane search failed: {exc}", file=sys.stderr)
-            if not bundle.items_by_source.get("x"):
-                bundle.errors_by_source["x"] = f"Phase 2 FROM-lane: {exc}"
+            if not bundle.items_by_source.get(x_slug):
+                bundle.errors_by_source[x_slug] = f"Phase 2 FROM-lane: {exc}"
         try:
-            about_items = bird_x.search_mentions(handles, from_date, count_per=MENTION_LANE_COUNT_PER)
+            about_items = _about_lane(handles, MENTION_LANE_COUNT_PER)
         except Exception as exc:
             print(f"[Pipeline] Phase 2 ABOUT-lane search failed: {exc}", file=sys.stderr)
         raw_items = from_items + about_items
 
         if raw_items:
             normalized = _normalize_score_dedupe(
-                "x", raw_items, from_date, to_date,
+                x_slug, raw_items, from_date, to_date,
                 freshness_mode=plan.freshness_mode,
                 ranking_query=ranking_query,
             )
             # Deduplicate against Phase 1 URLs
             normalized = [item for item in normalized if item.url not in existing_urls]
             if normalized:
-                bundle.add_items(primary_label, "x", normalized)
+                bundle.add_items(primary_label, x_slug, normalized)
                 # Update existing URLs for related-handle dedup
                 for item in normalized:
                     if item.url:
@@ -912,16 +1096,14 @@ def _run_supplemental_searches(
     # Search related handles with lower weight (0.3)
     if related_handles:
         try:
-            raw_items = bird_x.search_handles(
-                related_handles, topic, from_date, count_per=RELATED_HANDLE_COUNT_PER,
-            )
+            raw_items = _from_lane(related_handles, RELATED_HANDLE_COUNT_PER)
         except Exception as exc:
             print(f"[Pipeline] Phase 2 related handle search failed: {exc}", file=sys.stderr)
             raw_items = []
 
         if raw_items:
             normalized = _normalize_score_dedupe(
-                "x", raw_items, from_date, to_date,
+                x_slug, raw_items, from_date, to_date,
                 freshness_mode=plan.freshness_mode,
                 ranking_query=ranking_query,
             )
@@ -930,7 +1112,7 @@ def _run_supplemental_searches(
             if normalized:
                 # Use a separate subquery label with lower weight so RRF
                 # scores related-handle results below primary results.
-                bundle.add_items("supplemental-related", "x", normalized)
+                bundle.add_items("supplemental-related", x_slug, normalized)
                 # Register the supplemental-related label in the plan for fusion
                 if not any(sq.label == "supplemental-related" for sq in plan.subqueries):
                     plan.subqueries.append(
@@ -938,7 +1120,7 @@ def _run_supplemental_searches(
                             label="supplemental-related",
                             search_query=", ".join(related_handles),
                             ranking_query=ranking_query,
-                            sources=["x"],
+                            sources=[x_slug],
                             weight=0.3,
                         )
                     )
@@ -969,7 +1151,12 @@ def _retry_thin_sources(
         for source in subquery.sources:
             if source not in planned_sources:
                 planned_sources.append(source)
-    _skip = skip_sources or set()
+    # trustpilot returns at most ONE item by design, so the "<3 items" rule
+    # would re-fetch it after every successful lookup -- bypassing
+    # MAX_SOURCE_FETCHES and re-resolving WITHOUT the caller's
+    # --trustpilot-domain (a lookalike-misattribution path). Its thin result
+    # is its normal success state; never retry it here.
+    _skip = (skip_sources or set()) | {"trustpilot"}
     thin_sources = [
         source
         for source in planned_sources
@@ -1047,6 +1234,56 @@ def _retry_thin_sources(
                 print(f"[Pipeline] Retry failed for {source}: {type(exc).__name__}: {exc}", file=sys.stderr)
 
 
+def _fetch_x_backend(backend, subquery, from_date, to_date, depth, config):
+    """Fetch X items from a single backend. Returns (items, error_str).
+
+    Backends are tried in priority order by the caller (env.x_backend_chain);
+    a non-empty error_str signals a hard failure (auth/payment/etc.) so the
+    caller can fail over to the next backend or surface the error honestly.
+    """
+    query = subquery.search_query
+    if backend == "bird":
+        result = bird_x.search_x(query, from_date, to_date, depth=depth)
+        items = bird_x.parse_bird_response(result, query=query)
+    elif backend == "xai":
+        model = config.get("LAST30DAYS_X_MODEL") or config.get("XAI_MODEL_PIN") or providers.XAI_DEFAULT
+        result = xai_x.search_x(config["XAI_API_KEY"], model, query, from_date, to_date, depth=depth)
+        items = xai_x.parse_x_response(result)
+    elif backend == "xurl":
+        result = xurl_x.search_x(query, depth=depth)
+        items = xurl_x.parse_x_response(result, topic=query)
+    elif backend == "xquik":
+        result = xquik.search_xquik(query, from_date, to_date, depth=depth, token=env.get_xquik_token(config))
+        items = xquik.parse_xquik_response(result)
+    else:
+        return [], f"unknown X backend: {backend}"
+    err = result.get("error") if isinstance(result, dict) else ""
+    return items, (err or "")
+
+
+def _reddit_post_key(item: dict) -> str:
+    """Stable per-thread dedupe key (base36 post id from the url/permalink)."""
+    url = item.get("url") or item.get("permalink") or ""
+    m = re.search(r"/comments/([A-Za-z0-9]+)", url)
+    return m.group(1) if m else url
+
+
+def _merge_reddit_items(free: list[dict], sc: list[dict]) -> list[dict]:
+    """Merge free + ScrapeCreators Reddit items, free first, deduped by post id.
+
+    Used when the thinness-floor trigger backfills a thin free run with SC, so a
+    thread present in both is never double-listed.
+    """
+    merged = list(free)
+    seen = {_reddit_post_key(it) for it in free}
+    for it in sc:
+        key = _reddit_post_key(it)
+        if key and key not in seen:
+            seen.add(key)
+            merged.append(it)
+    return merged
+
+
 def _retrieve_stream(
     *,
     topic: str,
@@ -1065,6 +1302,8 @@ def _retrieve_stream(
     tiktok_hashtags: list[str] | None = None,
     tiktok_creators: list[str] | None = None,
     ig_creators: list[str] | None = None,
+    trustpilot_domain: str | None = None,
+    trustpilot_domain_is_hint: bool = False,
 ) -> tuple[list[dict], dict]:
     # Early exit if source was rate-limited by a sibling future
     if rate_limited_sources is not None and source in rate_limited_sources:
@@ -1088,81 +1327,154 @@ def _retrieve_stream(
         # Use raw_topic so expand_reddit_queries() generates diverse variants
         # from the original user topic, not the planner's narrowed search_query.
         reddit_query = raw_topic or subquery.search_query
-        # Public Reddit first (free, gets comments); SC as backup
+        dedicated_subreddits = config.get("_dedicated_subreddits") or None
+        has_sc_key = bool(config.get("SCRAPECREATORS_API_KEY"))
+        sc_first = (
+            has_sc_key
+            and (config.get(env.REDDIT_BACKEND_PIN_VAR) or "").lower()
+            == "scrapecreators"
+        )
+        if sc_first:
+            # env.REDDIT_BACKEND_PIN_VAR=scrapecreators: SC primary, public fallback
+            try:
+                result = reddit.search_and_enrich(
+                    reddit_query, from_date, to_date, depth=depth,
+                    token=config.get("SCRAPECREATORS_API_KEY"),
+                    subreddits=subreddits,
+                )
+                items = reddit.parse_reddit_response(result)
+                if items:
+                    return items, {}
+                sys.stderr.write(
+                    "[Reddit] ScrapeCreators primary returned no items, "
+                    "using public fallback\n"
+                )
+            except Exception as exc:
+                sys.stderr.write(
+                    f"[Reddit] ScrapeCreators primary failed "
+                    f"({type(exc).__name__}: {exc}), using public fallback\n"
+                )
+            try:
+                public_results = reddit_public.search_reddit_public(
+                    reddit_query, from_date, to_date, depth=depth,
+                    subreddits=subreddits,
+                )
+                if public_results:
+                    return public_results, {}
+                sys.stderr.write(
+                    "[Reddit] Public fallback returned no items after "
+                    "ScrapeCreators primary miss\n"
+                )
+            except Exception as exc:
+                sys.stderr.write(
+                    f"[Reddit] Public fallback also failed "
+                    f"({type(exc).__name__}: {exc})\n"
+                )
+            return [], {}
+
+        # Default: public Reddit first (free). ScrapeCreators backfills when the
+        # free path is empty OR returns fewer than the configured thinness floor
+        # (env.REDDIT_SC_MIN_ITEMS_VAR, default 0 = empty-only — today's
+        # behavior, no extra credit spend unless the user opts in).
+        try:
+            min_items = int(config.get(env.REDDIT_SC_MIN_ITEMS_VAR) or 0)
+        except (TypeError, ValueError):
+            min_items = 0
+        public_results: list[dict] = []
         try:
             public_results = reddit_public.search_reddit_public(
                 reddit_query, from_date, to_date, depth=depth,
-                subreddits=subreddits,
-            )
-            if public_results:
-                return public_results, {}
+                subreddits=subreddits, dedicated_subreddits=dedicated_subreddits,
+            ) or []
         except Exception as exc:
             sys.stderr.write(
                 f"[Reddit] Public search failed ({type(exc).__name__}: {exc})"
             )
-            if not config.get("SCRAPECREATORS_API_KEY"):
+            if not has_sc_key:
                 sys.stderr.write("\n")
                 return [], {}
             sys.stderr.write(", using ScrapeCreators backup\n")
-        # Fallback to ScrapeCreators if public returned empty or raised
-        if config.get("SCRAPECREATORS_API_KEY"):
-            try:
-                result = reddit.search_and_enrich(
-                    reddit_query,
-                    from_date,
-                    to_date,
-                    depth=depth,
-                    token=config.get("SCRAPECREATORS_API_KEY"),
-                    subreddits=subreddits,
-                )
-                return reddit.parse_reddit_response(result), {}
-            except Exception as exc:
-                sys.stderr.write(
-                    f"[Reddit] ScrapeCreators backup also failed "
-                    f"({type(exc).__name__}: {exc})\n"
-                )
-        return [], {}
-    if source == "x":
-        backend = runtime.x_search_backend or env.get_x_source(config)
-        if backend == "bird":
-            result = bird_x.search_x(subquery.search_query, from_date, to_date, depth=depth)
-            return bird_x.parse_bird_response(result, query=subquery.search_query), {}
-        if backend == "xai":
-            model = config.get("LAST30DAYS_X_MODEL") or config.get("XAI_MODEL_PIN") or providers.XAI_DEFAULT
-            result = xai_x.search_x(
-                config["XAI_API_KEY"],
-                model,
-                subquery.search_query,
-                from_date,
-                to_date,
-                depth=depth,
+        # Enough free results, or no key to backfill with -> done. max(min_items,
+        # 1) keeps the default (min_items=0) as empty-only AND treats exactly
+        # `min_items` results as acceptable (no backfill) for min_items > 0.
+        if len(public_results) >= max(min_items, 1) or not has_sc_key:
+            return public_results, {}
+        if public_results:
+            sys.stderr.write(
+                f"[Reddit] Free path returned {len(public_results)} "
+                f"(below the {min_items}-item floor); backfilling with ScrapeCreators\n"
             )
-            return xai_x.parse_x_response(result), {}
-        if backend == "xurl":
-            result = xurl_x.search_x(subquery.search_query, depth=depth)
-            return xurl_x.parse_x_response(result, topic=subquery.search_query), {}
-        raise RuntimeError("No X backend is available.")
+        try:
+            result = reddit.search_and_enrich(
+                reddit_query, from_date, to_date, depth=depth,
+                token=config.get("SCRAPECREATORS_API_KEY"),
+                subreddits=subreddits,
+            )
+            sc_items = reddit.parse_reddit_response(result)
+        except Exception as exc:
+            sys.stderr.write(
+                f"[Reddit] ScrapeCreators backup also failed "
+                f"({type(exc).__name__}: {exc})\n"
+            )
+            return public_results, {}
+        return _merge_reddit_items(public_results, sc_items), {}
+    if source == "x":
+        # One X source, an ordered chain of interchangeable backends. Try the
+        # primary; fall through to the next only if it returns nothing or errors.
+        chain = env.x_backend_chain(config)
+        # Trust an explicit runtime backend as the primary (already resolved as
+        # available), keeping the rest of the chain as failover backups.
+        pinned = runtime.x_search_backend
+        if pinned:
+            chain = [pinned] + [b for b in chain if b != pinned]
+        if not chain:
+            raise RuntimeError("No X backend is available.")
+        last_error = ""
+        for i, backend in enumerate(chain):
+            items, err = _fetch_x_backend(backend, subquery, from_date, to_date, depth, config)
+            if items:
+                if i > 0:
+                    print(f"[X] primary backend(s) returned nothing; used fallback '{backend}'", file=sys.stderr)
+                return items, {}
+            if err:
+                last_error = f"{backend}: {err}"
+                print(f"[X] backend '{backend}' failed ({err}); trying next", file=sys.stderr)
+        if last_error:
+            raise RuntimeError(f"All X backends failed — {last_error}")
+        return [], {}
     if source == "youtube":
         # Use raw_topic so expand_youtube_queries() generates diverse variants
         # from the original user topic, not the planner's narrowed search_query.
         yt_query = raw_topic or subquery.search_query
         result = None
-        # Try yt-dlp first, fall back to SC YouTube if it fails or isn't installed
+        # ScrapeCreators key (when present) is the default-on backup tier: it
+        # powers the per-video transcript fallback, the SC search fallback, and
+        # comment enrichment. None when no key, which keeps everything keyless.
+        sc_token = (
+            config.get("SCRAPECREATORS_API_KEY", "")
+            if env.is_youtube_sc_available(config) else None
+        )
+        # Try yt-dlp first; the SC transcript fallback covers per-video failures.
         if which("yt-dlp"):
             try:
-                result = youtube_yt.search_and_transcribe(yt_query, from_date, to_date, depth=depth)
+                result = youtube_yt.search_and_transcribe(
+                    yt_query, from_date, to_date, depth=depth, token=sc_token,
+                )
             except Exception:
                 result = None
-        if (result is None or not result.get("items")) and env.is_youtube_sc_available(config):
-            sc_token = config.get("SCRAPECREATORS_API_KEY", "")
-            result = youtube_yt.search_youtube_sc(yt_query, from_date, to_date, depth=depth, token=sc_token)
+        # Fall back to SC YouTube search if yt-dlp failed or isn't installed.
+        if (result is None or not result.get("items")) and sc_token:
+            result = youtube_yt.search_youtube_sc(
+                yt_query, from_date, to_date, depth=depth, token=sc_token,
+            )
         if result is None:
             result = {"items": []}
-        # Enrich top videos with comments when SC key is available
+        # Enrich top videos with comments (default-on when a key is present).
         items = youtube_yt.parse_youtube_response(result)
         if items and env.is_youtube_comments_available(config):
-            sc_token = config.get("SCRAPECREATORS_API_KEY", "")
-            youtube_yt.enrich_with_comments(items, token=sc_token)
+            youtube_yt.enrich_with_comments(
+                items, token=config.get("SCRAPECREATORS_API_KEY", ""),
+            )
         return items, {}
     if source == "tiktok":
         # Use raw_topic so expand_tiktok_queries() generates diverse variants
@@ -1194,10 +1506,39 @@ def _retrieve_stream(
             token=env.get_instagram_token(config),
             ig_creators=ig_creators,
         )
-        return instagram.parse_instagram_response(result), {}
+        items = instagram.parse_instagram_response(result)
+        if items and env.is_instagram_comments_available(config):
+            instagram.enrich_with_comments(
+                items, token=config.get("SCRAPECREATORS_API_KEY", ""),
+            )
+        return items, {}
+    if source == "linkedin":
+        token = config.get("SCRAPECREATORS_API_KEY", "")
+        result = linkedin.search_linkedin(
+            subquery.search_query,
+            from_date,
+            to_date,
+            depth=depth,
+            token=token,
+        )
+        items = linkedin.parse_linkedin_response(
+            result, from_date=from_date, to_date=to_date
+        )
+        # Articles never appear in post search — surface them (high signal)
+        # via a bounded profile-enrichment lane on person topics.
+        items += linkedin.enrich_articles(
+            items, raw_topic or topic, token, from_date=from_date, to_date=to_date
+        )
+        return items, {}
     if source == "hackernews":
         result = hackernews.search_hackernews(subquery.search_query, from_date, to_date, depth=depth)
         return hackernews.parse_hackernews_response(result, query=subquery.search_query), {}
+    if source == "stocktwits":
+        # Pass raw_topic so symbol detection sees the full topic, not the
+        # narrowed per-subquery search_query (same rationale as reddit).
+        result = stocktwits.search_stocktwits(
+            raw_topic or topic or subquery.search_query, from_date, to_date, depth=depth)
+        return stocktwits.parse_stocktwits_response(result, query=subquery.search_query), {}
     if source == "digg":
         result = digg.search_digg(subquery.search_query, from_date, to_date, depth=depth)
         items = digg.parse_digg_response(result, query=subquery.search_query)
@@ -1205,6 +1546,26 @@ def _retrieve_stream(
         # _finalize_items_by_source so it runs on the items that actually
         # survive dedupe rather than on top-K of the raw fanout.
         return items, {}
+    if source == "arxiv":
+        result = arxiv.search_arxiv(subquery.search_query, from_date, to_date, depth=depth)
+        # Relevance keys off the stable research topic, not the per-subquery
+        # search_query, so off-topic narrowing does not let weak matches through.
+        relevance_topic = raw_topic or topic or subquery.search_query
+        return arxiv.parse_arxiv_response(result, query=relevance_topic), {}
+    if source == "techmeme":
+        result = techmeme.search_techmeme(subquery.search_query, from_date, to_date, depth=depth)
+        relevance_topic = raw_topic or topic or subquery.search_query
+        return techmeme.parse_techmeme_response(result, query=relevance_topic), {}
+    if source == "trustpilot":
+        # Brand-shape gate keys off the stable research topic, not the narrowed
+        # per-subquery search_query, so the company is detected consistently.
+        relevance_topic = raw_topic or topic or subquery.search_query
+        result = trustpilot.search_trustpilot(
+            relevance_topic, from_date, to_date, depth=depth, config=config,
+            explicit_domain=trustpilot_domain,
+            domain_is_hint=trustpilot_domain_is_hint,
+        )
+        return trustpilot.parse_trustpilot_response(result, query=relevance_topic), {}
     if source == "bluesky":
         result = bluesky.search_bluesky(subquery.search_query, from_date, to_date, depth=depth, config=config)
         return bluesky.parse_bluesky_response(result), {}
@@ -1220,7 +1581,12 @@ def _retrieve_stream(
         return truthsocial.parse_truthsocial_response(result), {}
     if source == "polymarket":
         result = polymarket.search_polymarket(subquery.search_query, from_date, to_date, depth=depth)
-        return polymarket.parse_polymarket_response(result, topic=subquery.search_query), {}
+        # Relevance filtering keys off the stable original research topic, not the
+        # per-subquery search_query (which narrows differently on each fanout pass
+        # and would let off-topic markets through on broad subqueries while dropping
+        # everything on narrow ones).
+        relevance_topic = raw_topic or topic or subquery.search_query
+        return polymarket.parse_polymarket_response(result, topic=relevance_topic), {}
     if source == "github":
         # Resolve once at the pipeline boundary so search and enrich
         # share the result; otherwise each call would re-run the env
@@ -1251,13 +1617,6 @@ def _retrieve_stream(
         ), {}
     if source == "perplexity":
         return perplexity.search(subquery.search_query, date_range, config, deep=config.get("_deep_research", False))
-    if source == "xquik":
-        result = xquik.search_xquik(
-            subquery.search_query, from_date, to_date,
-            depth=depth,
-            token=env.get_xquik_token(config),
-        )
-        return xquik.parse_xquik_response(result), {}
     raise RuntimeError(f"Unsupported source: {source}")
 
 
@@ -1344,6 +1703,47 @@ def _mock_stream_results(source: str, subquery: schema.SubQuery) -> tuple[list[d
                 "posts": [],
                 "relevance": 0.71,
                 "why_relevant": "Mock Digg cluster",
+            },
+        ],
+        "arxiv": [
+            {
+                "id": "http://arxiv.org/abs/2606.00001v1",
+                "title": f"A Survey of {subquery.search_query}",
+                "url": "https://arxiv.org/abs/2606.00001v1",
+                "summary": f"We present a comprehensive study of {subquery.search_query} and its recent advances.",
+                "author": "Ada Lovelace et al.",
+                "authors": ["Ada Lovelace", "Alan Turing"],
+                "date": dates.get_date_range(20)[0],
+                "engagement": {},
+                "relevance": 0.86,
+                "why_relevant": "Mock arXiv paper",
+            },
+        ],
+        "techmeme": [
+            {
+                "id": "https://www.techmeme.com/260627/p1",
+                "title": f"Major development in {subquery.search_query} reshapes the industry",
+                "url": "https://www.techmeme.com/260627/p1",
+                "source_name": "techcrunch.com",
+                "date": dates.get_date_range(1)[0],
+                "engagement": {},
+                "relevance": 0.83,
+                "why_relevant": "Mock Techmeme headline",
+            },
+        ],
+        "trustpilot": [
+            {
+                "id": "example.com",
+                "title": f"{subquery.search_query}: TrustScore 3.4",
+                "url": "https://www.trustpilot.com/review/example.com",
+                "summary": f"Across recent reviews, customers were split on {subquery.search_query}: some praised support, others cited delays.",
+                "name": subquery.search_query,
+                "trustScore": 3.4,
+                "reviewCount": 128,
+                "date": dates.get_date_range(1)[0],
+                "engagement": {"reviews": 128, "trustScore": 3.4},
+                "relevance": 0.8,
+                "why_relevant": "Mock Trustpilot sentiment",
             },
         ],
         "jobs": [

@@ -65,10 +65,14 @@ SOURCE_LABELS = {
     "grounding": "Web",
     "hackernews": "Hacker News",
     "truthsocial": "Truth Social",
+    "linkedin": "LinkedIn",
     "xiaohongshu": "Xiaohongshu",
     "x": "X",
     "github": "GitHub",
     "digg": "Digg",
+    "arxiv": "arXiv",
+    "techmeme": "Techmeme",
+    "trustpilot": "Trustpilot",
     "perplexity": "Perplexity",
     "jobs": "Jobs",
 }
@@ -471,8 +475,9 @@ def _render_pre_research_warning(report: schema.Report) -> list[str]:
         "- Subreddit-specific threads on dedicated communities",
         "- Topic-specific TikTok and Instagram creators",
         "",
-        "To fix: in a fresh Claude Code window, run `ToolSearch select:WebSearch` first,",
-        f"then rerun `/last30days {report.topic}`. The skill will resolve handles",
+        "To fix: in a fresh agent session (Claude Code, Codex, Hermes, Gemini, or any runtime),",
+        "ensure your runtime's web-search tool is active, then",
+        f"rerun `/last30days {report.topic}`. The skill will resolve handles",
         "and communities before calling the engine this time, producing richer results.",
         "",
         "If this topic really is abstract (e.g. \"AI regulation\") and doesn't need",
@@ -1287,6 +1292,9 @@ def _shorten_polymarket_title(title: str) -> str:
         words = t.split()
         t = " ".join(words[:6])
 
+    # Drop a leading article so the descriptor doesn't read "an Anthropic Claude..."
+    t = re.sub(r"^(?:a|an|the)\s+", "", t, flags=re.I)
+
     return t
 
 
@@ -1318,12 +1326,21 @@ def _polymarket_top_markets(items: list[schema.SourceItem], limit: int = 3) -> l
         if not descriptor:
             continue
 
-        # For binary Yes/No markets (lead_name == "Yes"), the "Yes" is implicit - omit it.
-        # For named outcomes (e.g. "Kanye" in a multi-way market), keep the outcome name.
-        if lead_name.lower() == "yes":
+        # Append the outcome name only when it adds information. It's redundant when
+        # empty, a binary Yes/No proxy, a bare article ("an"/"the"), or already the
+        # leading token of the descriptor — appending it then yields noise like
+        # "...score at: an 19%" or a doubled token.
+        label = (lead_name or "").strip()
+        descriptor_lead = descriptor.split()[0].lower() if descriptor.split() else ""
+        redundant = (
+            not label
+            or label.lower() in ("yes", "no", "a", "an", "the")
+            or label.lower() == descriptor_lead
+        )
+        if redundant:
             summaries.append(f"{descriptor} {pct}")
         else:
-            summaries.append(f"{descriptor}: {lead_name} {pct}")
+            summaries.append(f"{descriptor}: {label} {pct}")
 
     return summaries
 
@@ -1473,8 +1490,12 @@ _FOOTER_SOURCES: list[tuple[str, str, str, str, list[tuple[str, str]]]] = [
     ("hackernews",  "🟡", "HN",           "story",    [("points", "points"), ("comments", "comments")]),
     ("bluesky",     "🦋", "Bluesky",      "post",     [("likes", "likes"), ("reposts", "reposts")]),
     ("truthsocial", "🇺🇸", "Truth Social", "post",     [("likes", "likes"), ("reposts", "reposts")]),
-    ("github",      "🐙", "GitHub",       "item",     [("reactions", "reactions"), ("comments", "comments")]),
+    ("linkedin",    "👔", "LinkedIn",     "post",     [("likes", "likes"), ("comments", "comments")]),
+    ("github",      "🐙", "GitHub",       "item",     [("stars", "stars"), ("merged_prs", "merged"), ("reactions", "reactions"), ("comments", "comments")]),
     ("digg",        "⛏️", "Digg",         "cluster",  [("postCount", "posts"), ("uniqueAuthors", "authors")]),
+    ("arxiv",       "📄", "arXiv",        "paper",    []),
+    ("techmeme",    "📰", "Techmeme",     "headline", []),
+    ("trustpilot",  "⭐", "Trustpilot",   "review",   [("reviews", "reviews")]),
     # Jobs must appear so a scoped --hiring-signals run (jobs-only) still emits
     # the LAW 5 footer; without it the footer was dropped entirely.
     ("jobs",        "💼", "Jobs",         "role",     []),
@@ -1739,10 +1760,12 @@ ENGAGEMENT_DISPLAY: dict[str, list[tuple[str, str]]] = {
     "hackernews":   [("points", "pts"), ("comments", "cmt")],
     "bluesky":      [("likes", "likes"), ("reposts", "rt"), ("replies", "re")],
     "truthsocial":  [("likes", "likes"), ("reposts", "rt"), ("replies", "re")],
+    "linkedin":     [("likes", "likes"), ("comments", "cmt")],
     "polymarket":   [],
-    "github":       [("reactions", "react"), ("comments", "cmt")],
+    "github":       [("stars", "stars"), ("merged_prs", "merged"), ("reactions", "react"), ("comments", "cmt")],
     "perplexity":   [("citations", "cite")],
     "digg":         [("postCount", "posts"), ("uniqueAuthors", "auth")],
+    "trustpilot":   [("reviews", "reviews")],
 }
 
 
@@ -1870,6 +1893,7 @@ _TOP_COMMENT_MIN_SCORE: dict[str, int] = {
     "reddit": 10,
     "youtube": 50,
     "tiktok": 500,
+    "instagram": 5,
     "hackernews": 5,
 }
 _TOP_COMMENT_VOTE_LABEL: dict[str, str] = {
@@ -1877,6 +1901,7 @@ _TOP_COMMENT_VOTE_LABEL: dict[str, str] = {
     "hackernews": "points",
     "youtube": "likes",
     "tiktok": "likes",
+    "instagram": "likes",
 }
 
 
@@ -2075,9 +2100,12 @@ def _render_top_comments(report, limit: int = 8) -> list[str]:
     scored: list[tuple[float, schema.Candidate, schema.SourceItem, dict, str]] = []
     for cand in report.ranked_candidates:
         for item in cand.source_items:
-            # _top_comments_list applies the per-source min-score threshold and
-            # the 3-per-item cap, so trivial comments don't surface here either.
-            for tc in _top_comments_list(item):
+            # Pass min_score=0 here: the cross-platform list deliberately does
+            # NOT gate on the per-platform absolute floor, because a less-watched
+            # video's killer low-vote top comment is gold too. The 3-per-item cap
+            # still applies; cross-platform fairness is handled by the rank-based
+            # round-robin below, and the model makes the final quotable pick.
+            for tc in _top_comments_list(item, min_score=0):
                 if not isinstance(tc, dict):
                     continue
                 body = (tc.get("excerpt") or tc.get("text") or tc.get("body") or "").strip()
@@ -2091,9 +2119,28 @@ def _render_top_comments(report, limit: int = 8) -> list[str]:
                 scored.append((strength, cand, item, tc, body))
     if len(scored) < 2:
         return []
-    scored.sort(key=lambda row: -row[0])
+    # Rank-based cross-platform diversity: group by platform, rank each
+    # platform's comments by within-platform vote strength, then interleave by
+    # rank -- every platform's #1, then every #2, then every #3, and so on. This
+    # makes the top-3-of-each-platform outrank the 4th-of-any and guarantees each
+    # platform's #1 a slot, instead of a global vote sort where one viral
+    # platform sweeps the list. Absolute vote counts are NOT compared across
+    # platforms (a less-watched video's killer 50-like comment is gold too);
+    # vote strength only orders comments *within* a platform and breaks ties
+    # among same-rank picks. The model still makes the final quotable pick.
+    by_source: dict[str, list] = {}
+    for row in scored:
+        by_source.setdefault(row[1].source, []).append(row)
+    for src_rows in by_source.values():
+        src_rows.sort(key=lambda row: -row[0])
+    ordered: list = []
+    deepest = max(len(rows) for rows in by_source.values())
+    for rank in range(deepest):
+        tier = [rows[rank] for rows in by_source.values() if len(rows) > rank]
+        tier.sort(key=lambda row: -row[0])  # among same-rank picks, strongest first
+        ordered.extend(tier)
     lines = ["## Top Community Comments", ""]
-    for _strength, cand, _item, tc, body in scored[:limit]:
+    for _strength, cand, _item, tc, body in ordered[:limit]:
         score = tc.get("score", "")
         vote_label = _vote_label_for(cand.source)
         attribution = _comment_attribution(cand.source, tc.get("author"))

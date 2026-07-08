@@ -1,7 +1,7 @@
 ---
 name: last30days
-version: "3.6.0"
-description: "Research what people actually say about any topic in the last 30 days. Pulls posts and engagement from Reddit, X, YouTube, TikTok, Hacker News, Polymarket, GitHub, and the web."
+version: "3.11.1"
+description: "Research what people actually say about any topic in the last 30 days. Pulls posts and engagement from Reddit, X, YouTube, TikTok, Hacker News, Polymarket, GitHub, and the web. Includes a doctor health check to diagnose broken or missing sources."
 argument-hint: 'last30days nvidia earnings reaction | last30days AI video tools | last30days what users want in react'
 allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch
 homepage: https://github.com/mvanhorn/last30days-skill
@@ -19,6 +19,7 @@ metadata:
         - OPENAI_API_KEY
         - XAI_API_KEY
         - OPENROUTER_API_KEY
+        - PERPLEXITY_API_KEY
         - PARALLEL_API_KEY
         - BRAVE_API_KEY
         - APIFY_API_TOKEN
@@ -43,6 +44,7 @@ metadata:
       - youtube
       - tiktok
       - instagram
+      - linkedin
       - hackernews
       - polymarket
       - digg
@@ -187,7 +189,7 @@ The self-evolving loop is the sticky use case. Every 15 tool calls Hermes pauses
 Cron-scheduled autonomous briefings are the most-cited concrete workflow. r/TunisiaTech's "Use cases of OpenClaw, Hermes Agent" thread says it plainly: "Currently I have daily cron jobs for news briefing, but I know there's much more I can do."
 ```
 
-**LAW 7 - YOU ARE THE PLANNER. `--plan` IS MANDATORY ON NAMED-ENTITY TOPICS.** If you are the reasoning model hosting this skill (Claude Code, Codex, Hermes, Gemini, or any agent runtime that invoked `/last30days`), YOU generate the JSON query plan. You do not need an API key, "LLM provider" credentials, or an external planning service - you ARE the LLM. The `--plan` flag exists precisely so a reasoning model generates its own plan upstream and passes it to the engine. The engine's internal planner and deterministic fallback are headless/cron paths only; on any reasoning-model path, bypass them by passing `--plan "$QUERY_PLAN_FILE"` (the path to a tmpfile you wrote via heredoc — see Step 1 for the pattern; never inline `--plan '$JSON'`, apostrophes in search/ranking strings break shell parsing).
+**LAW 7 - YOU ARE THE PLANNER. `--plan` IS MANDATORY ON NAMED-ENTITY TOPICS.** If you are the reasoning model hosting this skill (Claude Code, Codex, Hermes, Gemini, or any agent runtime that invoked `/last30days`), YOU generate the JSON query plan. You do not need an API key, "LLM provider" credentials, or an external planning service - you ARE the LLM. The `--plan` flag exists precisely so a reasoning model generates its own plan upstream and passes it to the engine. The engine's internal planner and deterministic fallback are headless/cron paths only; on any reasoning-model path, bypass them by passing `--plan "$QUERY_PLAN_FILE"` (the path to a tmpfile you wrote via heredoc — see Step 1 for the pattern; never inline `--plan '$JSON'`, and never wrap the whole engine invocation in `bash -lc '...'` or `zsh -lc '...'` - a single-quoted `-lc` argument ends at the first apostrophe in a search or ranking string like `Kanye West's album` and the command dies with `unmatched`. Run the heredoc block directly in your shell tool; apostrophes in search/ranking strings break shell parsing otherwise).
 
 Named-entity topics (capitalized proper nouns, product names, person names, project names, or any topic that would benefit from handle resolution in Step 0.55) REQUIRE `--plan`. Your invocation of `scripts/last30days.py` MUST contain `--plan "$QUERY_PLAN_FILE"` (or any path the engine can read). A bare `python3 scripts/last30days.py "$TOPIC" --emit=compact` on a named-entity topic is a LAW 7 violation. Before you invoke Bash, self-check: does my command contain `--plan`? If no, STOP and generate a plan first (see Step 0.75 for the schema).
 
@@ -195,21 +197,28 @@ Named-entity topics (capitalized proper nouns, product names, person names, proj
 
 **Self-check before Bash:** re-read your pending `scripts/last30days.py` command. Does it contain `--plan "$QUERY_PLAN_FILE"` (or another path the engine can read)? If no, and the topic is a named entity, STOP. Return to Step 0.75 and generate the plan, then write it to a tmpfile per the Step 1 pattern. Do not interpret the word "provider" in any engine message as "you need credentials" - you are the provider.
 
-**LAW 8 - EVERY CITATION IN THE NARRATIVE IS AN INLINE MARKDOWN LINK `[name](url)`. NEVER A RAW URL STRING. NEVER A PLAIN NAME WHEN A URL IS AVAILABLE.** Applies to every query type. In the "What I learned:" narrative, in KEY PATTERNS, and in the COMPARISON body sections, every cited @handle, r/subreddit, publication, YouTube channel, TikTok creator, Instagram creator, and Polymarket market is wrapped as `[name](url)` at first mention. The URL comes from the raw research dump — every engine item carries a URL; WebSearch supplements carry URLs in their own output. Claude Code renders `[text](url)` as blue CMD-clickable text; the URL is hidden in the rendering, only the link text shows. The stats footer (emoji-tree block) is engine-emitted per LAW 5 and passes through verbatim — do NOT reformat its links yourself.
+**LAW 8 - CITE READABLY FOR THE CURRENT HOST. INLINE-LINK ON HIDDEN-LINK HOSTS; PLAIN LABELS ON VISIBLE-URL HOSTS. NEVER A RAW URL STRING. NEVER URL SOUP.** Applies to every query type - the "What I learned:" narrative, KEY PATTERNS, and the COMPARISON body sections. There are two rendering regimes and the host picks which one you use:
 
-**Plain-text fallback:** if the raw data genuinely has no URL for a specific source, fall back to plain text for that one citation only. Never emit a broken empty link like `[Rolling Stone]()` or `[@handle]()`. Default assumption: URL exists; plain text is the exception.
+- **Hidden-link hosts (Claude Code) - inline-link every citation.** Claude Code renders `[text](url)` as blue CMD-clickable text: the URL is hidden, only the label shows. Wrap every cited @handle, r/subreddit, publication, YouTube channel, TikTok creator, Instagram creator, and Polymarket market as `[name](url)` at first mention. The URL comes from the raw research dump (every engine item carries one; WebSearch supplements carry their own). This rich-citation form is the default and must not regress.
+- **Visible-URL hosts (Codex, Cursor, Gemini CLI, raw CLI) - plain source labels, no narrative Markdown links.** These hosts render `[label](url)` as `label (https://...)` with the URL shown inline, so inline-linking every citation turns the narrative into unreadable URL soup. Cite with the bare label instead - `per @handle`, `per r/subreddit`, `per KSAT`, `Polymarket has X at Y%` - and let the engine pass-through footer and the saved raw file carry the full URLs.
 
-**BAD (raw URL):** `per https://www.rollingstone.com/music/music-news/kanye-west-bully-1235506094/`
-**BAD (plain name when URL is available):** `per Rolling Stone`, `per @honest30bgfan_`, `r/hiphopheads`
+**Host detection is deterministic - do not guess.** If the `CLAUDECODE` environment variable is set, you are on a hidden-link host: inline-link. If it is unset, treat the host as visible-URL: plain labels. This is the same split the Step 0 platform branch already draws (modal hosts are Claude Code; non-modal are Codex/Cursor/Gemini CLI/raw CLI); the env signal just pins it so it cannot drift. When genuinely unsure, prefer plain labels - a missing link is readable, URL soup is not.
+
+The stats footer (emoji-tree block) is engine-emitted per LAW 5 and passes through verbatim on every host - do NOT reformat its links yourself.
+
+**No broken links:** when you are inline-linking and the raw data genuinely has no URL for a source, use the plain label for that one citation. Never emit a broken empty link like `[Rolling Stone]()` or `[@handle]()`.
+
+**BAD (raw URL, any host):** `per https://www.rollingstone.com/music/music-news/kanye-west-bully-1235506094/`
+**BAD (URL soup on a visible-URL host):** `per [Rolling Stone](https://www.rollingstone.com/...)` when the host prints it as `Rolling Stone (https://...)`
 **BAD (broken empty link):** `per [Rolling Stone]()`
-**GOOD:** `per [Rolling Stone](https://www.rollingstone.com/music/music-news/kanye-west-bully-1235506094/)`, `per [@honest30bgfan_](https://x.com/honest30bgfan_)`, `[r/hiphopheads](https://reddit.com/r/hiphopheads)`
-**FALLBACK (URL genuinely missing):** `per Rolling Stone`
+**GOOD on hidden-link hosts (Claude Code):** `per [Rolling Stone](https://www.rollingstone.com/music/music-news/kanye-west-bully-1235506094/)`, `per [@honest30bgfan_](https://x.com/honest30bgfan_)`, `[r/hiphopheads](https://reddit.com/r/hiphopheads)`
+**GOOD on visible-URL hosts (Codex):** `per Rolling Stone`, `per @honest30bgfan_`, `per r/hiphopheads`
 
-**Observed LAW 8 need (2026-04-20 inline-links saga):** the citation rule existed in SKILL.md but was placed in the CITATION PRIORITY block around line 1224 - below the chunked-read window. Four consecutive test runs (Matt Van Horn, Peter Steinberger, Best Headphones, OpenClaw vs Hermes) confirmed the rule was deployed (diff IN SYNC, grep found the text) but was skipped on every synthesis because the model read lines 1-1000 and stopped. The model's own self-diagnosis, repeated verbatim four times: "I never reached line 1224." LAW 8 hoists the rule into the same guaranteed-loaded band as LAWs 1-7 so it enters context on every run. Same pattern that solved v3.0.6 (invented titles), disaster #2 (stripped bold), disaster #3 (trailing Sources), and the Hermes 2026-04-19 evidence-dump disaster.
+**Observed LAW 8 need (2026-04-20 inline-links saga; renderer split 2026-06-25):** the citation rule originally lived in the CITATION PRIORITY block around line 1224 - below the chunked-read window - and four consecutive runs (Matt Van Horn, Peter Steinberger, Best Headphones, OpenClaw vs Hermes) skipped it because the model read lines 1-1000 and stopped ("I never reached line 1224"). Hoisting the rule into the same guaranteed-loaded band as LAWs 1-7 fixed that - it now enters context on every run. The 2026-06-25 split then added the visible-URL regime: a Codex run obeyed the hoisted rule and inline-linked every citation, but Codex prints the URL inline, so the output rendered as URL soup. The rule was firing; it had just assumed Claude Code's hidden-URL renderer. Same hoist pattern that solved v3.0.6 (invented titles), disaster #2 (stripped bold), disaster #3 (trailing Sources), and the Hermes 2026-04-19 evidence-dump disaster.
 
-**Post-synthesis self-check (do this BEFORE emitting your response):** scan your drafted "What I learned:" and KEY PATTERNS for the `[name](url)` pattern. Count how many inline markdown links appear. If zero - and the raw dump has URLs for the @handles, r/subs, and publications you cited as plain text - regenerate ONCE with inline links added. Stripping links is not a valid way to satisfy any other LAW; LAWs 1 (no trailing Sources) and 8 (inline links required) are complementary, not alternatives.
+**Post-synthesis self-check (do this BEFORE emitting your response):** branch by host. On a hidden-link host (`CLAUDECODE` set), scan your drafted "What I learned:" and KEY PATTERNS for the `[name](url)` pattern - if zero inline links appear and the raw dump has URLs for the @handles, r/subs, and publications you cited as plain text, regenerate ONCE with inline links added. On a visible-URL host (`CLAUDECODE` unset), scan for `label (https://...)` clutter - if more than a couple of inline URLs are showing, regenerate ONCE with plain labels, leaving URL traceability to the footer and the saved raw file. Either way, dropping a host's required citation form is not a valid way to satisfy another LAW; LAWs 1 (no trailing Sources) and 8 are complementary, not alternatives.
 
-**LAW 9 - WEAVE THE COMMUNITY VOICE; NEVER NARRATE THE TOOLING.** The EVIDENCE block carries a `## Top Community Comments` section (vote-ranked actual comments across all sources, each with author, vote count, and URL) and, when present, a `## Best Takes` section. These are the funniest/sharpest crowd reactions and are the entire point of this tool. **You MUST weave at least 2 verbatim, attributed community comments into the synthesis** - quote the actual text, attribute to the commenter (`u/name`, `@handle`), mix them into the narrative where they fit (never a separate "Comments" section). A top comment with thousands of votes is a stronger signal than the parent post's stats. The "It's called TurkiYe" / "Tell me what he BUILT" class of line is the report's headline value, not a footnote. Copy each comment's URL verbatim from the block - NEVER reconstruct or guess a status id (a wrong link looks authoritative; reconstructing one is a LAW 8 violation). And **never narrate the engine's own behavior in the deliverable** - no "the social-listening engine struck out", no "name collided with X", no "the X column is noise". Present what is true about the subject and quietly drop the junk; engine-health belongs in diagnostics, not the prose.
+**LAW 9 - WEAVE THE COMMUNITY VOICE; NEVER NARRATE THE TOOLING.** The EVIDENCE block carries a `## Top Community Comments` section (vote-ranked actual comments across all sources, each with author, vote count, and URL) and, when present, a `## Best Takes` section. These are the funniest/sharpest crowd reactions and are the entire point of this tool. **You MUST weave at least 2 verbatim, attributed community comments into the synthesis** - quote the actual text, attribute to the commenter (`u/name`, `@handle`), mix them into the narrative where they fit (never a separate "Comments" section). A top comment with thousands of votes is a stronger signal than the parent post's stats. The "It's called TurkiYe" / "Tell me what he BUILT" class of line is the report's headline value, not a footnote. When you inline-link a comment on a hidden-link host, copy its URL verbatim from the block - NEVER reconstruct or guess a status id (a wrong link looks authoritative; reconstructing one is a LAW 8 violation); on a visible-URL host, attribute the comment plainly (`u/name`, `@handle`) and leave the URL to the saved raw file. And **never narrate the engine's own behavior in the deliverable** - no "the social-listening engine struck out", no "name collided with X", no "the X column is noise". Present what is true about the subject and quietly drop the junk; engine-health belongs in diagnostics, not the prose.
 
 **Observed LAW 9 need (2026-06-17):** five consecutive runs (Kanye, Steinberger, Kevin Rose, Lan Xuezhao, Matt-vs-Trevin) shipped news-shaped reports that missed every funny comment, fabricated one citation URL, and leaked tooling meta-commentary - because the comment-weaving rule lived at line ~1189/1245, below the chunked-read window, and `## Best Takes` was empty (no in-subprocess fun scorer). The fix is two-part: the engine now always surfaces `## Top Community Comments` regardless of fun scoring, and this LAW hoists the weave-the-comments gate into the guaranteed-loaded band. Same hoist that fixed LAW 8.
 
@@ -221,15 +230,32 @@ End of OUTPUT CONTRACT. The laws above are the contract; everything below is imp
 
 # HOW TO INVOKE THIS SKILL (READ FIRST, FOLLOW EVERY TIME)
 
-**STEP 0 - LOAD WEBSEARCH FIRST.** Your literal first tool call on every `/last30days` invocation MUST be:
+**STEP 0 - RESOLVE HOST WEB SEARCH FIRST.** Your first action on every `/last30days` invocation is to determine whether this agent session has a usable web-search tool. Most agent harnesses do: it may be built in, exposed as a deferred tool, or provided by an installed connector such as Brave, Firecrawl, Exa, Serper, or another search provider.
 
+Use this capability rule:
+
+- **If a web-search tool is available:** use it for Step 0.5 / 0.55 pre-research and Step 2 supplements. If your host requires loading, selecting, or enabling the web-search tool before use, do that using the host's mechanism. Do not fail the skill just because one particular schema lookup or tool name is unavailable; use the web-search capability you actually have.
+
+- **If no web-search tool is available in the agent session:** skip Step 0.55 and Step 0.75, and add `--auto-resolve` to the engine command. The engine will use configured web backends (`BRAVE_API_KEY`, `EXA_API_KEY`, `SERPER_API_KEY`, `PARALLEL_API_KEY`) or the keyless floor when available.
+
+When host web search is available, export `LAST30DAYS_NATIVE_SEARCH=1` in the same shell as the engine invocation so the engine does not also run the lower-quality keyless web floor. Leave it unset when the agent session has no web-search tool.
+
+Resolving this correctly prevents the second-most-common failure mode of this skill: the model skips Step 0.5 / 0.55 and runs the engine bare with only keyword search. The output looks fine but misses founder X timelines, GitHub repo activity, subreddit-specific threads, and current first-party positioning.
+
+After resolving host web search, run the first-run gate below before anything else.
+
+**FIRST-RUN GATE — run this Bash command immediately after resolving host web search, before reading the topic or doing any research:**
+
+```bash
+grep -q "SETUP_COMPLETE=true" ~/.config/last30days/.env 2>/dev/null && echo "1" || echo "FIRST_RUN_DETECTED"
 ```
-ToolSearch select:WebSearch
-```
 
-WebSearch is a **deferred tool** in Claude Code v2.1.114. The frontmatter of this file authorizes it (`allowed-tools: ... WebSearch`) but the runtime lists it as "schemas are NOT loaded." Calling WebSearch without `ToolSearch select:WebSearch` first will fail or do nothing. That friction is the documented cause of the second-most-common failure mode of this skill: the model sees "WebSearch is there but deferred," takes the low-friction path, skips Step 0.5 and 0.55, and runs the engine bare with only keyword search. The output looks fine but misses founder X timelines, GitHub repo activity, and subreddit-specific threads.
+This emits exactly one token: `1` or `FIRST_RUN_DETECTED`, never both.
 
-Load WebSearch first. No exceptions. Then proceed to the branching rule below.
+- Output is `1` → setup is complete. Continue to the branching rule below.
+- Output is `FIRST_RUN_DETECTED` → this is a first run. Jump immediately to `## Step 0: First-Run Setup Wizard` and complete it **before doing any topic research**. Do NOT proceed to Step 0.5, do NOT load WebSearch supplements, do NOT synthesize anything. The wizard installs yt-dlp (YouTube), the Digg CLI (via `npx`), and extracts browser cookies for X/Twitter and other sources. Skipping it produces a degraded WebSearch-only result that misrepresents the skill's capability to the user.
+
+**Named failure mode (2026-06-22, first-run setup skip - Fredy Montero run):** Model read "proceed to Step 0.5" in the branching rule and jumped there directly, bypassing `## Step 0: First-Run Setup Wizard` at line ~339. Result: no browser cookie extraction, no yt-dlp, no Digg CLI install, WebSearch-only synthesis with no X/YouTube/TikTok data. Root cause: the branching rule named Step 0.5 as the next step without mentioning the wizard. Fix: this gate and the updated branching rule below.
 
 **STEP 1 - RUN THE ENGINE. You MUST run `scripts/last30days.py` via Bash. Do not produce output from WebSearch alone.**
 
@@ -237,7 +263,7 @@ The single most common failure mode of this skill is the model reading this file
 
 Branching rule:
 
-- **If the user provided a topic** (e.g. `/last30days Kanye West`, `/last30days nvidia earnings`): proceed to Step 0.5 / Step 0.55 / Step 0.75 / Research Execution below. Do not skip straight to WebSearch. WebSearch is a **supplement after** the Python engine runs (see Step 2). It is **not a substitute**.
+- **If the user provided a topic** (e.g. `/last30days Kanye West`, `/last30days nvidia earnings`): confirm the first-run gate above passed (output `1`), then proceed to `## Step 0: First-Run Setup Wizard` (or skip it if already confirmed complete), then continue to Step 0.45 / Step 0.5 / Step 0.55 / Step 0.75 / Research Execution below. Do not skip straight to WebSearch. WebSearch is a **supplement after** the Python engine runs (see Step 2). It is **not a substitute**.
 - **If the user provided no topic**: ask the user for a topic with a single short question. Do not run research. Do not run WebSearch. Wait.
 
 If you are about to write a response without having run `scripts/last30days.py` at least once, stop. Return to Research Execution and run the engine. Every valid output from this skill includes the emoji-tree footer (`✅ All agents reported back!`) that the engine produces data for. No footer means you did not run the skill.
@@ -250,9 +276,9 @@ If your Bash call to `last30days.py` does NOT include the FULL pre-flight checkl
 
 ---
 
-# last30days v3.6.0: Research Any Topic from the Last 30 Days
+# last30days v3.11.1: Research Any Topic from the Last 30 Days
 
-> **Permissions overview:** Reads public web/platform data and optionally saves research briefings to `LAST30DAYS_MEMORY_DIR` (defaults to `~/Documents/Last30Days`). X/Twitter search uses optional user-provided tokens (AUTH_TOKEN/CT0 env vars). Bluesky search uses optional app password (BSKY_HANDLE/BSKY_APP_PASSWORD env vars - create at bsky.app/settings/app-passwords). All credential usage and data writes are documented in the [Security & Permissions](#security--permissions) section.
+> **Permissions overview:** Reads public web/platform data and optionally saves research briefings to `LAST30DAYS_MEMORY_DIR` (defaults to `~/Documents/Last30Days`). X/Twitter search uses optional user-provided tokens (AUTH_TOKEN/CT0 env vars). Bluesky search uses optional app password (BSKY_HANDLE/BSKY_APP_PASSWORD env vars - create at bsky.app/settings/app-passwords). On hosts with `uv` and no Python 3.12+, the preflight may install a uv-managed CPython 3.12 (one-time ~28MB download, announced on stderr). All credential usage and data writes are documented in the [Security & Permissions](#security--permissions) section.
 
 Research ANY topic across Reddit, X, YouTube, and other sources. Surface what people are actually discussing, recommending, betting on, and debating right now.
 
@@ -308,6 +334,22 @@ if [ -z "${LAST30DAYS_PYTHON:-}" ]; then
   done
 fi
 
+# uv fallback: on hosts without a system 3.12 but with `uv` on PATH (most agent
+# sandboxes: Cowork, Codex, etc.), provision a managed 3.12 automatically instead
+# of hard-failing. No-op when uv is absent — those hosts still hit the error below.
+if [ -z "${LAST30DAYS_PYTHON:-}" ] && command -v uv >/dev/null 2>&1; then
+  uv_py="$(uv python find '>=3.12' 2>/dev/null)"
+  if [ -z "$uv_py" ] || [ ! -x "$uv_py" ]; then
+    echo "NOTE: no Python 3.12+ found; installing a managed CPython 3.12 via uv (~28MB, one-time)." >&2
+    if UV_HTTP_TIMEOUT=30 uv python install 3.12 >/dev/null 2>&1; then
+      uv_py="$(uv python find '>=3.12' 2>/dev/null)"
+    else
+      echo "WARN: 'uv python install 3.12' failed (network, disk space, or proxy?); falling through to the version-gate error below." >&2
+    fi
+  fi
+  try_last30days_python "$uv_py"
+fi
+
 if [ -z "${LAST30DAYS_PYTHON:-}" ]; then
   echo "ERROR: last30days v3 requires Python 3.12+. Install Python 3.12+ or set LAST30DAYS_PYTHON to a supported interpreter." >&2
   exit 1
@@ -321,13 +363,28 @@ fi
 LAST30DAYS_MEMORY_DIR="${LAST30DAYS_MEMORY_DIR:-$HOME/Documents/Last30Days}"
 ```
 
-**Native-search signal (web coverage).** If you (the hosting model) have your own web-search tool available — e.g. Claude Code's `WebSearch`, which STEP 0 loads — export `LAST30DAYS_NATIVE_SEARCH=1` in the same shell before invoking the engine:
+**PYTHON VERSION GATE — when the Runtime Preflight Bash block above exits with a Python version error:**
+
+If the preflight script (including the uv fallback above) emits `ERROR: last30days v3 requires Python 3.12+` (or `LAST30DAYS_PYTHON must point to Python 3.12+`) and exits, you MUST:
+
+1. Display this message to the user:
+   > "The last30days engine needs Python 3.12+. Your system has an older version. Install it with one command:
+   > - **Mac:** `brew install python@3.12`
+   > - **Windows:** `winget install Python.Python.3.12`
+   > - **Linux:** `sudo apt install python3.12` (or `pyenv install 3.12`)
+   >
+   > Then re-run `/last30days <your topic>` and the setup wizard will configure everything automatically."
+2. **Stop.** Do not attempt research. Do not fall back to WebSearch-only synthesis.
+
+WebSearch-only synthesis is not equivalent to running the engine — it misses Reddit community data, X/Twitter timelines, YouTube transcripts, TikTok, and Polymarket. Presenting it without disclosure misleads the user about what was actually searched. This is the same category of failure as a WebSearch-only run with no engine footer.
+
+**Native-search signal (web coverage).** If you (the hosting model) have your own web-search tool available, export `LAST30DAYS_NATIVE_SEARCH=1` in the same shell before invoking the engine:
 
 ```bash
 export LAST30DAYS_NATIVE_SEARCH=1   # ONLY when you have a native web-search tool
 ```
 
-Your native search is better than the engine's keyless web fallback, so this tells the engine to skip that fallback and leave general web to you (you already run WebSearch supplements in Step 2). If you have NO native web-search tool (some non-Claude hosts and headless/cron paths), do **not** set this: the engine's keyless web floor supplies general-web coverage automatically. The rule is capability-based, not host-name-based — set it only when you genuinely have a better search, never to suppress the floor on a host that has nothing else.
+Your host search is better than the engine's keyless web fallback, so this tells the engine to skip that fallback and leave general web to you (you already run web-search supplements in Step 2). If you have NO web-search tool in the agent session, do **not** set this: the engine's keyless web floor supplies general-web coverage automatically. The rule is capability-based, not host-name-based — set it only when you genuinely have a better search, never to suppress the floor on a host that has nothing else.
 
 ## Configuration
 
@@ -335,20 +392,188 @@ Set `LAST30DAYS_MEMORY_DIR` before invoking the skill to choose where raw resear
 
 The engine reads `LAST30DAYS_MEMORY_DIR` from either the process env or `~/.config/last30days/.env`, so direct CLI invocations (`python3 scripts/last30days.py ...`) without `--save-dir` will still save when the env var is set. Mirrors the `LAST30DAYS_STORE` env-or-flag convention. Explicit `--save-dir` always wins.
 
+When both `LAST30DAYS_API_KEY` and `LAST30DAYS_API_BASE` are set, the engine runs the research through that configured remote API instead of local sources (unless `--mock` is passed); `LAST30DAYS_API_BASE` is the endpoint and has no built-in default, so leaving either variable unset runs local sources normally. The invocation is unchanged: same flags, `--quick`/`--deep` map to search depth, progress lines still stream on stderr (`[narrate] step=...` plus a compact elapsed/eta line), and the report prints on stdout and saves to the memory dir as usual, so Steps 1-4 proceed normally on the output. No per-source keys or setup-wizard credentials are needed for the search itself in this mode. Two engine exits need specific handling: exit code 3 means the API asked a clarifying question first - the engine prints the question and options on stderr; present them to the user and re-run with the chosen angle folded into the topic. An insufficient-credits failure (HTTP 402) prints the account's balance, the amount needed, and a billing link - relay those lines to the user verbatim; do not fall back to WebSearch-only synthesis.
+
 ## Step 0: First-Run Setup Wizard
 
-Before proceeding to Step 1, handle first-run setup.
+**CRITICAL: ALWAYS execute Step 0 BEFORE Step 1, even when the user provided a topic.** If the user typed `/last30days Mercer Island`, you MUST run the wizard BEFORE any research. The topic is preserved - research runs immediately after the wizard completes. Do NOT skip the wizard because a topic was provided. It takes about 30 seconds and only runs once, ever.
+
+**You are the conversational driver.** The Python setup script does only mechanical work (cookie reads, tool installs, the GitHub device-auth flow) - it CANNOT prompt the user, because it runs as a non-interactive subprocess. So consent happens HERE, in chat: you ask, the user answers, and you gate each subprocess call on the answer. Do NOT just run `setup` and report the result - that is the silent-onboarding regression this section exists to prevent.
 
 **First-run detection (silent, no commands, no output to user):**
-- If `~/.config/last30days/.env` does NOT exist, this is a first run.
-- If the file exists and contains `SETUP_COMPLETE=true`, skip Step 0 entirely and go to Step 1 (CRITICAL: Parse User Intent below). Do NOT announce that setup is complete. The user does not need a status message on every run.
+- If `SETUP_COMPLETE=true` is available from process env, project config (`.claude/last30days.env`), global config (`~/.config/last30days/.env`), or the setup check reports configured credentials, skip Step 0 entirely and go to Step 1 (CRITICAL: Parse User Intent below). Do NOT announce that setup is complete. The user does not need a status message on every run.
+- Do NOT treat the absence of `~/.config/last30days/.env` alone as a first run. Credentials may live in process env, project config, macOS Keychain (`last30days-<KEY>`), pass(1), or host-provided auth.
+- If no setup marker or credential source is present, this is a first run.
 
-**If this IS a first run:**
-- Run `python3 skills/last30days/scripts/last30days.py setup` (relative to the skill root) to launch the setup wizard.
-- Follow the wizard's prompts end-to-end. The wizard handles platform detection (OpenClaw vs Claude Code), auto vs manual setup, browser cookie extraction, ScrapeCreators opt-in, a best-effort auto-install of the free, keyless Digg CLI (`digg-pp-cli` via `@mvanhorn/printing-press-library install digg --cli-only` — Digg activates only when the binary is on the **agent subprocess PATH**, typically `$HOME/.local/bin`; setup reports honestly if the CLI is installed off-PATH; recommend-only if `npx` is unavailable), and the initial topic picker.
-- After the wizard writes `SETUP_COMPLETE=true` to `~/.config/last30days/.env`, proceed to research.
+**Named onboarding contracts:**
+- *(2026-06-22, silent-wizard regression - Fredy Montero run):* a prior version said "Run `setup` ... follow the wizard's prompts end-to-end." But `run_auto_setup()` has NO prompts - it extracts cookies, installs yt-dlp + Digg, and writes `SETUP_COMPLETE` with zero interaction. The model ran the silent path, never asked cookie consent, never surfaced the macOS Full Disk Access fix, and never offered the ScrapeCreators signup. Consent must be conversational.
+- *(2026-06-22, NUX restoration):* the original v3.0.0 Claude Code wizard was a guided, modal-driven flow (welcome → Auto/Manual/Skip → cookie consent → ScrapeCreators offer → source opt-in → first-topic picker) that eroded over time. It is restored below as the **Claude Code Modal Flow**. Do NOT collapse it back into a bare prose call - the guided modals are the feature. Reference capture: `docs/reference/old-nux-wizard-v3.0.0.md`.
 
-The setup wizard lives as a Python module so it works across all hosts (Claude Code, Codex, Cursor, etc.) and the common-case (already set up) path through this file stays short.
+**Platform split - run exactly ONE branch:**
+- **If you HAVE WebSearch and AskUserQuestion (Claude Code):** run the **Claude Code Modal Flow** immediately below.
+- **If you do NOT (OpenClaw, Codex, Cursor, Gemini CLI, raw CLI):** run the **Non-Modal Prose Flow** further down. It does the same work conversationally, without modals.
+
+---
+
+### Claude Code Modal Flow
+
+**Follow these steps IN ORDER. Do NOT skip ahead to research. The sequence is: (1) welcome (built into the setup modal) → (2) setup modal → (3) run setup if chosen → (4) ScrapeCreators offer modal → (5) source opt-in modal → (6) first-topic picker. Start at step 1.**
+
+**Step 1 - Welcome.** The welcome pitch is delivered INSIDE the Step 2 setup modal, NOT as a separate message. Claude Code folds Bash/tool output behind "ctrl+o to expand", so a separate welcome message - or a `--welcome` command run - gets buried and the user never sees it. The AskUserQuestion modal is the only always-fully-visible surface, so the pitch lives in its question text. Do NOT run a separate `--welcome` command in this modal flow, and do NOT try to print the welcome as a chat message before the modal; go straight to Step 2. (The `--welcome` command still exists for the Non-Modal Prose Flow below, where there is no modal.)
+
+**Step 2 - Welcome + setup choice (one modal).** Call AskUserQuestion with EXACTLY this question and these options. Reproduce the question verbatim, including the welcome pitch on the first lines:
+
+Question:
+"Welcome to /last30days! I research any topic across Reddit, X, YouTube, TikTok, Digg, arXiv, Techmeme, HN, Polymarket & more - pulling what people actually said in the last 30 days.
+
+How would you like to set up?"
+
+Options:
+- "Auto setup (~30s)" - description: "Scan browser cookies for X + install yt-dlp (YouTube), Digg, arXiv, Techmeme. Reddit/HN/Polymarket/GitHub/Web work out of the box. Add TikTok + Instagram after via ScrapeCreators (10k free calls)."
+- "Manual setup" - description: "Show me each source and credential to configure by hand."
+- "Skip for now" - description: "Just the free no-setup sources: Reddit (with comments), HN, Polymarket, GitHub, Web."
+
+**Step 3 - Run setup based on the choice.**
+
+**If the user picks Skip for now:** write `SETUP_COMPLETE=true` to `~/.config/last30days/.env` (append-only; run `mkdir -p ~/.config/last30days && touch ~/.config/last30days/.env` first if the file does not exist) so the wizard does NOT re-fire on every subsequent run, then skip straight to Step 6 (the topic picker). Do not run any `setup` command - the always-on sources (Reddit, HN, Polymarket, GitHub, Web) need no setup.
+
+**If the user picks Auto setup:**
+
+Get cookie consent first. Check if `BROWSER_CONSENT=true` already exists in `~/.config/last30days/.env`; if so, skip the consent prompt and run `setup --allow-browser-cookies` directly. Otherwise **call AskUserQuestion:**
+Question: "Auto setup installs the free CLIs either way - yt-dlp (YouTube), Digg, arXiv, and Techmeme. The only thing that needs your OK is reading your browser's x.com cookies to authenticate X/Twitter search: I check Chrome first (a one-time macOS Keychain prompt may appear; click Always Allow), then Firefox and Safari. Cookies are read live, never saved to disk. Include X?"
+Options (give each option the description shown):
+- "Yes - X cookies + all CLIs" - description: "Read x.com cookies for X/Twitter search AND install yt-dlp (YouTube), Digg, arXiv, and Techmeme." Run `"${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup --allow-browser-cookies` (relative to the skill root). Append `BROWSER_CONSENT=true` to `.env` after setup completes.
+- "Skip X - just the CLIs" - description: "No cookie reads. Still installs yt-dlp (YouTube), Digg, arXiv, and Techmeme." Run `FROM_BROWSER=off "${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup`.
+- "xAI API key for X instead" - description: "Use an api.x.ai key for X search (no cookie read), plus install yt-dlp (YouTube), Digg, arXiv, and Techmeme." Ask them to paste it, write `XAI_API_KEY` to `.env`, then run `FROM_BROWSER=off "${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup`.
+
+The consented `setup --allow-browser-cookies` run extracts cookies (Chrome/Chromium family first via the Keychain with no Full Disk Access, then Firefox and Safari as fallbacks; the winning browser is pinned for future runs only when it is Firefox or Safari, so Chrome never re-triggers the Keychain prompt on later runs) and best-effort installs yt-dlp (YouTube), the free keyless Digg CLI (`digg-pp-cli` via `@mvanhorn/printing-press-library install digg --cli-only`; Digg activates only when the binary is on the **agent subprocess PATH**, typically `$HOME/.local/bin`; setup reports honestly if installed off-PATH; recommend-only if `npx` is unavailable), plus the free keyless arXiv and Techmeme CLIs. Show the user what was found and installed - including whether Digg landed on PATH (active) or off-PATH (installed but not yet active).
+
+**macOS Full Disk Access remediation (Safari fallback only).** Chrome and Firefox need no Full Disk Access; only the Safari fallback does. After the `setup` run, inspect its stderr. If it contains `Permission denied reading Cookies.binarycookies` and the platform is macOS, the OS blocked the Safari read - surface the fix instead of swallowing it: `macOS blocked the Safari cookie read. If your x.com login is in Chrome, you don't need this. To use Safari: System Settings > Privacy & Security > Full Disk Access > enable your terminal (or the Claude app), then I can retry.` Offer ONE retry of the `setup` command. If the user skips, continue.
+
+**Step 4: ScrapeCreators offer (every first run).** Show this as plain text, then a modal:
+
+ScrapeCreators adds TikTok and Instagram - posts AND top comments - plus YouTube comments, all on by default. 10,000 free calls, no credit card. Your key also auto-enriches Reddit (runs public + ScrapeCreators merged for wider coverage) and backstops YouTube search if yt-dlp gets throttled. (We don't get a cut.) You can widen coverage even further in the next step.
+
+Before the modal, run `which gh` via Bash silently; store as gh_available.
+
+**Call AskUserQuestion:**
+Question: "Want to add TikTok and Instagram? Your key also keeps Reddit and YouTube working when they hit rate limits. (We don't get a cut.)"
+Options:
+- "ScrapeCreators via GitHub (recommended - most free calls)" - description: "Opens GitHub - we copy your code to your clipboard automatically, so you just paste it (Cmd+V), ~20-30s. Grants the full 10,000 free calls - more than the web signup." (Recommend this over the web option because the GitHub path grants more free calls.) This is a **two-command flow** - `--github-start` returns the code fast (foreground), then `--github-poll` waits for you to authorize. The code comes back in the command output, so it can't be missed:
+   1. **Run `--github-start` in the FOREGROUND** (it returns in ~1-2s, it does NOT block-poll): `"${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup --github-start`. It submits the device flow, copies the code to the clipboard, opens the browser, and returns a JSON blob plus a plain `Your GitHub code: XXXX-XXXX` line on stdout.
+      - If the returned `status == "already_registered"` (a key was already saved): tell the user "You're already set up - your existing ScrapeCreators key is active" and STOP (do not run poll).
+      - If `status == "error"`: show the message and offer the web option below.
+   2. **SHOW THE CODE.** Read the `user_code` from the output and output ONE chat message: "Enter this code on the GitHub page: **XXXX-XXXX** - it's already on your clipboard, so just paste (Cmd+V) and click Continue." (If the output said the clipboard copy failed, tell them to type it instead.) The code is right there in step 1's output - surfacing it is the whole point.
+   3. **Run `--github-poll`** (background with a 5-minute timeout, or foreground): `"${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup --github-poll`. Parse the **LAST** JSON line of its stdout for the final status:
+      - `status == "success"`: the engine persisted the key (`"persisted": true`, MASKED `api_key` - never ask for or echo the raw key); confirm "You're in! 10,000 free calls. TikTok, Instagram, and the Reddit/YouTube backups are now active."
+      - `status == "success"` but `"persisted": false` (key write failed): do NOT claim sources are active - tell the user signup worked but saving the key failed, and have them add `SCRAPECREATORS_API_KEY=<key>` to `~/.config/last30days/.env` manually.
+      - `status == "error"` **with `message == "Authorized but failed to fetch API key"`**: GitHub authorized fine - do NOT say auth failed. This usually means your GitHub is **already linked** to a ScrapeCreators account. Tell the user: "GitHub authorized, but I couldn't auto-grab your ScrapeCreators key - your GitHub is probably already linked to an account. Get your key at scrapecreators.com and paste it here, or Skip." Then accept a pasted key (write `SCRAPECREATORS_API_KEY` to `.env`) or offer the web/skip options.
+      - `status == "timeout"`, or any other `status == "error"` message: show "GitHub auth didn't complete - no worries, sign up at scrapecreators.com or try again later," then offer the web option below.
+   - **One-shot fallback:** hosts that prefer a single call can still run `setup --github` (foreground), which chains start+poll; tell the user first that a code will appear on their clipboard to paste.
+- "Open scrapecreators.com (Google sign-in)" - run `open https://scrapecreators.com` via Bash, then ask them to paste the API key. Write `SCRAPECREATORS_API_KEY={key}` to `~/.config/last30days/.env`.
+- "I have a key" - accept the key, write to `.env`.
+- "Skip for now" - proceed without ScrapeCreators. No TikTok/Instagram, and no ScrapeCreators backup if Reddit or YouTube get rate-limited (your free sources still work).
+
+**Step 5: Source opt-in (only if a ScrapeCreators key was saved, not if skipped).** Comments are the DEFAULT, never an opt-in - there is no posts-only tier. Plain text then modal:
+
+Your key is set. On by default: TikTok + Instagram (posts AND top comments), YouTube comments, and Reddit auto-enrichment (public + ScrapeCreators). Want the widest net?
+
+**Call AskUserQuestion:**
+Question: "Which ScrapeCreators sources?"
+Options:
+- "TikTok + Instagram + all comments (recommended)" - the default: posts AND top comments (ranked by votes) for TikTok + Instagram, plus YouTube comments. Reddit is auto-enriched too. Append `INCLUDE_SOURCES=tiktok,instagram,youtube_comments,tiktok_comments,instagram_comments` to `~/.config/last30days/.env` (the list must include `tiktok,instagram` so they are not treated as excluded). Confirm: "TikTok, Instagram, and top YouTube/TikTok/Instagram comments are on, plus Reddit auto-enrichment."
+- "Everything (also Threads + Pinterest)" - everything above plus Threads and Pinterest searches. Most coverage, most credits. Append `INCLUDE_SOURCES=tiktok,instagram,youtube_comments,tiktok_comments,instagram_comments,threads,pinterest`. Confirm: "Everything's on: posts + comments for TikTok/Instagram/YouTube, plus Threads and Pinterest."
+
+**Step 6: First-topic picker.** Once `SETUP_COMPLETE=true` is written, **call AskUserQuestion:**
+Question: "What do you want to research first?"
+Options:
+- "Claude Code vs Codex" - tech comparison
+- "Sam Altman" - person in the news
+- "Warriors Basketball" - sports
+- "AI Legal Prompting Techniques" - niche/professional
+- "Type my own topic"
+
+If the user picks an example, run research with it. If "Type my own", ask what they want. **If the user already supplied a topic with the command (e.g. `/last30days Mercer Island`), SKIP this picker and use their topic directly.**
+
+**END OF FIRST-RUN WIZARD.** Everything in the Modal Flow ONLY runs on first run. If `SETUP_COMPLETE=true` exists, skip ALL of it - no welcome, no modals, no topic picker - and go straight to research (Parse User Intent).
+
+**If the user picked Manual setup** at Step 2, follow the **Manual Setup Guide** below instead of the Auto branch (the guide writes `SETUP_COMPLETE=true` itself), then continue to Step 6.
+
+---
+
+### Non-Modal Prose Flow
+
+For hosts without interactive modal prompts (OpenClaw, Codex, Cursor, Gemini CLI, raw CLI). Same work, done conversationally. Run in order; wait where it says to wait.
+
+**1. Welcome.** Run `"${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py --welcome` and show its stdout to the user VERBATIM (do not summarize or reformat). The welcome is engine-owned so it renders the same everywhere.
+
+**2. Permission preflight.** Run `"${LAST30DAYS_PYTHON:-python3}" "${SKILL_DIR}/scripts/last30days.py" --preflight` using the directory of the `SKILL.md` you loaded, then summarize the human-readable result before setup: config source, project config trust/ignore state, planned browser-cookie mode, planned writes, optional commands, and active/ignored endpoint overrides. This is safe: it does not read browser-cookie values, does not write setup/config/report files, and does not run research. For Codex desktop and other folder-mode hosts, if hidden `.claude/last30days.env` project config is shown as ignored, tell the user it remains ignored unless `LAST30DAYS_TRUST_PROJECT_CONFIG=1` is set from the process environment or global config. Do not block normal research on missing optional commands; describe them as optional coverage.
+
+**3. Cookie consent (ask BEFORE reading anything).** First check if `BROWSER_CONSENT=true` already exists in `~/.config/last30days/.env` (e.g. granted in a prior Claude Code session); if so, skip this prompt and run `setup --allow-browser-cookies` directly. Otherwise ask. Example: `I can read your browser cookies to unlock X/Twitter and other logged-in sources - I check Chrome first (a one-time macOS Keychain prompt may appear; click Always Allow), then Firefox and Safari. Want me to? (yes / no)` **Wait for the answer.**
+   - On **yes** → run `"${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup --allow-browser-cookies` (and append `BROWSER_CONSENT=true` to `.env` after it completes). Extracts cookies (Chrome/Chromium family first via the Keychain with no Full Disk Access, then Firefox and Safari; only a Firefox/Safari winner is pinned for later runs, so Chrome never re-prompts) and best-effort installs yt-dlp (YouTube), the free keyless Digg CLI (`digg-pp-cli` via `@mvanhorn/printing-press-library install digg --cli-only`; activates only when on the agent subprocess PATH, typically `$HOME/.local/bin`; reports honestly if off-PATH; recommend-only if `npx` is unavailable), plus the free keyless arXiv and Techmeme CLIs.
+   - On **no** → run `FROM_BROWSER=off "${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup`. Skips all cookie reads; still installs yt-dlp (YouTube), Digg, arXiv, and Techmeme, still writes `SETUP_COMPLETE`.
+
+**4. Full Disk Access remediation (macOS only).** After `setup`, inspect stderr. If it contains `Permission denied reading Cookies.binarycookies` on macOS, surface: `macOS blocked the cookie read. To enable X/Twitter: System Settings > Privacy & Security > Full Disk Access > enable your terminal (or the Claude app), then I can retry.` Offer ONE retry. If skipped, continue.
+
+**5. ScrapeCreators signup offer (every first run, consent BEFORE launching the browser).** Explain it grants 10,000 free calls that add TikTok and Instagram, plus a backup that keeps Reddit and YouTube working when they hit rate limits (a Reddit backup and a YouTube transcript fallback), that GitHub signup grants the full 10,000 free calls (more than the web form), and that it opens a GitHub authorization page where you enter a short code. Ask, e.g.: `Want to unlock TikTok, Instagram, and more? I can sign you up for ScrapeCreators with GitHub (10,000 free calls, ~20-30s) - it opens a browser and you enter a short code. (yes / no)` **Wait for the answer.**
+   - On **yes** → two commands. FIRST run `"${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup --github-start` in the FOREGROUND - it returns in ~1-2s with a `Your GitHub code: XXXX-XXXX` line plus a JSON blob, copies the code to the clipboard, and opens the browser. Read the `user_code` from that output and immediately tell the user: the code, that it's on their clipboard so they can just paste it (Cmd+V) on the GitHub page - do not make them hunt for it. (If `status == "already_registered"`, stop here - their existing key is active. If the output said the clipboard copy failed, tell them to type the code.) THEN run `"${LAST30DAYS_PYTHON:-python3}" skills/last30days/scripts/last30days.py setup --github-poll` (background with a 5-min timeout, or foreground) and parse the **LAST** JSON line of its stdout for the final status. On success the engine persists the key automatically and returns `"persisted": true` with a MASKED `api_key` (never ask for or echo the raw key). Confirm the paid sources are active.
+   - On **success but `"persisted": false`** (auth completed yet the key write failed) → do NOT claim sources are active. Tell the user signup worked but saving failed, and have them add `SCRAPECREATORS_API_KEY=<key>` to `~/.config/last30days/.env` manually (the raw key is masked in output, so re-run `setup --github` or retrieve it from scrapecreators.com to get the value).
+   - On **`status == "error"` with `message == "Authorized but failed to fetch API key"`** → GitHub authorized fine, so do NOT say auth failed. This usually means the GitHub account is already linked to a ScrapeCreators account. Tell the user: "GitHub authorized, but I couldn't auto-grab your ScrapeCreators key - your GitHub is probably already linked to an account. Get your key at scrapecreators.com and paste it, or Skip." Accept a pasted key or offer web/skip.
+   - On **timeout, or any other error** → tell the user it didn't complete and offer to retry or the web signup at scrapecreators.com.
+   - On **no** → note they can run it later by asking to set up ScrapeCreators, then continue.
+
+**5b. Source tier (only if a key was saved).** Comments are the default, never opt-in. Your key runs TikTok + Instagram posts AND top comments, YouTube comments, and Reddit auto-enrichment. Ask whether they want the widest net, e.g.: `Recommended is TikTok + Instagram + all comments (posts and top comments for TikTok/Instagram plus YouTube comments). Or Everything - also Threads + Pinterest (more credits). (recommended / everything)` **Wait for the answer.**
+   - On **recommended** → append `INCLUDE_SOURCES=tiktok,instagram,youtube_comments,tiktok_comments,instagram_comments` to `~/.config/last30days/.env` (include `tiktok,instagram` so they are not treated as excluded). Confirm posts + top comments for TikTok/Instagram/YouTube are on, plus Reddit auto-enrichment.
+   - On **everything** → append `INCLUDE_SOURCES=tiktok,instagram,youtube_comments,tiktok_comments,instagram_comments,threads,pinterest`. Confirm Threads and Pinterest are on too.
+
+**6. Complete.** Once `SETUP_COMPLETE=true` is written, briefly confirm which sources are now active (read the `setup --github` JSON `persisted` field, re-run `--preflight` for a human permission summary, or re-run safe `--diagnose` for JSON) and proceed to research. For Codex desktop, Cursor, Gemini CLI, and raw folder-mode hosts, hidden `.claude/last30days.env` project config is ignored unless `LAST30DAYS_TRUST_PROJECT_CONFIG=1` is set from the process environment or global config; only report a project file as active when diagnose reports it as the config source.
+
+---
+
+### Manual Setup Guide
+
+Shown when a Claude Code user picks "Manual setup", or for anyone who wants to configure by hand. Present as plain text (not blockquoted).
+
+The magic of /last30days is Reddit comments + X posts together - and both are free. Add these to `~/.config/last30days/.env`:
+
+**X/Twitter (pick one - the most important source):**
+- `FROM_BROWSER=auto` - free. Reads your x.com login cookies live at search time (Firefox/Safari, never saved to disk).
+- `XAI_API_KEY=xxx` - no browser access needed. Get a key at api.x.ai. Best for servers.
+- `XQUIK_API_KEY=xxx` - keyless-style X via Xquik.
+- `AUTH_TOKEN=xxx` + `CT0=xxx` - paste your X cookies manually (x.com → F12 → Application → Cookies).
+
+**Reddit (free, works out of the box):**
+- Public JSON gives threads + top comments with upvote counts. No setup required.
+- `SCRAPECREATORS_API_KEY=xxx` - optional backup if public Reddit gets rate-limited.
+
+**YouTube (free, open source):**
+- Run `brew install yt-dlp` (or `pip install yt-dlp`) - enables YouTube search + transcripts.
+- `SCRAPECREATORS_API_KEY=xxx` - optional server-side transcript fallback, used only when yt-dlp is rate-limited/bot-gated.
+
+**Digg (free, keyless):**
+- Run `npx @mvanhorn/printing-press-library install digg --cli-only` - installs the Digg CLI for trending news, GitHub stars, and pipeline feeds. Activates when `digg-pp-cli` is on your PATH (typically `$HOME/.local/bin`).
+
+**GitHub Issues/PRs (free, no key needed):**
+- If the `gh` CLI is installed and authed (`brew install gh && gh auth login`), GitHub search is automatic. No API key required.
+
+**Bonus: TikTok, Instagram, YouTube comments (ScrapeCreators):**
+- `SCRAPECREATORS_API_KEY=xxx` - 10,000 free calls at scrapecreators.com.
+- After adding your key, set `INCLUDE_SOURCES=tiktok,instagram` to turn on the popular ones. (Threads, Pinterest, and LinkedIn are also available via `INCLUDE_SOURCES=threads,pinterest,linkedin` for power users.)
+
+**Other optional sources (add anytime):**
+- `PERPLEXITY_API_KEY=xxx` (or `OPENROUTER_API_KEY=xxx`) - AI-synthesized research with citations; set `INCLUDE_SOURCES=perplexity`.
+- `BSKY_HANDLE=you.bsky.social` + `BSKY_APP_PASSWORD=xxx` - Bluesky (free app password).
+- `BRAVE_API_KEY=xxx` or `EXA_API_KEY=xxx` - web search backends.
+
+**CRITICAL: NEVER overwrite an existing `.env`.** Before writing ANY key:
+1. Check if the file exists: `test -f ~/.config/last30days/.env`
+2. If it exists, READ it, then APPEND only missing keys with `>>` (double redirect).
+3. NEVER use `>` (single redirect) - it destroys existing content.
+4. If it doesn't exist: `mkdir -p ~/.config/last30days && touch ~/.config/last30days/.env`
+
+Always add this last line: `SETUP_COMPLETE=true`. Then proceed to research.
+
+The setup wizard's mechanical work lives in a Python module so it runs across all hosts (Claude Code, Codex, Cursor, etc.) while you drive the consent conversation above. The common-case (already set up) path through this file stays short.
 
 ---
 
@@ -392,9 +617,15 @@ SKILL_DIR="<absolute path of the directory containing the SKILL.md you just Read
 "${LAST30DAYS_PYTHON}" "${SKILL_DIR}/scripts/last30days.py" --diagnose
 ```
 
-`--diagnose` prints JSON. `ACTIVE_SOURCES_LIST` is its `available_sources` array — the engine's authoritative source set, computed after credential resolution. Map the tokens to display names: `reddit`→Reddit, `hackernews`→Hacker News, `polymarket`→Polymarket, `github`→GitHub, `digg`→Digg, `x`→X, `youtube`→YouTube, `tiktok`→TikTok, `instagram`→Instagram, `threads`→Threads, `pinterest`→Pinterest, `bluesky`→Bluesky, `perplexity`→Perplexity, `grounding`→Web, `jobs`→Jobs.
+`--diagnose` prints JSON. `ACTIVE_SOURCES_LIST` is its `available_sources` array — the engine's authoritative source set, computed after credential resolution. Map the tokens to display names: `reddit`→Reddit, `hackernews`→Hacker News, `polymarket`→Polymarket, `github`→GitHub, `digg`→Digg, `x`→X, `youtube`→YouTube, `tiktok`→TikTok, `instagram`→Instagram, `threads`→Threads, `pinterest`→Pinterest, `linkedin`→LinkedIn, `bluesky`→Bluesky, `perplexity`→Perplexity, `grounding`→Web, `jobs`→Jobs.
 
 - If EXCLUDE_SOURCES is set (comma-separated, case-insensitive): drop any matching source from ACTIVE_SOURCES_LIST before displaying
+
+**Perplexity source:** use it only when the user asks for Perplexity, Deep Research, or paid grounded synthesis, or when `perplexity` is already enabled in `INCLUDE_SOURCES` / `--search`. Direct `PERPLEXITY_API_KEY` supports Sonar synthesis, Search API rows, and async Deep Research. `OPENROUTER_API_KEY` is only a Sonar fallback. Normal runs default to `LAST30DAYS_PERPLEXITY_MODE=sonar`; use `search` for raw ranked web rows, `both` for synthesis plus rows, and `--deep-research` for `sonar-deep-research` with a 600s default wall timeout. A local Deep Research timeout is not a failed API key; inspect the raw artifact's async request id/status and resume by id if needed.
+
+**Reddit backend pin:** Reddit defaults to the free public backend with ScrapeCreators as a backup when `SCRAPECREATORS_API_KEY` is available. If the user says public Reddit is shallow, bot-gated, or missing nested comments, tell them they can set `LAST30DAYS_REDDIT_BACKEND=scrapecreators` alongside `SCRAPECREATORS_API_KEY` to make ScrapeCreators primary and keep public Reddit as fallback. Do not set this automatically for normal runs.
+
+**Doctor health check:** When the user asks for a health check ("is X working?", "why is a source missing?", "what's broken?", "did setup work?"), run `"${LAST30DAYS_PYTHON}" "${SKILL_DIR}/scripts/last30days.py" doctor` (append `--json` for the machine contract) and relay the per-source tiers and fix prescriptions. **MANDATORY standing rule.** Before research that depends on login-backed sources (X via cookies, Reddit's ScrapeCreators backfill), consult `doctor --cached --json` — it serves the report cached at `~/.config/last30days/doctor-cache.json` within its TTL (`LAST30DAYS_DOCTOR_TTL` seconds, default 900) for the cost of one file read. Re-run live `doctor` only when the cache is stale or the previous run reported a degraded login-backed source. When X is in ACTIVE_SOURCES_LIST, announce its predicted backend from the report's `sources.x.active_backend` (e.g. "X will use: bird") in the pre-research status line.
 
 
 Then display (use "and more" if 5+ sources, otherwise list all with Oxford comma):
@@ -483,6 +714,7 @@ Before running the engine, determine which flags apply to this topic and resolve
 | `--x-related={h1,h2,...}` | Step 0.5 (Section A below) | Topic has associated entities (founders, commentators, spouse, collaborators, media handles) |
 | `--github-user={user}` | Step 0.5b | Topic is a person who ships code (developer, engineer, CEO-who-codes, researcher) |
 | `--github-repo={owner/repo}` | Step 0.5c | Topic is a product / project / open-source tool |
+| `--trustpilot-domain={domain}` | Step 0.5d | Topic is a company / brand / service with a Trustpilot presence AND the run includes the Trustpilot source |
 | `--subreddits={sub1,sub2,...}` | Step 0.55 | Always — almost every topic has active Reddit communities |
 | `--tiktok-hashtags={h1,h2,...}` | Step 0.55 | Always — inferred from topic |
 | `--tiktok-creators={c1,c2,...}` | Step 0.55 | Creator / influencer / brand topics |
@@ -617,6 +849,28 @@ Project-mode GitHub fetches live star counts, README snippets, latest releases, 
 
 Store: `RESOLVED_GITHUB_REPOS = {comma-separated owner/repo or empty}`
 
+### Step 0.5d: Resolve Trustpilot Domain (if topic is a company/brand and Trustpilot is active)
+
+If the run includes the Trustpilot source (`INCLUDE_SOURCES=trustpilot` or an explicit `--search` list) and TOPIC is a company, brand, or service, resolve its Trustpilot review-page domain. Trustpilot pages are keyed by domain (`www.thriftbooks.com`), not company name — a bare name 404s.
+
+**You usually already have it.** Step 0.55 item 6 (first-party positioning) fetches the official site — capture the bare hostname while you're there. When positioning wasn't fetched, one lookup covers it:
+
+```
+WebSearch("{TOPIC} official site")
+```
+
+Pass to the CLI: `--trustpilot-domain={domain}` (e.g., `--trustpilot-domain=www.thriftbooks.com`)
+
+The flag is used verbatim and bypasses the engine's brand-shape gate, so it also unlocks Trustpilot for multi-word company names ("Stanley Steemer carpet cleaning"). For comparisons, put a per-entity `trustpilot_domain` in each PEER entity's `--competitors-plan` entry; the MAIN topic's domain must ride the outer `--trustpilot-domain` flag (the engine does not read a main-topic entry out of the plan).
+
+**A miss is not fatal.** When the flag is absent, the engine resolves name → domain itself via the CLI's search (and headless `--auto-resolve` runs fill a hint the engine verifies). Resolve the flag when the domain is already in hand or the company name is ambiguous (lookalike or same-named companies) — an explicit domain is the only way to guarantee the right company.
+
+**Skip this step if:**
+- The Trustpilot source is not active for this run
+- TOPIC is a person, event, or abstract concept (no company reviews to fetch)
+
+Store: `RESOLVED_TRUSTPILOT_DOMAIN = {domain or empty}`
+
 ---
 
 ## Agent Mode (--agent flag)
@@ -657,8 +911,9 @@ When the user asks "X vs Y" (or "X vs Y vs Z"), the engine fans out N full `pipe
 **MANDATORY per-entity resolution.** For each entity, resolve the full Step 0.55 stack (X handle, subreddits, GitHub user/repos, news context). Then assemble a `--competitors-plan` JSON mapping each entity to its targeting, and invoke the engine ONCE with the vs-topic string.
 
 **Output shape per run:**
-- Main topic saves to `{main-slug}-raw.md`.
-- Each peer saves to `{peer-slug}-raw.md`.
+- For `--emit=compact` / `--emit=md`, there is no separate merged Markdown raw file. The main topic saves to `{main-slug}-raw.md`; each peer saves to `{peer-slug}-raw.md`.
+- For `--emit=html`, the main saved artifact is the merged comparison HTML at `{main-slug}-vs-{peer-slug}-raw-html[...].html`; each peer may also save its own per-entity HTML artifact.
+- The engine logs every written file as `[last30days] Saved output to {path}` and, for comparison runs, follows with `[last30days] Comparison artifact set: main={path}; peers={path, ...}`. Treat that log line as authoritative instead of recomputing paths from slugs.
 - Stdout shows a merged comparison with the `## Head-to-Head` scaffold + per-entity Resolved Entities block.
 
 **Invocation:**
@@ -668,8 +923,8 @@ When the user asks "X vs Y" (or "X vs Y vs Z"), the engine fans out N full `pipe
 # the Read tool result. Examples:
 #   Read ~/.claude/skills/last30days/SKILL.md      → SKILL_DIR=$HOME/.claude/skills/last30days
 #   Read ~/.codex/skills/last30days/SKILL.md       → SKILL_DIR=$HOME/.codex/skills/last30days
-#   Read ~/.claude/plugins/cache/last30days-skill/last30days/3.6.0/skills/last30days/SKILL.md
-#     → SKILL_DIR=$HOME/.claude/plugins/cache/last30days-skill/last30days/3.6.0/skills/last30days
+#   Read ~/.claude/plugins/cache/last30days-skill/last30days/3.11.0/skills/last30days/SKILL.md
+#     → SKILL_DIR=$HOME/.claude/plugins/cache/last30days-skill/last30days/3.11.0/skills/last30days
 # scripts/last30days.py is always a direct child of SKILL_DIR (every install layout
 # packages SKILL.md and scripts/ as siblings).
 SKILL_DIR="<absolute path of the directory containing the SKILL.md you Read>"
@@ -709,7 +964,7 @@ PLAN_EOF
 
 **Keep the heredoc marker quoted as `'PLAN_EOF'`.** Quoting suppresses shell interpolation so apostrophes, `$`, backticks, etc. pass through verbatim. If you ever switch to an unquoted `<<PLAN_EOF`, every variable reference and apostrophe inside the JSON becomes a parse hazard.
 
-Topic A (the main topic, first in the vs-string) uses outer `--x-handle`, `--x-related`, `--subreddits`, `--github-user`, `--github-repo`, `--tiktok-*`, `--ig-creators` as usual. Topics B and C get their targeting from `--competitors-plan` entries (keyed by entity name, case-insensitive).
+Topic A (the main topic, first in the vs-string) uses outer `--x-handle`, `--x-related`, `--subreddits`, `--github-user`, `--github-repo`, `--trustpilot-domain`, `--tiktok-*`, `--ig-creators` as usual. Topics B and C get their targeting from `--competitors-plan` entries (keyed by entity name, case-insensitive) — the engine does NOT read a main-topic entry out of the plan, so the main topic's Trustpilot domain must ride the outer flag.
 
 **Step 0.55 for N entities.** The same pre-research protocol that applies to a single-entity topic applies to EACH entity in a vs-run. For N=3, that means 3 WebSearches for X handles, 3 for subreddits, 3 for GitHub, 3 for news context — or equivalent batched queries. A `## Resolved Entities` block with dashes for any entity means you skipped Step 0.55 for that one. Re-run with a corrected plan.
 
@@ -735,15 +990,15 @@ Topic A (the main topic, first in the vs-string) uses outer `--x-handle`, `--x-r
 - `--competitors` (bare) - signals the hosting model to discover 2 peers (3-way total).
 - `--competitors=N` - N peers (1..6; out-of-range clamps with stderr warning).
 - `--competitors-list="A,B,C"` - minimum escape hatch; names only, no per-entity targeting. Peer sub-runs fall back to planner defaults (visibly thinner data).
-- `--competitors-plan '{entity: {x_handle, subreddits, github_user, github_repos, context}}'` - full per-entity targeting; implies vs-mode; preferred.
+- `--competitors-plan '{entity: {x_handle, subreddits, github_user, github_repos, trustpilot_domain, context}}'` - full per-entity targeting; implies vs-mode; preferred.
 - `--polymarket-keywords "kw1,kw2"` - disambiguate Polymarket for ambiguous single-token topics ("Warriors" → `nba,gsw,golden-state`).
 - `--hiring-signals` - deep-dive into public jobs/careers evidence for company focus signals. Use signal language only: leaning into, investing in, increasing focus, priority shift. Do NOT claim exact roadmap predictions from job postings.
 
 **Why --competitors-plan over --competitors-list:** without per-entity handles/subs, peer sub-runs run with deterministic single-word planner queries and produce visibly thinner evidence than the main topic. The Resolved Entities block in stdout makes the gap visible — dashes for a peer = you skipped its Step 0.55.
 
-**Engine-internal auto-resolve (headless fallback):** if the engine detects BRAVE_API_KEY / EXA_API_KEY / SERPER_API_KEY / PARALLEL_API_KEY / OPENROUTER_API_KEY, it runs its own per-entity `resolve.auto_resolve()` before each sub-run. The hosting-model path does NOT need those keys — you are the WebSearch. The engine's auto-resolve is the cron/CI fallback for when no reasoning model is driving.
+**Engine-internal auto-resolve (headless fallback):** if the engine detects BRAVE_API_KEY / EXA_API_KEY / SERPER_API_KEY / PARALLEL_API_KEY / PERPLEXITY_API_KEY / OPENROUTER_API_KEY, it runs its own per-entity `resolve.auto_resolve()` before each sub-run. The hosting-model path does NOT need those keys — you are the WebSearch. The engine's auto-resolve is the cron/CI fallback for when no reasoning model is driving.
 
-**Output:** one `{slug}-raw.md` per entity in `--save-dir` plus the merged comparison on stdout. Synthesis contract identical to the vs-mode protocol above.
+**Output:** for Markdown/compact runs, one `{slug}-raw.md` per entity in `--save-dir` plus the merged comparison on stdout. For HTML runs, the main saved artifact is merged comparison HTML and peer artifacts remain per-entity. Always use the `[last30days] Comparison artifact set: main=...; peers=...` log line as the source of truth. Synthesis contract identical to the vs-mode protocol above.
 
 ### Hiring Signals mode (`--hiring-signals`)
 
@@ -781,6 +1036,11 @@ WebSearch("{TOPIC} news {CURRENT_MONTH} {CURRENT_YEAR}")
 The first search finds subreddits. The second gives you current events context (which helps you generate better subqueries in Step 0.75) and may surface YouTube channels or creators organically.
 
 Extract 3-5 subreddit names from the results. Store as `RESOLVED_SUBREDDITS` (comma-separated, no r/ prefix).
+
+**Dedicated vs broad subreddits.** Split the resolved subs into two buckets:
+- **Dedicated** = subreddits whose entire purpose IS the topic (the entity's home: `r/Kanye` / `r/WestSubEver` / `r/GoodAssSub` for "Kanye West", `r/OpenClaw` for OpenClaw). Every post there is on-topic. Store as `RESOLVED_DEDICATED_SUBREDDITS` and pass via `--dedicated-subreddits`. The engine pulls these in full (top+hot+new) and skips the relevance floor for them, so an on-topic post whose title lacks the entity name (a "BULLY Deluxe" thread in r/Kanye) is not dropped.
+- **Broad** = mixed-content communities where the topic is only sometimes discussed (`r/hiphopheads`, `r/Music`, category peers from 2a). Store as `RESOLVED_SUBREDDITS` and pass via `--subreddits`. These stay relevance-floored.
+Label conservatively: only a sub clearly named for / dedicated to the entity goes in the dedicated bucket. Most topics have 0-3 dedicated subs (people and products often have one; generic concepts have none). When unsure, treat it as broad.
 
 **2a. Category-peer expansion (MANDATORY for product topics).** If the topic is a product in a recognizable category (AI image generation, AI video generation, AI coding agents, AI music, AI chat models, SaaS screen recording, prediction markets, etc.), the brand-specific subreddits that WebSearch returned are INSUFFICIENT. Add 2-3 peer subreddits from the category. Peer subs are where cross-product technique discussion actually lives. Missing them is the 2026-04-22 `GPT Image 2` failure mode: the model resolved `r/OpenAI, r/ChatGPT, r/singularity, r/ChatGPTpromptengineering` (all OpenAI-brand) and missed `r/StableDiffusion, r/midjourney, r/dalle2, r/aiArt` where prompting techniques are actually shared. The user had to manually prompt "check image generation reddits too" to get a usable run.
 
@@ -859,6 +1119,7 @@ Per-entity lookup types to resolve:
 2. **Project GitHub repo** - `owner/repo` format (e.g., `openai/openai-python`)
 3. **Founder/maintainer X handle** - the person or team behind the project
 4. **Relevant subreddits** - project-specific subreddits (e.g., `r/openclaw`) AND general-category subreddits (e.g., `r/LocalLLaMA`)
+5. **Trustpilot domain** (only when the Trustpilot source is active and the entity is a company/brand/service) - the entity's Trustpilot review-page domain per Step 0.5d; peers carry it as `trustpilot_domain` in their `--competitors-plan` entry, the main topic via the outer `--trustpilot-domain` flag
 
 Example batching for "OpenClaw vs Hermes vs Paperclip":
 
@@ -893,10 +1154,11 @@ Resolved:
 - Reddit: r/{sub1}, r/{sub2}, r/{sub3}, r/{peer1}, r/{peer2} (+ {category_id} peers)
 - TikTok: #{hashtag1}, #{hashtag2}
 - YouTube: {query1}, {query2}
+- Trustpilot: {domain}
 - Positioning: "{one-line stated value prop}" (first-party)
 ```
 
-Only show lines for platforms where something was resolved. Skip empty lines. On the Reddit line, the trailing `(+ {category_id} peers)` annotation appears when Step 0.55 Section 2a added category-peer subs. Omit the annotation when the topic had no matching category. The `Positioning:` line appears for company / product / service topics (from Step 0.55 item 6); omit it for people, events, abstract concepts, and ownerless topics. This display replaces the old "Parsed intent" block with something more useful.
+Only show lines for platforms where something was resolved. Skip empty lines. On the Reddit line, the trailing `(+ {category_id} peers)` annotation appears when Step 0.55 Section 2a added category-peer subs. Omit the annotation when the topic had no matching category. The `Positioning:` line appears for company / product / service topics (from Step 0.55 item 6); omit it for people, events, abstract concepts, and ownerless topics. The `Trustpilot:` line appears only when Step 0.5d resolved a domain (company/brand topic with the Trustpilot source active). This display replaces the old "Parsed intent" block with something more useful.
 
 ---
 
@@ -1008,8 +1270,8 @@ Store your plan as `QUERY_PLAN_JSON` - you'll pass it to the script in the next 
 # the Read tool result. Examples:
 #   Read ~/.claude/skills/last30days/SKILL.md      → SKILL_DIR=$HOME/.claude/skills/last30days
 #   Read ~/.codex/skills/last30days/SKILL.md       → SKILL_DIR=$HOME/.codex/skills/last30days
-#   Read ~/.claude/plugins/cache/last30days-skill/last30days/3.6.0/skills/last30days/SKILL.md
-#     → SKILL_DIR=$HOME/.claude/plugins/cache/last30days-skill/last30days/3.6.0/skills/last30days
+#   Read ~/.claude/plugins/cache/last30days-skill/last30days/3.11.0/skills/last30days/SKILL.md
+#     → SKILL_DIR=$HOME/.claude/plugins/cache/last30days-skill/last30days/3.11.0/skills/last30days
 # scripts/last30days.py is always a direct child of SKILL_DIR (every install layout
 # packages SKILL.md and scripts/ as siblings).
 SKILL_DIR="<absolute path of the directory containing the SKILL.md you Read>"
@@ -1041,16 +1303,20 @@ cat >| "$QUERY_PLAN_FILE" <<'PLAN_EOF'
 PLAN_EOF
 ```
 
+**Run this block directly in your shell tool. Do NOT wrap it in `bash -lc '...'` or `zsh -lc '...'`** - the outer single quotes terminate at the first apostrophe inside the heredoc body (a ranking string like `What did Kanye West's album do?`), which aborts the command with a `zsh: unmatched "` error before the engine ever runs. The quoted `<<'PLAN_EOF'` marker already makes the heredoc body apostrophe-safe; the `-lc '...'` wrapper is what breaks it.
+
 Then add to the engine command:
 
 - `--plan "$QUERY_PLAN_FILE"` (path to the file you just wrote)
 - `--x-handle={RESOLVED_HANDLE}` (from Step 0.5)
-- `--subreddits={RESOLVED_SUBREDDITS}` (from Step 0.55)
+- `--subreddits={RESOLVED_SUBREDDITS}` (broad/category subs, from Step 0.55)
+- `--dedicated-subreddits={RESOLVED_DEDICATED_SUBREDDITS}` (entity-home subs, from Step 0.55; pulled in full + floor-exempt)
 - `--tiktok-hashtags={RESOLVED_HASHTAGS}` (from Step 0.55)
 - `--tiktok-creators={RESOLVED_TIKTOK_CREATORS}` (from Step 0.55)
 - `--ig-creators={RESOLVED_IG_CREATORS}` (from Step 0.55)
 - `--github-user={RESOLVED_GITHUB_USER}` (from Step 0.5b, person topics only)
 - `--github-repo={RESOLVED_GITHUB_REPOS}` (from Step 0.5c, product/project topics only)
+- `--trustpilot-domain={RESOLVED_TRUSTPILOT_DOMAIN}` (from Step 0.5d, company/brand topics when the Trustpilot source is active)
 - Omit any flag where the value was not resolved (empty).
 
 **If you skipped Steps 0.55 and 0.75 (no WebSearch -- OpenClaw, Codex, etc.), add:**
@@ -1067,7 +1333,7 @@ The script will automatically:
 
 **Read the ENTIRE output.** It contains EIGHT data sections in this order: Reddit items, X items, YouTube items, TikTok items, Instagram Reels items, Hacker News items, Polymarket items, and WebSearch items. If you miss sections, you will produce incomplete stats.
 
-**YouTube items in the output look like:** `**{video_id}** (score:N) {channel_name} [N views, N likes]` followed by a title, URL, **transcript highlights** (pre-extracted quotable excerpts from the video), and an optional full transcript in a collapsible section. **Quote the highlights directly in your synthesis.** When YouTube items also include top comments (enabled via `youtube_comments`), quote those too with their like counts - they capture how viewers reacted to the video. Transcript highlights and top comments are complementary signals; use both when present. Attribute transcript quotes to the channel name, comment quotes to the commenter. Count them and include them in your synthesis and stats block.
+**YouTube items in the output look like:** `**{video_id}** (score:N) {channel_name} [N views, N likes]` followed by a title, URL, **transcript highlights** (pre-extracted quotable excerpts from the video), and an optional full transcript in a collapsible section. **Quote the highlights directly in your synthesis.** When YouTube items also include top comments (default-on once a ScrapeCreators key is set; suppress via `EXCLUDE_SOURCES=youtube_comments`), quote those too with their like counts - they capture how viewers reacted to the video. Transcript highlights and top comments are complementary signals; use both when present. Attribute transcript quotes to the channel name, comment quotes to the commenter. Count them and include them in your synthesis and stats block.
 
 **TikTok items in the output look like:** `**{TK_id}** (score:N) @{creator} [N views, N likes]` followed by a caption, URL, hashtags, and optional caption snippet. Count them and include them in your synthesis and stats block.
 
@@ -1141,7 +1407,9 @@ For ALL query types:
 
 **Instructions:**
 1. Read the saved raw file. Locate it via the engine's `[last30days] Saved output to {path}` log line, not a hardcoded path.
-2. Append a `## WebSearch Supplemental Results` section at the end.
+   - **Single-topic runs:** append to the one Markdown raw file shown by the saved-output log.
+   - **Comparison runs:** locate the `[last30days] Comparison artifact set: main=...; peers=...` line. For compact/Markdown runs, append the same `## WebSearch Supplemental Results` section to every listed per-entity Markdown raw file, because the comparison synthesis draws from all of them and there is no separate merged Markdown raw file. For HTML/JSON-only artifacts, do not append Markdown text to `.html` or `.json`; keep the appendix in the Markdown raw artifacts from the source run.
+2. Append a `## WebSearch Supplemental Results` section at the end of each target Markdown raw file.
 3. For each WebSearch result, include one bullet in the canonical format (see Format example below).
 4. Write the updated file back.
 
@@ -1248,7 +1516,7 @@ Read the research output carefully. Pay attention to:
 
 **ANTI-PATTERN TO AVOID**: If user asks about "clawdbot skills" and research returns ClawdBot content (self-hosted AI agent), do NOT synthesize this as "Claude Code skills" just because both involve "skills". Read what the research actually says.
 
-**FUN CONTENT (see LAW 9): the EVIDENCE block's `## Top Community Comments` section (always present when 2+ comments exist) and any `## Best Takes` section are the voice of the people - weave at least 2 of the funniest/cleverest VERBATIM quotes into your synthesis.** A 1,338-upvote comment that says "Where's the limewire link" tells you more about the cultural moment than a news article. Quote the actual text, attribute the commenter, copy the URL verbatim from the block. Don't put fun content in a separate section - mix it into the narrative where it fits naturally. This is what makes the report feel alive rather than like a news summary. Do NOT wait for a `## Best Takes` section - it is often empty; `## Top Community Comments` is the always-on source.
+**FUN CONTENT (see LAW 9): the EVIDENCE block's `## Top Community Comments` section (always present when 2+ comments exist) and any `## Best Takes` section are the voice of the people - weave at least 2 of the funniest/cleverest VERBATIM quotes into your synthesis.** A 1,338-upvote comment that says "Where's the limewire link" tells you more about the cultural moment than a news article. Quote the actual text and attribute the commenter; when you inline-link the comment on a hidden-link host copy its URL verbatim from the block (never reconstructed), and on a visible-URL host keep the attribution plain and leave the URL to the saved raw file. Don't put fun content in a separate section - mix it into the narrative where it fits naturally. This is what makes the report feel alive rather than like a news summary. Do NOT wait for a `## Best Takes` section - it is often empty; `## Top Community Comments` is the always-on source.
 
 **ELI5 MODE: If ELI5_MODE is true for this run, apply these writing guidelines to your ENTIRE synthesis. If ELI5_MODE is false, skip this block completely and write normally.**
 
@@ -1484,27 +1752,27 @@ CITATION RULE: Cite sources sparingly to prove research is real.
 - Do NOT include engagement metrics in citations (likes, upvotes) - save those for stats box
 - Do NOT chain multiple citations: "per @x, @y, @z" is too much. Pick the strongest one.
 
-**URL formatting is governed by LAW 8** in the VOICE CONTRACT block above. Every citation in the narrative body is an inline markdown link `[name](url)`; raw URL strings are forbidden; plain-text fallback only when the raw data has no URL for that specific source. Re-read LAW 8 now if you skipped it. The stats footer is engine-emitted per LAW 5 and passes through verbatim.
+**URL formatting is governed by LAW 8** in the VOICE CONTRACT block above: inline `[name](url)` on hidden-link hosts (Claude Code), plain source labels on visible-URL hosts (Codex/Cursor/Gemini CLI/raw CLI). Raw URL strings are forbidden either way. Re-read LAW 8 now if you skipped it. The stats footer is engine-emitted per LAW 5 and passes through verbatim.
 
-CITATION PRIORITY (most to least preferred), with each example showing the LAW 8 inline-link shape:
-1. @handles from X - `per [@handle](https://x.com/handle)` (these prove the tool's unique value)
-2. r/subreddits from Reddit - `per [r/subreddit](https://reddit.com/r/subreddit)` (when citing Reddit, YouTube, or TikTok, prefer quoting top comments over just the thread title)
-3. YouTube channels - `per [channel name](https://youtube.com/@channel) on YouTube` (transcript-backed insights)
-4. TikTok creators - `per [@creator](https://tiktok.com/@creator) on TikTok` (viral/trending signal)
-5. Instagram creators - `per [@creator](https://instagram.com/creator) on Instagram` (influencer/creator signal)
-6. HN discussions - `per [HN](https://news.ycombinator.com/item?id=N)` or `per [hn/username](https://news.ycombinator.com/user?id=username)` (developer community signal)
-7. Polymarket - `[Polymarket](https://polymarket.com/event/...) has X at Y% (up/down Z%)` with specific odds and movement
-8. Web sources - ONLY when Reddit/X/YouTube/TikTok/Instagram/HN/Polymarket don't cover that specific fact; link the publication: `per [Rolling Stone](https://rollingstone.com/...)`
+CITATION PRIORITY (most to least preferred). Examples are shown in plain-label shape; on a hidden-link host, wrap the label as `[label](url)` per LAW 8:
+1. @handles from X - `per @handle` (these prove the tool's unique value)
+2. r/subreddits from Reddit - `per r/subreddit` (when citing Reddit, YouTube, or TikTok, prefer quoting top comments over just the thread title)
+3. YouTube channels - `per channel name on YouTube` (transcript-backed insights)
+4. TikTok creators - `per @creator on TikTok` (viral/trending signal)
+5. Instagram creators - `per @creator on Instagram` (influencer/creator signal)
+6. HN discussions - `per HN` or `per hn/username` (developer community signal)
+7. Polymarket - `Polymarket has X at Y% (up/down Z%)` with specific odds and movement
+8. Web sources - ONLY when Reddit/X/YouTube/TikTok/Instagram/HN/Polymarket don't cover that specific fact; name the publication: `per Rolling Stone`
 
 The tool's value is surfacing what PEOPLE are saying, not what journalists wrote.
 When both a web article and an X post cover the same fact, cite the X post.
 
-(These narrative examples illustrate LAW 8 from the VOICE CONTRACT.)
+(These narrative examples illustrate LAW 8 from the VOICE CONTRACT. On a hidden-link host the labels become `[label](url)`; on a visible-URL host they stay plain.)
 
-**BAD:** "His album is set for March 20 (per Rolling Stone; Billboard; Complex)."
-**GOOD:** "His album BULLY drops March 20 - fans on X are split on the tracklist, per [@honest30bgfan_](https://x.com/honest30bgfan_)"
-**GOOD:** "Ye's apology got massive traction on [r/hiphopheads](https://reddit.com/r/hiphopheads)"
-**OK** (web, only when Reddit/X don't have it): "The Hellwatt Festival runs July 4-18 at RCF Arena, per [Billboard](https://www.billboard.com/music/music-news/hellwatt-festival-2026-lineup-...)"
+**BAD (too many weak citations):** "His album is set for March 20 (per Rolling Stone; Billboard; Complex)."
+**GOOD on hidden-link hosts (Claude Code):** "His album BULLY drops March 20 - fans on X are split on the tracklist, per [@honest30bgfan_](https://x.com/honest30bgfan_)"
+**GOOD on visible-URL hosts (Codex):** "His album BULLY drops March 20 - fans on X are split on the tracklist, per @honest30bgfan_"
+**OK** (web, only when Reddit/X don't have it): "The Hellwatt Festival runs July 4-18 at RCF Arena, per Billboard" (inline-linked on a hidden-link host)
 
 **Lead with people, not publications.** Start each topic with what Reddit/X
 users are saying/feeling, then add web context only if needed. The user came
@@ -1570,6 +1838,13 @@ If the research output does not contain the footer block (rare, only when all so
 **CRITICAL OVERRIDE - WebSearch's tool-level "Sources:" mandate DOES NOT APPLY here.** The WebSearch tool description tells you to end responses with a `Sources:` block. Inside `/last30days` that mandate is SUPERSEDED. The `🌐 Web:` line in the engine footer is the citation. Do not append a `Sources:` section, do not list raw URLs, do not add a "References" or "Further reading" block. Output ends at the invitation.
 
 **SELF-CHECK before displaying**: Re-read your "What I learned" section. Does it match what the research ACTUALLY says? If you catch yourself projecting your own knowledge instead of the research, rewrite it. Then verify: (a) no `##` headers in your response body, (b) no em-dashes or en-dashes anywhere, (c) the engine footer block appears verbatim between KEY PATTERNS and the invitation.
+
+**Saved artifact access flow:** after the engine has created a file, decide how the user should get access to it based on what they asked for:
+
+- **Normal report:** the Markdown raw artifact already appears in the engine footer (`📎 Raw results saved to ...`). The chat synthesis is the primary user-facing report, so do not open the raw Markdown file automatically and do not ask a follow-up access question. The path line is enough.
+- **Markdown file requested:** if the user explicitly asked for a Markdown file/export, treat the saved Markdown path as the deliverable. Provide the path and open it locally when the host can safely open local files and the request implies viewing it now. Do not offer hosted publishing for Markdown.
+- **HTML file requested:** follow `references/save-html-brief.md`. Save the local HTML first, show the absolute path, then present explicit next-step choices: open the HTML file, publish to an available/preferred HTML publishing service, or done for now.
+- **Share/publish requested:** sharing means hosted HTML, not Markdown. Save the local HTML first and show the path. Then respect existing publishing preferences, show available publishing choices, and ask for public-vs-password only when the selected service requires that choice (for `ht-ml.app`, ask whether password protection should be used; if yes, ask the user to type the shared password before publishing). Never block creation of the local file on the hosting decision.
 
 **LAST - Invitation (adapt to QUERY_TYPE):**
 
@@ -1641,7 +1916,7 @@ Close with `I have all the links to the {N} {source list} I pulled from. Just as
 
 1. **Bold headlines present.** Every narrative paragraph in "What I learned" starts with `**Headline phrase** -` (single hyphen with spaces, NOT em-dash). If any paragraph opens with plain prose, regenerate with bold headlines.
 2. **Per-source emoji headers in the stats footer.** Every active source returned by the engine has a `├─` or `└─` line with its emoji, counts, and engagement numbers. No active source is silently dropped; no source with 0 results is displayed.
-3. **Community voice woven in (LAW 9).** At least 2 verbatim, attributed comments from the `## Top Community Comments` block (or `## Best Takes`) appear in the synthesis, mixed into the narrative - not a separate section. Each cited comment's URL is copied verbatim from the block (never reconstructed). If the block has comments and your draft has zero, regenerate. Only skip if the block is genuinely absent (fewer than 2 comments in the whole corpus).
+3. **Community voice woven in (LAW 9).** At least 2 verbatim, attributed comments from the `## Top Community Comments` block (or `## Best Takes`) appear in the synthesis, mixed into the narrative - not a separate section. When a comment is inline-linked on a hidden-link host, its URL is copied verbatim from the block (never reconstructed); on a visible-URL host the attribution stays plain and the URL is left to the saved raw file. If the block has comments and your draft has zero, regenerate. Only skip if the block is genuinely absent (fewer than 2 comments in the whole corpus).
 3b. **No tooling meta-commentary (LAW 9).** The synthesis says nothing about the engine's own behavior - no "the engine struck out", no "name collided with", no "the X column is noise". If present, strip it and present only what is true about the subject.
 4. **Polymarket block present if markets were returned.** If the engine surfaced Polymarket markets, the synthesis includes specific percentages and directional movement. If no markets were surfaced, skip.
 5. **Coverage footer matches the actual output.** `✅ All agents reported back!` line followed by per-source `├─`/`└─` tree exactly as the engine provided.
@@ -1654,10 +1929,10 @@ Close with `I have all the links to the {N} {source list} I pulled from. Just as
 
 ## SHAREABLE HTML BRIEF (when the user asked for one)
 
-**This section fires if EITHER trigger is true:**
+**This section fires if EITHER prompt-level trigger is true:**
 
-- `$ARGUMENTS` contains `--emit=html`, `--emit:html`, or `--html` as a flag
-- The user's natural-language request asks for an HTML brief, shareable doc, or file for sharing (Slack, email, Notion, "export as HTML", etc). Use your judgment for phrasing variants.
+- The user included an HTML-looking argument such as `--emit=html`, `--emit:html`, or `--html` in the skill prompt. Treat this as a strong user intent signal for HTML; do not confuse it with the complete Python CLI contract.
+- The user's natural-language request asks for an HTML brief, shareable doc, or file for sharing (Slack, email, Notion, "give it to me in HTML", "export as HTML", etc). Use your judgment for phrasing variants; a literal flag is not required.
 
 **If neither trigger fires, skip this entire section and proceed to WAIT FOR USER'S RESPONSE.** No HTML save flow, no reference read needed.
 
@@ -1665,7 +1940,8 @@ Close with `I have all the links to the {N} {source list} I pulled from. Just as
 
 - Read `references/save-html-brief.md` BEFORE proceeding to WAIT FOR USER'S RESPONSE
 - Follow that file's instructions exactly - it is the canonical source for the save flow
-- Append the confirmation line (`📎 Shareable brief saved to <path>`) to your already-emitted chat response
+- End with the artifact handoff defined there: saved HTML path, open the local file when the host can do so, and a concise confirmation for requests where HTML is the requested deliverable
+- If the user explicitly asks for a hosted/shareable web link, follow the opt-in publishing instructions in the reference file. Never publish by default.
 
 **You MUST NOT:**
 
@@ -1674,6 +1950,7 @@ Close with `I have all the links to the {N} {source list} I pulled from. Just as
 - Save to a different path than the reference specifies
 - Add data quality warnings, debug headers, or safety notes to the saved HTML
 - Re-research the topic for the HTML render - the engine cache covers the second invocation
+- Upload or publish the HTML to a third-party host unless the user explicitly asked for hosted sharing and you have told them the link may be public/indexed unless password-protected
 
 **Why the directive is forceful:** the reference file is the only source of truth for the save flow. Skipping it produces broken artifacts - wrong path conventions, missing synthesis content, leaked engine debug output, or warnings that don't belong in shareable docs.
 
@@ -1786,25 +2063,27 @@ Want another prompt? Just tell me what you're creating next.
 **What this skill does:**
 - Sends search queries to ScrapeCreators API (`api.scrapecreators.com`) for TikTok and Instagram search, and as a Reddit backup when public Reddit is unavailable (requires SCRAPECREATORS_API_KEY)
 - Legacy: Sends search queries to OpenAI's Responses API (`api.openai.com`) for Reddit discovery (fallback if no SCRAPECREATORS_API_KEY)
-- Sends search queries to Twitter's GraphQL API (via optional user-provided AUTH_TOKEN/CT0 env vars - no browser session access), xAI's API (`api.x.ai`), Xquik's API (`xquik.com`), or the official X API v2 via xurl CLI (OAuth2, auto-detected when installed and authenticated) for X search
+- Sends search queries to X/Twitter via optional user-provided `AUTH_TOKEN`/`CT0` env vars, explicit browser-cookie opt-in (`FROM_BROWSER` or setup consent), xAI's API (`api.x.ai` by default), Xquik's API (`xquik.com` by default), or the official X API v2 via xurl CLI (OAuth2, auto-detected when installed and authenticated)
 - Sends search queries to Algolia HN Search API (`hn.algolia.com`) for Hacker News story and comment discovery (free, no auth)
 - Sends search queries to Polymarket Gamma API (`gamma-api.polymarket.com`) for prediction market discovery (free, no auth)
 - Runs `yt-dlp` locally for YouTube search and transcript extraction (no API key, public data)
-- Sends search queries to ScrapeCreators API (`api.scrapecreators.com`) for TikTok and Instagram search, transcript/caption extraction (PAYG after 100 free credits)
-- Optionally sends search queries to Brave Search API, Parallel AI API, or OpenRouter API for web search
+- Sends search queries to ScrapeCreators API (`api.scrapecreators.com`) for TikTok and Instagram search, transcript/caption extraction (10,000 free calls, then PAYG)
+- Optionally sends search queries to Brave Search API, Parallel AI API, Perplexity API (`api.perplexity.ai`), or OpenRouter API for web search / synthesis
 - Fetches public Reddit thread data from `reddit.com` for engagement metrics
 - Stores research findings in local SQLite database (watchlist mode only)
 - Saves research briefings as .md files to `LAST30DAYS_MEMORY_DIR` (defaults to `~/Documents/Last30Days`)
+- Provides `--preflight` for a safe human-readable permission summary before research; it does not read browser-cookie values, write files, or run live research
 
 **What this skill does NOT do:**
 - Does not post, like, or modify content on any platform
-- Does not access your Reddit, X, or YouTube accounts
-- Does not share API keys between providers (OpenAI key only goes to api.openai.com, etc.)
+- Does not access browser cookies unless explicitly configured or consented (`FROM_BROWSER`, manual X cookies, or setup with `--allow-browser-cookies`); `--preflight` and `--diagnose` do not read browser-cookie values
+- Does not use Codex ChatGPT auth as an OpenAI provider credential
+- Does not share API keys between providers
 - Does not log, cache, or write API keys to output files
-- Does not send data to any endpoint not listed above
+- Endpoint destinations follow configured provider base URLs; `--preflight` reports active and ignored endpoint overrides without printing secrets
 - Hacker News and Polymarket sources are always available (no API key, no binary dependency)
-- TikTok and Instagram sources require SCRAPECREATORS_API_KEY (100 free credits one-time, then PAYG). Reddit uses ScrapeCreators only as a backup when public Reddit is unavailable.
-- Can be invoked autonomously by agents via the Skill tool (runs inline, not forked); pass `--agent` for non-interactive report output
+- TikTok and Instagram sources require SCRAPECREATORS_API_KEY (10,000 free calls, then PAYG). Reddit uses ScrapeCreators only as a backup when public Reddit is unavailable.
+- Agent hosts invoke the slash-command skill contract; if `--agent` appears in the user's slash-command arguments, treat it as skill-level mode guidance, not a Python CLI flag.
 
 **Bundled scripts:** `scripts/last30days.py` (main research engine), `scripts/lib/` (search, enrichment, rendering modules), `scripts/lib/vendor/bird-search/` (vendored X search client, MIT licensed)
 
