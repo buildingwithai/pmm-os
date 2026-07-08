@@ -79,9 +79,16 @@ adversarial log that also goes in `gaps` (which is what renders today — never 
   "url": "https://…",                                  // only URLs that literally appeared in a run file
   "metric": "the comparator / measurement context",
   "date": "2026-07-01",                                // NEW, optional: capturedAt — the run date, YYYY-MM-DD
-  "claimType": "fact"                                  // NEW, optional: fact | estimate | assumption
+  "claimType": "fact",                                 // NEW, optional: fact | estimate | assumption
+  "shot": "evidence-shots/customer-r-pm-20260708.png"  // NEW, optional: screenshot of the source, path relative to the kit file
 }
 ```
+
+`shot` renders as a thumbnail under the quote in the kit (click = full size) and as an
+image in the markdown mirror. Capture discipline lives in the desk runner: screenshot
+**public content only**, keep the source URL + capture date in the record (the filename
+carries `<desk>-<slug>-<YYYYMMDD>`), and store PNGs in `.agents/research/evidence-shots/`
+(copied next to the kit on build).
 
 The generator currently copies `q · who · src · url · metric` into the kit's `evidence`
 blocks; `date` and `claimType` ride in `report.json` (and the ledger) as the audit trail

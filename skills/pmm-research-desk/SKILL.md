@@ -102,6 +102,15 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      handles and quote the phrases the recipe gives you.
 5. **Capture every run** to `.agents/research/runs/<date>-<domain>-<engine>.md` via
    `scripts/research-store.sh add <domain> <engine> <file>`. Nothing is lost to chat.
+   **Screenshot the load-bearing quotes.** When a finding rests on a real user's public
+   post (Reddit thread, review, tweet), also capture a screenshot: drive Chrome via the
+   Chrome DevTools MCP in **attach mode** (see the `chrome-for-testing` skill — never
+   launch mode), save the PNG to `.agents/research/evidence-shots/<desk>-<slug>-<YYYYMMDD>.png`,
+   and set the evidence record's `shot` field (the record already carries `url` + `date`).
+   Guardrails: **public content only**, no logged-in/private views, and never crop away
+   the context that makes the quote honest. Double duty: proof inside the workspace +
+   ready-made social-proof material — an "evidence pack" export is just this folder with
+   captions from the records.
 6. **Distill into the ledger — the FULL findings, not a summary.** Write the recipe's
    evidence section in `.agents/research/evidence.md` answering **each question in the
    question set** with its evidence (quotes, numbers, named entities, the "so what"), every

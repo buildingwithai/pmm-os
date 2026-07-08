@@ -60,6 +60,7 @@ function meatBlocks(d) {
       if (e.src) o.src = esc(e.src);
       if (e.url) o.url = esc(e.url);
       if (e.metric) o.metric = esc(e.metric);
+      if (e.shot) o.shot = esc(e.shot);
       return o;
     });
     if (ev.length) out.push({ evidence: ev });
