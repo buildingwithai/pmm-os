@@ -1,0 +1,166 @@
+{
+  "meta": { "title": "Enamel IT — Launch Kit", "wordmark": "Enamel", "tagline": "growth kit" },
+  "sidebar": [
+    { "group": "Overview",     "items": [["00","Overview","v-overview"]] },
+    { "group": "Foundation",   "items": [["01","Service context","v-product"]] },
+    { "group": "Audience",     "items": [["02","ICP & personas","v-personas"]] },
+    { "group": "Strategy",     "items": [["03","Positioning","v-positioning"],["04","Messaging","v-messaging"],["05","Competitive","v-competitive"],["5b","Reviews desk","v-reviews"],["06","Pricing","v-pricing"]] },
+    { "group": "Go-to-market", "items": [["07","Growth plan","v-launch"],["08","Referral engine","v-referral"],["8b","Events desk","v-events"],["8c","Channels desk","v-channels"]] },
+    { "group": "Story",        "items": [["09","Narrative","v-narrative"],["10","Campaign","v-campaign"]] },
+    { "group": "Review",       "items": [["11","Coach review","v-coach"]] },
+    { "group": "Appendix",     "items": [["+","Exports","v-exports"]] }
+  ],
+  "data": {
+    "stats": [["9 min","median response, all tickets",9],["43 min","the metro's advertised average",43],["$0","HIPAA fines across the client base",0],["97%","annual retainer retention",97]],
+    "kit": [["01","Service context","v-product"],["02","ICP & personas","v-personas"],["03","Positioning","v-positioning"],["04","Messaging","v-messaging"],["05","Competitive","v-competitive"],["5b","Reviews desk","v-reviews"],["06","Pricing","v-pricing"],["07","Growth plan","v-launch"],["08","Referral engine","v-referral"],["09","Narrative","v-narrative"],["10","Campaign","v-campaign"],["11","Coach review","v-coach"]],
+    "taglines": ["IT that never cancels a patient.","The 9-minute MSP.","Compliance you can show an auditor.","Your practice, never on hold.","Downtime is a schedule full of no-shows."],
+    "msgVariants": [["Dr. Reyes","A chair-down morning costs you 14 patients. We answer in 9 minutes — median, not marketing."],["Monica","One number to call, one invoice, and the audit binder is always current."],["Dr. Patel","Three locations, one IT bill that scales per operatory — not per emergency."]],
+    "pricing": { "tiers": [["Essentials","$390/mo","per location + $45/operatory"],["Compliance+","$690/mo","per location + $45/operatory"],["Group","custom","multi-location, pooled ops"]], "features": [["Response SLA","4 hr","1 hr","15 min"],["HIPAA risk assessment","annual","quarterly","quarterly"],["Audit binder (SRA + evidence)","—","included","included"],["Imaging-vendor management","—","included","included"],["After-hours coverage","—","on-call","dedicated"]] },
+    "scorecard": [["Positioning clarity",5],["Differentiation",4],["ICP specificity",5],["Evidence/proof",4],["Monetization",4],["Channel realism",5],["Referral engine",4]],
+    "launchActs": ["Google Business Profile rebuild + review cadence (the local homepage)","\"Chair-down math\" one-pager for practice consultants + dental CPAs","Southwest Dental Conference booth + study-club talks (2/quarter)","Referral program: one free month per signed referral, both sides","Case study: 3-location group, zero downtime through an imaging migration","Local SEO: per-city pages (Plano, Frisco, Arlington) + dental-IT FAQ"],
+    "revisions": ["Publish the 9-minute median with its measurement window (trailing 12 mo) — auditable, not vibes.","Price test Compliance+ at $790 with quarterly SRA before wide rollout.","Sign 2 practice-consultant referral partners before paid spend.","Build the audit-binder demo (redacted) — the compliance proof IS the demo.","Adopt a written review-response policy (no PHI, ever) before scaling review volume."],
+    "palette": [["Dr. Reyes","v-personas","p-reyes"],["Monica","v-personas","p-monica"],["Dr. Patel","v-personas","p-patel"],["Pillar: Never chair-down","v-messaging","m-0"],["Pillar: Audit-ready","v-messaging","m-1"],["Pillar: One throat to choke","v-messaging","m-2"],["vs The nephew","v-competitive","c-nephew"],["vs Generalist MSP","v-competitive","c-generalist"],["vs National franchise","v-competitive","c-franchise"]],
+    "exportFiles": [["campaign-brief.docx","Word · campaign brief"],["deck-outline.pptx","PowerPoint · deck"],["referral-onepager.pdf","PDF · consultant one-pager"],["review-response-policy.md","Policy · review responses"]],
+    "exportDocs": ["01-service-context","02-icp-and-personas","03-positioning","04-messaging-house","05-competitive-intelligence","5b-reviews-desk","06-pricing-packaging","07-gtm-growth-plan","08-referral-engine","09-sales-narrative","10-campaign-brief","11-pmm-coach-review"],
+    "intro": [
+      { "kind":"title", "eyebrow":"Enamel IT · growth kit", "h":"Never lose a morning<br/>to a dead server.", "s":"Managed IT + HIPAA compliance for dental practices — and the plan to grow it across DFW." },
+      { "kind":"stats", "eyebrow":"The practice-downtime math" },
+      { "kind":"line", "h":"Downtime isn't an<br/>IT problem.", "s":"It's a schedule full of no-shows, a hygienist paid to wait, and an imaging vendor pointing at your network guy." },
+      { "kind":"cta", "h":"Enamel keeps the chairs full.", "s":"9-minute response · audit-ready compliance · one number to call." }
+    ]
+  },
+  "views": {
+    "v-overview": { "eyebrow":"Services marketing · growth kit", "title":"Overview", "h1":"Never lose a morning to a dead server.", "sub":"12 interlocking docs for a <b>geo-bound B2B service</b> — managed IT for dental practices across Dallas–Fort Worth. The through-line: downtime is measured in <b>empty chairs</b>, and the buyer needs compliance they can show an auditor. <i>(Fictional demo company; all numbers are illustrative.)</i>",
+      "blocks": [ {"widget":"stats"}, {"h":"The kit"}, {"widget":"kitrows"} ] },
+    "v-product": { "eyebrow":"01 · Foundation", "title":"Service context", "h1":"Service context", "sub":"The shared brief every other doc reads from.",
+      "blocks": [
+        {"kv":[["Service","Enamel IT — managed IT, security & HIPAA compliance for dental practices"],["What it does","Monitoring + helpdesk + imaging-vendor management + a quarterly, evidence-backed compliance binder"],["Geography","Dallas–Fort Worth metro (onsite within 45 min); no remote-only accounts"],["Delivery","Per-location retainer · named engineer pod · 9-min median response (trailing 12 mo)"],["Stage","32 practices under management · expanding from Collin County into Tarrant"]]},
+        {"callout":"<b>POV.</b> A dental practice is a small hospital wearing a small business's IT budget. The stakes are clinical (imaging, records, schedule) but the buyer has no IT staff — so the service must carry the accountability, not hand back tickets."},
+        {"h":"Where the money is lost today"},
+        {"table":{"head":["Failure","Operational cost","Who feels it"],"rows":[["Imaging server down at 7am","14-patient morning rescheduled","dentist-owner"],["Ransomware / PHI incident","OCR fine exposure + patient-trust damage","owner + office manager"],["Vendor finger-pointing (imaging ↔ network)","days of degraded x-rays","clinical staff"],["\"The nephew\" is on vacation","no coverage at all","everyone"]]}}
+      ] },
+    "v-personas": { "eyebrow":"02 · Audience", "title":"ICP & personas", "h1":"ICP & personas", "sub":"Select a persona to inspect JTBD, pain, and the message that lands.",
+      "blocks": [
+        {"h":"Personas"},
+        {"rows":[
+          {"t":"Dr. Reyes — solo owner-dentist <span class=\"badge cy\">primary</span>","d":"Keep every chair producing; never think about IT.","meta":"1 location · 5 ops","detail":"p-reyes"},
+          {"t":"Monica — office manager <span class=\"badge\">day-to-day buyer</span>","d":"One number to call and an audit binder that's always current.","meta":"runs the practice","detail":"p-monica"},
+          {"t":"Dr. Patel — group owner (3–8 locations)","d":"Standardize IT across locations with per-operatory economics.","meta":"expansion-minded","detail":"p-patel"}
+        ]},
+        {"h":"Anti-ICP — decline politely"},
+        {"callout":"Practices that want break-fix hourly billing, DSOs with corporate IT, and anyone outside the 45-minute onsite radius. Retainer economics and the response SLA both break — refer them out instead.","variant":"warn"}
+      ] },
+    "v-positioning": { "eyebrow":"03 · April Dunford", "title":"Positioning", "h1":"Positioning", "sub":"Statement, category, value themes, and the tagline tester.",
+      "blocks": [
+        {"callout":"<span class=\"stmt\">For dental practices in DFW with no IT staff, <b>Enamel IT</b> is the <b>dental-specialized MSP</b> that keeps chairs producing and compliance audit-ready — with a 9-minute median response and one accountable retainer, instead of a generalist queue or a cousin with a login.</span>"},
+        {"kv":[["Category","Dental-specialized managed IT (vertical MSP) — not \"computer support\""],["Value themes","<span class=\"chip\">Never chair-down</span><span class=\"chip\">Audit-ready</span><span class=\"chip\">One throat to choke</span>"],["Best-fit market","1–8 location practices, no internal IT, digital imaging in every op"],["Why now","Imaging is now 100% digital, OCR enforcement is up, and the metro's generalist MSPs quote 4-hour SLAs a practice can't survive"]]},
+        {"h":"Tagline tester — copy & star your pick"},
+        {"widget":"taglines"}
+      ] },
+    "v-messaging": { "eyebrow":"04 · Message architecture", "title":"Messaging", "h1":"Messaging house", "sub":"POV → value prop → three pillars. Select a pillar to inspect proof; switch persona variants with the tabs.",
+      "blocks": [
+        {"kv":[["Roof · POV","Downtime is a schedule full of no-shows — not an IT ticket."],["Value proposition","Chairs stay producing, compliance stays provable, and there's one number to call."]]},
+        {"h":"Pillars"},
+        {"rows":[
+          {"t":"1 · Never chair-down","d":"9-min median response; imaging treated as clinical, not office, IT.","meta":"proof →","detail":"m-0"},
+          {"t":"2 · Audit-ready","d":"A living binder: SRA, training logs, BAAs, evidence — shown quarterly.","meta":"proof →","detail":"m-1"},
+          {"t":"3 · One throat to choke","d":"We own the imaging-vendor call so the practice never referees.","meta":"proof →","detail":"m-2"}
+        ]},
+        {"h":"Persona message variant"},
+        {"widget":"msgvariants"}
+      ] },
+    "v-competitive": { "eyebrow":"05 · Battlecards", "title":"Competitive", "h1":"Competitive intelligence", "sub":"The real incumbent is informal IT. Select an alternative to inspect when-we-win / when-they-win + guidance.",
+      "blocks": [
+        {"h":"Alternatives"},
+        {"rows":[
+          {"t":"\"The nephew\" / hourly one-man shop","d":"Informal IT: a relative, a retired tech, break-fix hourly","meta":"<span class=\"badge bd\">primary incumbent</span>","detail":"c-nephew"},
+          {"t":"Generalist local MSP","d":"Competent, but dental-blind: no imaging expertise, 4-hr SLA","meta":"<span class=\"badge\">most common rival</span>","detail":"c-generalist"},
+          {"t":"National dental-IT franchise","d":"Vertical brand, remote-first delivery, call-center support","meta":"<span class=\"badge\">adjacent</span>","detail":"c-franchise"}
+        ]},
+        {"h":"Objection handling"},
+        {"rows":[
+          {"t":"\"Our current guy is cheaper.\"","d":"Per hour, yes. Per chair-down morning — one rescheduled day costs more than a quarter of the retainer. We publish the math."},
+          {"t":"\"We've never had a breach.\"","d":"Neither had anyone, until the Tuesday they did. The binder isn't fear — it's what you hand the auditor so the letter stays a letter."},
+          {"t":"\"Can't our imaging vendor handle it?\"","d":"They handle their software. When it's the network, the server, or the backup, they hand it back — to whoever answers our line in 9 minutes."}
+        ]}
+      ] },
+    "v-reviews": { "eyebrow":"5b · Reviews Desk", "title":"Reviews desk", "h1":"Reviews & ratings — the local VoC", "sub":"For a local service, Google reviews ARE the funnel. This desk mines ours and every rival's. <i>(Demo fiction — quotes are illustrative, typed and dated per the evidence contract.)</i>",
+      "blocks": [
+        {"kv":[["Scope","Google Business profiles: Enamel + 6 named DFW rivals · Yelp (secondary) · trailing 24 mo"],["Ratings shape","Enamel 4.9★ (61) · generalist rivals cluster 4.2–4.6★ · franchise 3.8★ (support-queue complaints trending down since Jan)"]]},
+        {"h":"What buyers praise (ours, 5★)"},
+        {"evidence":[
+          {"q":"Server died at 7:05, tech was in our Plano office by 7:40, first patient seated on time.","who":"office manager, 5★ Google review","src":"google","metric":"response praise","date":"2026-04-18"},
+          {"q":"First IT company that talks to Dexis and Eaglesoft support FOR us instead of pointing fingers.","who":"practice owner, 5★ Google review","src":"google","metric":"vendor-ownership praise","date":"2026-02-03"}
+        ]},
+        {"h":"What buyers punish (rivals, 1–2★) — our objection bank"},
+        {"evidence":[
+          {"q":"Took two days to get a callback while our x-ray sensors were down. Two DAYS.","who":"1★ review of a generalist MSP","src":"google","metric":"SLA failure — feeds pillar 1","date":"2026-03-11"},
+          {"q":"Every call starts over with a new person at a call center who has never heard of our practice.","who":"2★ review of the national franchise","src":"google","metric":"no named engineer — feeds pillar 3","date":"2026-05-27"}
+        ]},
+        {"callout":"<b>Switching language to reuse verbatim:</b> \"two days for a callback\", \"starts over with a new person\", \"pointing fingers at the imaging vendor.\" These phrases go into ads, the homepage, and the consultant one-pager — buyer words, not ours.","variant":"warn"}
+      ] },
+    "v-pricing": { "eyebrow":"06 · Monetization", "title":"Pricing", "h1":"Pricing & packaging", "sub":"Value metric = locations + operatories (chairs), because that's how the practice makes money. Compliance is the premium tier, not an add-on menu.",
+      "blocks": [ {"widget":"pricing"}, {"p":"<span class=\"small muted\">Anchor to the cost of a chair-down morning (a 14-patient reschedule), never to hourly rates — hourly is the incumbent's frame.</span>"} ] },
+    "v-launch": { "eyebrow":"07 · Growth plan", "title":"Growth plan", "h1":"Go-to-market / growth plan", "sub":"Services GTM: referrals + local proof + field presence. No PLG — a practice buys twice a decade, so every touch must compound trust.",
+      "blocks": [
+        {"h":"Timeline"},
+        {"table":{"head":["Phase","Move"],"rows":[["<b>Q3</b>","GBP rebuild + review cadence · consultant/CPA one-pager · 2 study-club talks"],["<b>Q4</b>","Southwest Dental Conference booth · 3-location case study published · referral program live"],["<b>Q1</b>","Per-city SEO pages · paid search on \"dental IT support {city}\" · price test Compliance+"]]}},
+        {"h":"Growth activities"},
+        {"widget":"checklist-launch"},
+        {"h":"Measurement"},
+        {"table":{"head":["Metric","Target","Decision rule"],"rows":[["Qualified consults / mo","6","<3 → double consultant-referral effort"],["Consult → retainer","40%","<25% → fix the audit-binder demo"],["Review velocity","4/mo, 4.8★+","reviews are the local funnel"],["Retainer retention","≥95%","one loss triggers a post-mortem"]]}}
+      ] },
+    "v-referral": { "eyebrow":"08 · Referral engine", "title":"Referral engine", "h1":"Referral engine & retention loops", "sub":"The services counterpart to PLG: the client base is the growth channel — 32 practices that talk to each other at study clubs.",
+      "blocks": [
+        {"h":"Primary loop"},
+        {"flow":[["01","Zero-downtime quarter"],["02","QBR + binder review"],["03","Ask: \"who else should sleep this well?\""],["04","Intro at study club / dental society"],["05","New practice → 01"]]},
+        {"h":"Multiplier loops"},
+        {"list":["<b>Practice-consultant loop</b> — consultants + dental CPAs touch dozens of practices; one-pager + rev-share makes Enamel their default answer.","<b>Imaging-vendor loop</b> — being the MSP that Dexis/Eaglesoft techs LIKE working with turns rival tickets into referrals.","<b>Review loop</b> — every resolved emergency triggers a review ask (written policy: never confirm the practice is a client in replies, no PHI)."]},
+        {"h":"Referral offer"},
+        {"kv":[["Both sides","one free month per signed referral"],["PQL-equivalent","a practice that mentions expansion, an audit letter, or an imaging migration in any QBR"]]}
+      ] },
+    "v-events": { "eyebrow":"8b · Events desk", "title":"Events desk", "h1":"Events & field presence", "sub":"Geo-scoped: DFW + Texas statewide. For a local service, one good booth conversation is worth a quarter of paid search.",
+      "blocks": [
+        {"table":{"head":["Event","When","Why / play"],"rows":[["Southwest Dental Conference (Dallas)","Q3","the metro's flagship — booth + the chair-down-math handout"],["Texas Dental Association meeting","Q2","statewide credibility; speak on ransomware readiness"],["Local study clubs (Collin/Tarrant)","monthly","the real buying committee — 20-min compliance talks, no pitch"],["Dental society CE evenings","quarterly","sponsor the CE credit, own the intro"]]}},
+        {"p":"<span class=\"small muted\">Rule: talks teach (compliance, downtime math) — the booth sells. Never reverse it.</span>"}
+      ] },
+    "v-channels": { "eyebrow":"8c · Channels desk", "title":"Channels desk", "h1":"Channels & local demand", "sub":"Where a practice actually looks when IT breaks — ranked by trust, not reach.",
+      "blocks": [
+        {"table":{"head":["Channel","Role","Note"],"rows":[["Referrals (clients + consultants + CPAs)","#1 — trust transfer","the engine; everything else feeds it"],["Google Business Profile + reviews","#2 — the local homepage","4.9★ with fresh reviews wins the 2am search"],["Per-city local SEO","demand capture","\"dental IT support Plano\" — low volume, perfect intent"],["Paid search","accelerant only","turn on after reviews + pages are strong"],["Facebook practice-owner groups","listening post","VoC + soft authority; never cold-pitch"]]}}
+      ] },
+    "v-narrative": { "eyebrow":"09 · Story", "title":"Narrative", "h1":"Sales narrative", "sub":"The change → stakes → villain → promised land → proof → flag.",
+      "blocks": [
+        {"rows":[
+          {"t":"1 · The change","d":"Dentistry went fully digital — imaging, records, schedule. The practice became a small hospital on a small-business IT budget."},
+          {"t":"2 · The stakes","d":"When it breaks, the cost isn't a ticket — it's a rescheduled morning, a paid-but-idle team, and an auditor's letter."},
+          {"t":"3 · The villain","d":"Accountability gaps: the hourly guy, the 4-hour SLA, the vendor finger-point. Nobody OWNS the outcome."},
+          {"t":"4 · The promised land","d":"Chairs full, binder current, one number to call — IT the practice never has to think about."},
+          {"t":"5 · The proof","d":"9-min median response (published, trailing 12 mo), $0 fines across 32 practices, 97% retention."},
+          {"t":"6 · The flag","d":"Enamel IT: the dental-specialized MSP. We keep the chairs producing."}
+        ]},
+        {"h":"Lines to copy"},
+        {"copy":["\"Downtime is a schedule full of no-shows.\"","Downtime is a schedule full of no-shows."]},
+        {"copy":["\"A chair-down morning costs more than a quarter of the retainer.\"","A chair-down morning costs more than a quarter of the retainer."]}
+      ] },
+    "v-campaign": { "eyebrow":"10 · \"Chair-Down Math\"", "title":"Campaign", "h1":"Growth campaign", "sub":"Flagship campaign. Big idea: publish the cost of a chair-down morning and make every rival's SLA answer for it.",
+      "blocks": [
+        {"statline":[["6","Consults / mo"],["40%","Consult → retainer"],["4/mo","Review velocity"],["≥95%","Retention"]]},
+        {"kv":[["Big idea","\"Chair-down math\" — a calculator + one-pager that prices downtime in patients, not hours. Every channel points at it."],["Channels","Consultant/CPA one-pager · GBP + reviews · study-club talks · SWDC booth · per-city SEO · paid search (phase 2)"],["Deliverables","Calculator page · one-pager · case study · 3 talk decks · booth kit · review-response policy · 6 city pages"],["Guardrails","No fear-mongering ads, no PHI ever in review replies, no naming rivals — the math does the arguing."]]}
+      ] },
+    "v-coach": { "eyebrow":"11 · Pressure-test", "title":"Coach review", "h1":"PMM coach review", "sub":"Senior-PMM scorecard + required revisions.",
+      "blocks": [ {"h":"Scorecard"}, {"widget":"scorecard"}, {"h":"Required revisions"}, {"widget":"checklist-rev"}, {"callout":"<b>Verdict:</b> greenlight — the vertical focus and the published SLA are real differentiation. <b>Do not scale paid spend</b> until two consultant partnerships are signed; for a trust-bought service, paid without referral proof just buys expensive skepticism.","variant":"warn"} ] },
+    "v-exports": { "eyebrow":"Appendix", "title":"Exports", "h1":"Exports & source docs", "sub":"Generated by the plugin's artifact factory. Links resolve when this file sits in the kit folder.",
+      "blocks": [ {"h":"Export files"}, {"widget":"exportFiles"}, {"h":"Source markdown"}, {"widget":"exportDocs"} ] }
+  },
+  "details": {
+    "p-reyes": { "eye":"Persona", "title":"Dr. Reyes — solo owner-dentist", "blocks":[ {"kv":[["JTBD","Keep every chair producing; never personally think about IT."],["Pain","Lost a Monday morning to a dead imaging server; the hourly guy was unreachable."],["Buying","Trusts peers + consultants; decides in the QBR, not the pitch."]]}, {"copy":["\"A chair-down morning costs you 14 patients. We answer in 9 minutes.\"","A chair-down morning costs you 14 patients. We answer in 9 minutes — median, not marketing."]} ] },
+    "p-monica": { "eye":"Persona · day-to-day buyer", "title":"Monica — office manager", "blocks":[ {"kv":[["JTBD","One number to call; an audit binder that's always current."],["Pain","Referees fights between the imaging vendor and whoever set up the network."],["Power","Doesn't sign, but a veto in practice — win Monica first."]]}, {"copy":["\"One number, one invoice, and the binder is always audit-ready.\"","One number to call, one invoice, and the audit binder is always current."]} ] },
+    "p-patel": { "eye":"Persona", "title":"Dr. Patel — group owner", "blocks":[ {"kv":[["JTBD","Standardize IT across 3–8 locations with predictable per-operatory cost."],["Pain","Each location inherited a different IT setup and a different guy."],["Angle","per-operatory pricing + a single pod that knows every site."]]}, {"copy":["\"Three locations, one IT bill that scales per operatory.\"","Three locations, one IT bill that scales per operatory — not per emergency."]} ] },
+    "m-0": { "eye":"Pillar 1", "title":"Never chair-down", "blocks":[ {"p":"Response measured and published: 9-minute median, trailing 12 months. Imaging is treated as clinical infrastructure — monitored, spared, and drilled like it."}, {"h":"Proof"}, {"list":["Published SLA dashboard per client","Imaging servers on 4-hour hardware spares","Onsite within 45 min, by policy"]} ] },
+    "m-1": { "eye":"Pillar 2", "title":"Audit-ready", "blocks":[ {"p":"Compliance as a living binder, not an annual scramble: security risk assessment, training logs, BAAs, and incident evidence — reviewed with the practice every quarter."}, {"h":"Proof"}, {"list":["Quarterly SRA on Compliance+","$0 fines across 32 practices","The binder demo closes deals — it's the product made visible"]} ] },
+    "m-2": { "eye":"Pillar 3", "title":"One throat to choke", "blocks":[ {"p":"Enamel owns the imaging-vendor call, the ISP call, and the printer nobody admits to buying. The practice never referees a finger-pointing match again."}, {"h":"Proof"}, {"list":["Named engineer pod per practice","Vendor escalations handled under Enamel's ticket, not the practice's phone"]} ] },
+    "c-nephew": { "eye":"Battlecard", "title":"vs \"the nephew\" / hourly one-man shop", "blocks":[ {"h":"When we win"}, {"p":"Any practice that has already lost a morning; anyone facing an audit letter; group practices (one person can't cover 3 sites)."}, {"h":"When they win"}, {"p":"Genuinely tiny practices that see IT as a cost to minimize — often fine until the Tuesday they aren't. Don't chase; stay referable."}, {"h":"Guidance"}, {"p":"Never mock the nephew — he's family. Price the downtime, not the person: \"per hour he's cheaper; per chair-down morning he isn't.\""} ] },
+    "c-generalist": { "eye":"Battlecard", "title":"vs generalist local MSP", "blocks":[ {"h":"When we win"}, {"p":"Imaging expertise (Dexis/Eaglesoft/Open Dental fluency), the 9-min vs 4-hr SLA, and the compliance binder they don't offer."}, {"h":"When they win"}, {"p":"The practice shares an owner with a non-dental business and wants one vendor for both."}, {"h":"Guidance"}, {"p":"Ask one question: \"who does your current MSP call when the sensor driver breaks the bridge to the practice-management system?\" Silence is the demo."} ] },
+    "c-franchise": { "eye":"Battlecard", "title":"vs national dental-IT franchise", "blocks":[ {"h":"When we win"}, {"p":"Local: onsite in 45 minutes vs a remote queue; a named pod vs a call center; reviews that say so (see the Reviews desk)."}, {"h":"When they win"}, {"p":"Multi-state DSOs standardizing nationally — out of ICP anyway."}, {"h":"Guidance"}, {"p":"Quote their own public reviews' language back — \"starts over with a new person every call\" — and put the named-pod org chart on the table."} ] }
+  }
+}

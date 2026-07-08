@@ -34,7 +34,7 @@ Every launch ends with a single **self-contained, offline HTML app** (no depende
 |:--:|:--:|:--:|
 | ![Positioning](docs/images/positioning.png) | ![Competitive](docs/images/competitive.png) | ![Pricing](docs/images/pricing.png) |
 
-> The screenshots above are a **real, end-to-end launch** PMM OS produced for a fictional company (*Plotline* — self-serve product analytics). The whole thing — positioning statement, message house, battlecards, pricing logic, GTM plan, PLG loops, coach review — lives in one [`kit-content.json`](demo/plotline-launch/kit-content.json) and builds to one HTML file. Open [`demo/plotline-launch/`](demo/plotline-launch/) to click through it.
+> The screenshots above are a **real, end-to-end launch** PMM OS produced for a fictional company (*Plotline* — self-serve product analytics). The whole thing — positioning statement, message house, battlecards, pricing logic, GTM plan, PLG loops, coach review — lives in one [`kit-content.json`](demo/plotline-launch/kit-content.json) and builds to one HTML file. Open [`demo/plotline-launch/`](demo/plotline-launch/) to click through it. Not a SaaS? [`demo/enamel-it/`](demo/enamel-it/) is the same OS run for a **geo-bound B2B service** (a dental-IT MSP): local events + channels desks, Google-review VoC, retainer pricing, and a referral engine instead of PLG.
 
 ## Quick start
 
