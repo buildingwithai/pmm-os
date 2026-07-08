@@ -20,7 +20,7 @@
 
 ## Research Plan
 
-**All nine desks are mandatory** — a complete PMM sweep is the floor for an impeccable
+**All ten desks are mandatory** — a complete PMM sweep is the floor for an impeccable
 launch. You set each desk's *scope* (named entities so the engines have targets) and the
 *run order* — you do **not** skip a discipline. Priority = run-order only: 🔴 now · 🟡 next · 🟢 foundation.
 
@@ -34,14 +34,17 @@ launch. You set each desk's *scope* (named entities so the engines have targets)
 | Channels | 🔴 | {communities/platforms} | where the ICP gathers · intent | last30days + agent-reach |
 | Analyst/KOL | 🟡 | {category, ICP} | who shapes the narrative | agent-reach (profiles) |
 | Events | 🔴 | {named events / fairs / conferences} | where the ICP is to table/sponsor/speak | agent-reach (event sites) + last30days |
+| Reviews | 🔴 | {competitors × applicable review sites/stores} | dislikes · switching language · ratings trend | agent-reach (G2/Capterra/store/Glassdoor reads) |
 | GTM/Launch | 🔴 | {comparable launches, motion} | how to launch impeccably · channels · activation | agent-reach (launch retros) + last30days |
 
 ## Run order
 
-1. Product → Customer → Competitive (the foundation spine)
+1. Product → Customer → Competitive → Reviews (the foundation spine)
 2. Channels / Events / GTM-Launch (the go-to-market motion)
 3. Market / Pricing / Analyst-KOL (rounding out the picture)
-4. each desk → `.agents/research/evidence.md` (sourced) → hydrates the rest of PMM OS
+4. each desk = a sprint: mini-hypothesis in → findings + carry-forward out; the next
+   desk reads `.agents/research/carry-forward.md` at scope time
+5. each desk → `.agents/research/evidence.md` (sourced) → hydrates the rest of PMM OS
 
 > Confirm before kicking off long/metered runs. Then: `pmm-research-desk` per planned desk,
 > highest priority first.

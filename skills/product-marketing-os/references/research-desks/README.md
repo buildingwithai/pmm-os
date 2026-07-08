@@ -13,7 +13,7 @@ that feed it (see *Hard gate* below).
 **The front door is [`pmm-research-brief`](../../../pmm-research-brief/SKILL.md).** A user
 rarely hands you clean parameters — they dump a product and a goal in one breath. The
 brief skill distills that ramble into a Product Brief + a Research Plan and runs the desks
-here. The plan is a **complete, mandatory sweep across all nine desks** — the brief sets
+here. The plan is a **complete, mandatory sweep across all ten desks** — the brief sets
 each desk's *scope* (named entities) and the *run order*, never whether to skip a
 discipline. A thorough PMM researches all of it; that's the floor for an impeccable launch.
 
@@ -80,6 +80,37 @@ each engine's active sources and the free fixes to unlock more. The honest capab
    A view that is only the artifact + a callout is **incomplete** — that's the thinness
    this standard exists to prevent.
 
+### The platform-coverage rule (no silent caps)
+
+Each recipe declares a **platform matrix**: which platforms (Reddit · X · HN · GitHub ·
+YouTube · TikTok · Instagram · web/SERP · review sites · …) × which query archetypes carry
+signal for *that* desk. The default per desk class:
+
+- **Text-pain desks** (customer, competitive, market, pricing, reviews): Reddit · X ·
+  HN · GitHub · web/SERP · review sites — YouTube *search titles/comments* ok, transcripts
+  excluded (rate-limit sink).
+- **Creator/discovery desks** (channels, analyst-KOL, events, gtm): all of the above
+  **plus** YouTube · TikTok (`tiktok-search`) · Instagram (`ig-search`) — creators and
+  events live where the text desks don't look.
+- **Product desk**: first-party surfaces (site, docs, repo, changelog, store listing).
+
+The desk run **walks every cell of its matrix or logs why a cell was skipped** in the
+Gaps block ("IG not signed in — one-time `ig-login` fix", "no TikTok signal for
+enterprise-infra ICP — 2 probe searches empty"). An unexplained empty cell reads as
+"covered" when it wasn't — that's the silent cap this rule exists to prevent.
+
+### Desk sprints — sequence and carry forward
+
+Desks run as **sprints, not one batch**: each desk opens with its own **mini-hypothesis**
+(5 lines: likely answer + what would kill it — appended to
+`.agents/research/hypothesis.md` under a `### Desk: {name}` heading) and closes by
+appending a **carry-forward block** to `.agents/research/carry-forward.md`: the 3–5
+findings that should **re-scope the next desks' queries** (product findings name the
+category the market desk searches; customer verbatims become the exact phrases the
+competitive/reviews desks grep for; competitive findings name the pricing pages). The
+next desk **reads carry-forward at scope time** and adjusts its entities/queries — that
+is what makes the sweep compound instead of nine parallel guesses.
+
 ### The exhaustiveness rule
 
 Within scope, **be comprehensive**. If the scope is "career events across LA County +
@@ -91,7 +122,7 @@ the boundary is what the scope gives you.
 
 ## The desks
 
-All nine desks ship as full recipes and are **mandatory** in a research plan — the brief
+All ten desks ship as full recipes and are **mandatory** in a research plan — the brief
 scopes each, it doesn't skip any. Each artifact is built from a **real template the skills
 already carry** (linked in each recipe), hydrated by the evidence ledger.
 
@@ -106,6 +137,7 @@ already carry** (linked in each recipe), hydrated by the evidence ledger.
 | [**analyst-influencer**](analyst-influencer.md) ✅ | AR / community | `## Channels & KOLs` | ranked KOL / influence map |
 | [**events**](events.md) ✅ | event marketing manager | `## Events & field marketing` | ranked events table + `events.csv` (`events-table-template`) |
 | [**gtm**](gtm.md) ✅ | GTM / launch strategist | `## GTM & launch motion` | launch-motion brief + tactics map (`go-to-market-plan-template`, `launch-tier-framework`) |
+| [**reviews**](reviews.md) ✅ | review-mining analyst | `## Reviews & ratings` (→ VoC + competitive) | objection bank + ratings comparison table + switching-language board |
 
 Adding the next desk is **one recipe file**, not a new system — that's the point of the
 desk model. The `pmm-research-desk` runner, the ledger, the hard gate, and the launch-kit

@@ -17,6 +17,8 @@ by reach × fit × effort, so the GTM motion spends where the buyers are.
 6. Where do competitors get traction (channels worth contesting)?
 7. **Effort vs payoff** — which channels are reachable for our size/budget?
 
+**Platform matrix (walk every cell or log the skip):** Reddit (subreddit map) · X · YouTube · TikTok (`tiktok-search`) · Instagram (`ig-search`) · newsletters/RSS · web/SERP · GitHub (if dev ICP). Query archetypes: where-the-ICP-gathers · community engagement probes per platform.
+
 ## Engine fan-out (decompose, run in parallel)
 
 | Question | `agent-reach` | `last30days` |

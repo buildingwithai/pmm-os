@@ -16,6 +16,8 @@ community leaders — so the launch earns third-party credibility, not just owne
 6. **Sentiment / leanings** — what do they already say about our space and competitors?
 7. **Recent activity** — who's actively publishing on this right now (warm to engage)?
 
+**Platform matrix (walk every cell or log the skip):** YouTube · TikTok (`tiktok-search`) · Instagram (`ig-search`) · X · LinkedIn (via web reads) · newsletters/podcasts (RSS) · web/SERP. Query archetypes: who-covers-the-category · follower/engagement sizing · recent takes.
+
 ## Engine fan-out (decompose, run in parallel)
 
 | Question | `agent-reach` | `last30days` |

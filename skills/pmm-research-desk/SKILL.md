@@ -34,6 +34,11 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
    [deliverable-standard §5](../product-marketing-os/references/deliverable-standard.md)).
    Missing ⇒ stop and produce them first. Then **map every engine call in your fan-out to
    the issue-tree leaf it tests** — a call that tests no leaf doesn't run.
+   **Open the desk's own sprint:** append a `### Desk: {name}` mini-hypothesis (5 lines —
+   likely answer + the disconfirming evidence that would kill it) to
+   `.agents/research/hypothesis.md`, and **read `.agents/research/carry-forward.md`** (if
+   present) — earlier desks' findings re-scope THIS desk's entities and queries (their
+   verbatims become your grep phrases, their named competitors your read targets).
 2. **Load the desk recipe** for the requested domain (e.g. `research-desks/events.md`).
    It carries the specialist's question set + the engine fan-out table.
 3. **Know what's live.** Run `bash scripts/verify-research.sh` (or `reach.sh doctor`) so you
@@ -69,6 +74,11 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      read each competitor's site + pricing + reviews + socials, search GitHub + the social hashtags.
      Two reads is not a desk run.
      Run `bash ../agent-reach/scripts/setup.sh` once to install the backends.
+   - **Walk the desk's platform matrix — every cell or a logged skip.** Each recipe (and
+     the README's platform-coverage rule) declares which platforms × query archetypes carry
+     signal for this desk — including TikTok/IG/YouTube/web-SERP for creator/discovery
+     desks and review sites for text-pain desks. A cell you don't run gets a one-line
+     reason in the Gaps block; an unexplained empty cell is a silent cap, which is a fail.
    - If a source is `needs setup`, record the gap in the ledger (one-line fix), don't drop it silently.
    - **Select sources per desk + cap runtime (don't let one source hang the sweep).** Pass
      `--search=<sources>` so each `last30days` run only hits sources that carry signal for
@@ -131,7 +141,13 @@ requirements, not aspirations:
   nothing-found** — in the desk's Gaps (and the report's `adversarialPass` field).
 - **Synthesize continuously.** After each engine batch, update the running "current best
   answer" in `.agents/research/hypothesis.md` (append — the pivot log is the audit trail),
-  scoring the new findings **supporting / refuting / neutral** against the day-1 hypothesis.
+  scoring the new findings **supporting / refuting / neutral** against the day-1 hypothesis
+  **and the desk's own mini-hypothesis**.
+- **Close the sprint — carry forward.** Before the desk closes, append a
+  `### From {desk} ({date})` block to `.agents/research/carry-forward.md`: the 3–5
+  findings that should re-scope later desks' queries (new competitor names, the segment's
+  verbatim phrases, the communities that lit up, the category language). The next desk
+  reads this at scope time — sequencing is what makes the sweep compound.
 
 ## Output
 

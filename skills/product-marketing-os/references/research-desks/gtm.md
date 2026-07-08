@@ -21,6 +21,8 @@ generic checklist.
 7. **What flopped** — failed or flat launches in the category and why (avoid the traps)?
 8. **Field motion** — do these products win via events/community (hand to the Events Desk)?
 
+**Platform matrix (walk every cell or log the skip):** web/SERP (launch retros, blogs) · Product Hunt pages (web) · Reddit · X · HN (launch threads) · YouTube (launch videos) · GitHub (open-source motions). Query archetypes: "how X launched" · launch post-mortems · activation teardown threads.
+
 ## Engine fan-out (decompose, run in parallel)
 
 | Question | `agent-reach` | `last30days` |

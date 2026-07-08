@@ -20,6 +20,8 @@ optional `{existing customers / call notes / reviews}`.
 7. **Where they are** — communities/channels they trust (hands off to the Channels Desk)?
 8. **Anti-signals** — who looks similar but churns / shouldn't be targeted (negative persona)?
 
+**Platform matrix (walk every cell or log the skip):** Reddit · X · HN · web/SERP · review sites (dislike fields) · GitHub (if dev-adjacent); YouTube search-titles only — transcripts excluded (rate-limit sink). Query archetypes: pain vents · "switched to" · "how do you handle" · regret threads.
+
 ## Engine fan-out (decompose, run in parallel)
 
 | Question | `agent-reach` | `last30days` |
