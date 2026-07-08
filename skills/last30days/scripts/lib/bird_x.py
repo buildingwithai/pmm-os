@@ -12,7 +12,7 @@ import sys
 import time
 from pathlib import Path
 
-from . import http, log, subproc
+from . import env, http, log, subproc
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -25,21 +25,13 @@ JSON_DECODE_RETRY_DELAY = 5.0  # seconds between retry attempts
 
 
 def _leading_mentions(text: str) -> list:
-    """Return the handles a post is directed at: the leading run of @mentions in the text.
+    """Leading-run @mention parse, shared with other X-shaped sources (xquik).
 
-    X replies open with the target handle(s) (e.g. "@someone thanks!"), so the
-    leading run identifies who the post is addressed to. A mention later in the
-    body is not a reply target and is intentionally ignored. Returns normalized
-    (``@``-stripped, lowercased) handles, in order.
+    Thin wrapper over ``query.leading_mentions`` so bird and xquik share one
+    implementation; kept here for existing call sites and tests.
     """
-    out: list = []
-    for token in (text or "").split():
-        tok = token.strip(",.:;!?")
-        if tok.startswith("@") and len(tok) > 1:
-            out.append(tok[1:].lower())
-        else:
-            break
-    return out
+    from .query import leading_mentions
+    return leading_mentions(text)
 
 
 def _first_of(*values):
@@ -78,7 +70,7 @@ def _has_injected_credentials() -> bool:
 
 def _has_process_credentials() -> bool:
     """Return True when AUTH_TOKEN/CT0 are present in process env."""
-    return bool(os.environ.get("AUTH_TOKEN") and os.environ.get("CT0"))
+    return bool(env.read_secret_env("AUTH_TOKEN") and env.read_secret_env("CT0"))
 
 
 def _subprocess_env() -> Dict[str, str]:
