@@ -6,7 +6,7 @@
 
 A Claude Code / Codex plugin: **40+ product-marketing, GTM & PLG skills**, **two built-in research engines**, a deep framework library, and a zero-dependency generator that turns strategy into an app.
 
-![PMM OS launch kit — overview](docs/images/overview.png)
+![PMM OS launch kit — a click-through of the workspace views](docs/images/launch-kit-demo.gif)
 
 </div>
 
