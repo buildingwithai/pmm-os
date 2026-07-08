@@ -111,14 +111,19 @@ competitive/reviews desks grep for; competitive findings name the pricing pages)
 next desk **reads carry-forward at scope time** and adjusts its entities/queries — that
 is what makes the sweep compound instead of nine parallel guesses.
 
-### The exhaustiveness rule
+### The exhaustiveness rule — floors are failure thresholds, saturation is the stop
 
-Within scope, **be comprehensive**. If the scope is "career events across LA County +
-Long Beach + San Diego, all quarters," surfacing five is a fail — push the engines (more
-listicle reads, more `"<category> conferences <city> <year>"` searches, regional
-round-ups, per-quarter sweeps) until you've found the in-scope set (target ≥ the recipe's
-number) or can show you exhausted the sources. Breadth within the boundary is the job;
-the boundary is what the scope gives you.
+Within scope, **the target is the full in-scope universe, not a number**. A recipe's
+floor (e.g. "events ≥ 15") is the line **below which the desk has failed** — it is never
+the point where you stop. If the scope holds a thousand in-scope items, the target is a
+thousand.
+
+**The stop condition is saturation, not a count:** keep widening the fan-out (more
+listicle reads, per-city × per-quarter searches, regional round-ups, adjacent-term
+sweeps, the next page of every calendar) until **two consecutive new probes return only
+items you already have**. Then log the saturation point in Gaps ("stopped after N probes,
+last 2 returned 0 new — universe ≈ M items"). Stopping at the floor with sources still
+returning new items is the same failure as silent skipping.
 
 ## The desks
 
