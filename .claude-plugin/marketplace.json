@@ -5,7 +5,7 @@
     "url": "https://github.com/buildingwithai/pmm-os"
   },
   "metadata": {
-    "description": "Marketplace hosting the PMM OS plugin \u2014 a Product Marketing Operating System with built-in research."
+    "description": "Marketplace hosting the PMM OS plugin — a Product Marketing Operating System with built-in research."
   },
   "plugins": [
     {
@@ -18,7 +18,17 @@
       },
       "source": "./",
       "category": "productivity",
-      "homepage": "https://github.com/buildingwithai/pmm-os"
+      "homepage": "https://github.com/buildingwithai/pmm-os",
+      "displayName": "PMM OS — Product Marketing Operating System",
+      "tags": [
+        "product-marketing",
+        "gtm",
+        "research",
+        "launch-kit",
+        "competitive-intelligence",
+        "positioning",
+        "pricing"
+      ]
     }
   ]
 }
