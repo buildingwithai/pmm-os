@@ -21,6 +21,25 @@ side-event) for each — with sources, not vibes.
   fail. Keep searching (per-city, per-quarter, regional round-ups) until you hit the target
   or can show the sources are exhausted.
 
+## Derive WHERE the ICP gathers before searching (the chain, not a guess)
+
+Events are found by walking a chain, and the chain differs by business type:
+
+- **SaaS / product:** product → **category** → the **practitioners + buyers of that
+  category** (not "tech people" — the PM, the analyst, the recruiter who lives in it) →
+  the conferences, meetups, and community events **those roles** attend. Also walk the
+  **feature-adjacent communities**: a product with an AI-query feature has a seat at data
+  conferences even if its category is "product analytics."
+- **Services (the inversion that matters):** the events are the **customer's industry**,
+  never the provider's. A dental-IT MSP goes to **dental** conferences and study clubs,
+  not IT conferences; a restaurant-cleaning service goes to restaurant-association shows.
+  Ask "whose world does my buyer live in professionally?" and search *that* world's
+  calendar — plus the **referrer's world** (the consultants/CPAs/vendors who influence
+  the buyer have their own events, often cheaper to reach).
+
+Name the chain explicitly in the run (category → roles → their associations/societies →
+their event calendars) so every search term is derived, not guessed.
+
 ## Question set (the senior event marketer's brief)
 
 1. Which conferences/events does our **ICP actually attend** (by role, seniority, market)?
