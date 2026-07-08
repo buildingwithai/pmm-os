@@ -17,9 +17,11 @@ side-event) for each — with sources, not vibes.
   **quarters** carry the events (Q3 campus-recruiting fairs, Q4 hiring pushes, conference
   seasons)? Annual cadence? Only count events inside the window that fits; flag a great-fit
   event just outside it.
-- **Exhaustiveness target — ≥ 12–15 in-geo events** (raise for a dense metro). Five is a
-  fail. Keep searching (per-city, per-quarter, regional round-ups) until you hit the target
-  or can show the sources are exhausted.
+- **Exhaustiveness — the full in-geo universe; ≥ 12–15 is the FAILURE floor, not the
+  stop.** Five is a fail; fifteen with calendars still yielding new events is ALSO a
+  fail. Keep searching (per-city × per-quarter × per-event-type, every organizer's
+  schedule page, every calendar's next page) until **two consecutive new probes return
+  zero new in-geo events** (saturation), then log the saturation point in Gaps.
 
 ## Derive WHERE the ICP gathers before searching (the chain, not a guess)
 

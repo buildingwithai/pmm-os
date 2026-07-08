@@ -94,6 +94,20 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
        topic per command into its own `runs/<date>-<desk>-<engine>.md` file** — never blob
        two heavy topics into one fire-and-forget background job (a stalled topic then hides
        behind a 0-byte file, which is exactly how a run looks "hung overnight").
+   - **Self-healing probes — noise is NEVER coverage.** After every engine batch, run a
+     signal check: are the top clusters on-entity, or dominated by entity-miss demotions
+     / off-topic items? A noisy or empty probe does not count as a covered cell — it
+     triggers a **reformulate-and-retry loop** (up to 3 reformulations per probe, each
+     logged with its outcome):
+     1. **Quote the buyer's words** — replace your abstraction with verbatims already in
+        the ledger/carry-forward (`"spray and pray"`, not `mass applying behavior`).
+     2. **Name entities** — add `--x-handle`/`--x-related` (competitor + creator handles
+        harvested from earlier desks), tighten `--subreddits` to the segment's real
+        communities, name the product/category exactly.
+     3. **Split, don't broaden** — a topic that misses gets divided into two narrower
+        topics, never padded with more keywords (more keywords = more entity-miss).
+     Only after 3 reformulations still return noise is the cell a logged dead-end
+     ("no fresh signal for X in this window — probes: a/b/c") — a *finding*, not a skip.
    - **Tight X / topic queries — never broad keyword soup.** `last30days` topic strings and
      `--x-handle`/`--x-related` must be **entity-targeted**: real handles + quoted exact
      phrases (`"flying blind"`, `"waiting on the data team"`), not a bag of common words.
