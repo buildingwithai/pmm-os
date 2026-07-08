@@ -34,11 +34,14 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
    [deliverable-standard §5](../product-marketing-os/references/deliverable-standard.md)).
    Missing ⇒ stop and produce them first. Then **map every engine call in your fan-out to
    the issue-tree leaf it tests** — a call that tests no leaf doesn't run.
-   **Open the desk's own sprint:** append a `### Desk: {name}` mini-hypothesis (5 lines —
-   likely answer + the disconfirming evidence that would kill it) to
-   `.agents/research/hypothesis.md`, and **read `.agents/research/carry-forward.md`** (if
-   present) — earlier desks' findings re-scope THIS desk's entities and queries (their
-   verbatims become your grep phrases, their named competitors your read targets).
+   **Open the desk's own sprint:** FIRST read `hypothesis.md` **in full — the pivot log
+   at the BOTTOM is the newest truth** (a sweep that reads only the day-1 head can
+   re-litigate kill-conditions the corpus already resolved — verified failure mode).
+   Then append a `### Desk: {name}` mini-hypothesis (5 lines — likely answer + the
+   disconfirming evidence that would kill it), and **read
+   `.agents/research/carry-forward.md`** (if present) — earlier desks' findings re-scope
+   THIS desk's entities and queries (their verbatims become your grep phrases, their
+   named competitors your read targets).
 2. **Load the desk recipe** for the requested domain (e.g. `research-desks/events.md`).
    It carries the specialist's question set + the engine fan-out table.
 3. **Know what's live.** Run `bash scripts/verify-research.sh` (or `reach.sh doctor`) so you
