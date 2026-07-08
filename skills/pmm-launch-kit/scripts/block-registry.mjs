@@ -142,11 +142,14 @@ export const REGISTRY = {
         const link = e.url
           ? `<a class="ev-src" href="${x.attr(e.url)}" target="_blank" rel="noopener noreferrer">${x.esc(e.src || 'source')} ↗</a>`
           : `<span class="ev-src ev-nolink">${x.esc(e.src || 'source')}</span>`;
-        return `<li class="ev"><span class="ev-n">${j + 1}</span><div class="ev-body"><span class="ev-q" data-path="${p}.evidence.${j}.q">${e.q}</span><div class="ev-meta">${who}${metric}${link}</div></div></li>`;
+        const shot = e.shot
+          ? `<a class="ev-shot" href="${x.attr(e.shot)}" target="_blank" rel="noopener noreferrer" aria-label="Open source screenshot full size"><img src="${x.attr(e.shot)}" alt="Screenshot of the quoted source" loading="lazy"/></a>`
+          : '';
+        return `<li class="ev"><span class="ev-n">${j + 1}</span><div class="ev-body"><span class="ev-q" data-path="${p}.evidence.${j}.q">${e.q}</span><div class="ev-meta">${who}${metric}${link}</div>${shot}</div></li>`;
       }).join('');
       return `<ol class="evidence">${items}</ol>`;
     },
-    markdown: (b, x) => b.evidence.map((e, j) => `${j + 1}. "${x.strip(e.q)}" — ${x.strip(e.who || e.src || '')}${e.url ? ` <${e.url}>` : (e.src && e.who ? ` (${x.strip(e.src)})` : '')}`).join('\n')
+    markdown: (b, x) => b.evidence.map((e, j) => `${j + 1}. "${x.strip(e.q)}" — ${x.strip(e.who || e.src || '')}${e.url ? ` <${e.url}>` : (e.src && e.who ? ` (${x.strip(e.src)})` : '')}${e.shot ? `\n   ![screenshot](${e.shot})` : ''}`).join('\n')
   },
   widget: {
     detect: (b) => b.widget != null,
