@@ -7,6 +7,7 @@
  *   npx pmm-os update      refresh the payload + marketplace, reinstall
  *   npx pmm-os uninstall   remove the plugin, the marketplace, and the payload
  *   npx pmm-os doctor      check node / claude CLI / payload / research engines
+ *                          (--deep additionally runs verify-research.sh --smoke)
  *
  * Why copy out of node_modules: `npx` caches are ephemeral and prunable, while the
  * Claude Code marketplace needs a stable local path. ~/.pmm-os/plugin is that path.
@@ -123,10 +124,26 @@ async function doctor() {
   cv ? ok('claude CLI: ' + cv) : fail('claude CLI not found on PATH — install Claude Code first: https://claude.com/claude-code');
   existsSync(PAYLOAD) ? ok('payload present: ' + PAYLOAD) : warn('payload not staged — run: npx pmm-os install');
   const py = spawnSync(IS_WIN ? 'python' : 'python3', ['--version'], { encoding: 'utf8', shell: IS_WIN });
-  py.status === 0 ? ok('python: ' + (py.stdout || py.stderr).trim() + ' (research engines need 3.10+)') : warn('python3 not found — the research engines need Python 3.10+');
+  const pyv = py.status === 0 ? (py.stdout || py.stderr).trim() : null;
+  const m = pyv ? pyv.match(/(\d+)\.(\d+)/) : null;
+  const pyOk = m && (Number(m[1]) > 3 || (Number(m[1]) === 3 && Number(m[2]) >= 10));
+  pyv
+    ? (pyOk ? ok('python: ' + pyv) : warn('python: ' + pyv + ' — the research engines need 3.10+ (verify-research.sh finds newer installs)'))
+    : warn('python3 not found — the research engines need Python 3.10+');
   const marker = join(HOME, '.pmm-os', 'research-setup');
   existsSync(marker) ? ok('research engines: set up') : warn('research engines: not yet set up (first Claude Code session auto-installs them)');
-  log('\nDeep health check (sources live?): bash ' + join(PAYLOAD, 'scripts', 'verify-research.sh') + ' --smoke');
+  const verify = [join(PAYLOAD, 'scripts', 'verify-research.sh'), join(PKG_ROOT, 'scripts', 'verify-research.sh')].find(existsSync);
+  if (!process.argv.includes('--deep')) {
+    log('\nDeep health check (live keyless engine calls): npx pmm-os doctor --deep');
+    return;
+  }
+  if (!verify) { fail('verify-research.sh not found — run: npx pmm-os install'); process.exitCode = 1; return; }
+  if (IS_WIN && spawnSync('bash', ['--version'], { encoding: 'utf8', shell: true }).status !== 0) {
+    warn('--deep needs bash (Git Bash / WSL on Windows)'); process.exitCode = 1; return;
+  }
+  log('\nDeep health check — real keyless engine calls (~30–60s)\n');
+  const r = spawnSync('bash', [verify, '--smoke'], { stdio: 'inherit', shell: false });
+  process.exitCode = r.status ?? 1;
 }
 
 const cmd = process.argv[2] || 'help';
@@ -140,6 +157,6 @@ else {
   log('  npx pmm-os install     install the plugin into Claude Code');
   log('  npx pmm-os update      update to this package’s version');
   log('  npx pmm-os uninstall   remove plugin + marketplace + payload');
-  log('  npx pmm-os doctor      environment + research-engine health');
+  log('  npx pmm-os doctor      environment + research-engine health (--deep = live smoke test)');
   log('\nDocs: https://github.com/buildingwithai/pmm-os');
 }

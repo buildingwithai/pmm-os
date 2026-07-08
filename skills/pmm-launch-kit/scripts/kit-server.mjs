@@ -187,8 +187,40 @@ const server = createServer((req, res) => {
   // default page: the folder's built kit (wordmark-named), whatever it's called
   let rel = url;
   if (url === '/') {
-    const kit = readdirSync(DIR).find((f) => f.endsWith('-launch-kit.html'));
-    rel = '/' + (kit || 'index.html');
+    const kits = readdirSync(DIR).filter((f) => f.endsWith('-launch-kit.html')).sort();
+    const hasIndex = existsSync(join(DIR, 'index.html'));
+    if (kits.length > 1 || (kits.length === 0 && !hasIndex)) {
+      // same tokens as .kit-style.css — the index must read as part of the kit product
+      const shell = (body) => `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Launch kits</title>
+<style>
+:root{color-scheme:dark;--bg:#0c0e11;--ink:#f7f8fa;--muted:#c5ccd4;--dim:#9aa3ad;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.12);--accent:#8cb8ff}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;display:grid;place-items:start center;padding:64px 24px}
+main{width:100%;max-width:560px}
+h1{font-size:17px;font-weight:700;margin:0 0 4px}
+p{margin:0 0 24px;color:var(--muted);font-size:13.5px}
+ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line2)}
+li a{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:12px 8px;min-height:44px;box-sizing:border-box;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+li a:hover .name{color:var(--accent)}
+li a:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:7px}
+.name{font-weight:600;text-transform:capitalize}
+.file{color:var(--dim);font:12px ui-monospace,Menlo,monospace}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.86em;color:var(--accent)}
+</style>
+<main>${body}</main>`;
+      if (kits.length === 0) {
+        return send(res, 200, 'text/html', shell(
+          `<h1>No launch kits here yet</h1><p>This folder has no built kit. Author a <code>kit-content.json</code> (ask the plugin, or copy <code>kit-content.example.json</code>), then run <code>node build-kit.mjs ${DIR.replace(/</g, '&lt;')}</code> — the kit appears here on reload.</p>`
+        ));
+      }
+      const rows = kits.map((f) => {
+        const name = f.replace(/-launch-kit\.html$/, '').replace(/[-_]+/g, ' ');
+        return `<li><a href="/${encodeURIComponent(f)}"><span class="name">${name}</span><span class="file">${f}</span></a></li>`;
+      }).join('');
+      return send(res, 200, 'text/html', shell(
+        `<h1>Launch kits in this folder</h1><p>${kits.length} kits — pick one to open.</p><ul>${rows}</ul>`
+      ));
+    }
+    rel = '/' + (kits[0] || 'index.html');
   }
   const file = normalize(join(DIR, rel));
   if (!file.startsWith(DIR)) return send(res, 403, 'text/plain', 'forbidden');
