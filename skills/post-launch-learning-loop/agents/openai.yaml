@@ -1,0 +1,19 @@
+name: Post Launch Learning Loop
+description: Post-launch and post-campaign impact analysis, metric scorecards, feedback synthesis, PMM coach critique, and iteration planning.
+invocation:
+  mode: auto
+  keywords:
+    - post-launch
+    - retrospective
+    - impact analysis
+    - campaign readout
+    - feedback synthesis
+    - iteration plan
+    - adoption review
+    - activation review
+    - retention review
+tools:
+  optional:
+    - marketing-os.post_launch_learning_plan
+    - marketing-os.pmm_coach_review
+    - marketing-os.recommend_mcp_servers

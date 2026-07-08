@@ -1,0 +1,9 @@
+name: OSP Technical Marketing Adapter
+description: Use OSP-style value maps, metadata, editing codes, technical writing, and on-page SEO.
+invocation:
+  mode: auto
+  confidence: medium
+tools:
+  required: []
+  suggested:
+    - marketing-os

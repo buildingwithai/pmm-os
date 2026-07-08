@@ -1,0 +1,56 @@
+{
+  "name": "pmm-os",
+  "version": "3.0.1",
+  "description": "Product Marketing Operating System for Claude Code — 45 PMM/GTM/PLG skills, two built-in research engines, consulting-grade quality gates, and an interactive launch-kit workspace generator. Install: npx pmm-os install",
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "product-marketing",
+    "pmm",
+    "gtm",
+    "positioning",
+    "messaging",
+    "competitive-intelligence",
+    "market-research",
+    "launch",
+    "plg"
+  ],
+  "author": {
+    "name": "Jovanny Tovar",
+    "url": "https://github.com/buildingwithai"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/buildingwithai/pmm-os#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buildingwithai/pmm-os.git"
+  },
+  "bugs": {
+    "url": "https://github.com/buildingwithai/pmm-os/issues"
+  },
+  "type": "module",
+  "bin": {
+    "pmm-os": "./bin/cli.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin/",
+    "skills/",
+    "hooks/",
+    "scripts/",
+    ".claude-plugin/",
+    ".codex-plugin/",
+    ".agents/plugins/",
+    "docs/images/",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "ADAPTED_REPOSITORY_MANIFEST.md",
+    "CODEX_PLUGIN.md"
+  ],
+  "scripts": {
+    "postpack": "echo 'Payload packed. Users install with: npx pmm-os install'"
+  }
+}

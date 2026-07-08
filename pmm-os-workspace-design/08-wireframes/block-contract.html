@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Block contract — the center-pane registry</title>
+<style>
+  /* Notion-clean: text leads, hairline dividers (not boxes), one quiet accent. Grayscale wireframe. */
+  :root{--bg:#f7f7f6;--ink:#2c2c2b;--mut:#73726e;--dim:#9b9a96;--line:#e6e5e2;--rule:#dcdbd7;--sunk:#efeeec;--bar:#9b9a96;
+    --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;--mono:ui-monospace,'SF Mono',Menlo,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.6}
+  .pg{max-width:720px;margin:0 auto;padding:var(--s10) var(--s6) 80px}
+  h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:0 0 var(--s2)}
+  .sub{color:var(--mut);font-size:15px;margin:0 0 var(--s6)}
+  hr{border:0;border-top:1px solid var(--rule);margin:var(--s8) 0}
+  h2.cat{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:700;margin:var(--s8) 0 var(--s4)}
+  .blk{margin:0 0 var(--s6)}
+  .demo{margin:0 0 var(--s2)}
+  .spec{font-size:12.5px;color:var(--mut);line-height:1.5}
+  .spec b{color:var(--ink)} .slash{font-family:var(--mono);font-size:11.5px;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--mut)}
+  .who{display:inline-block;font-size:10px;border:1px solid var(--rule);border-radius:3px;padding:0 5px;color:var(--mut);margin-right:3px}
+  /* the blocks themselves, rendered clean */
+  .d-h1{font-size:28px;font-weight:700;letter-spacing:-.02em}
+  .d-h2{font-size:21px;font-weight:600}
+  .d-h3{font-size:17px;font-weight:600}
+  .d-p{font-size:16px;color:#3a3a38}
+  .d-quote{border-left:3px solid var(--bar);padding-left:var(--s4);font-style:italic;color:#45443f;font-size:16px}
+  .d-callout{display:flex;gap:var(--s3);background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:var(--s3) var(--s4);font-size:14.5px}
+  .d-callout .ic{flex:0 0 18px}
+  .d-code{font-family:var(--mono);font-size:13px;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:var(--s3) var(--s4);color:#45443f;white-space:pre;overflow:auto}
+  ul.d-bul,ol.d-num{margin:0;padding-left:var(--s5);color:#3a3a38} ul.d-bul li,ol.d-num li{margin:3px 0}
+  .d-todo{list-style:none;margin:0;padding:0;color:#3a3a38} .d-todo li{display:flex;gap:var(--s2);align-items:center;margin:3px 0}
+  .ck{width:15px;height:15px;border:1.5px solid var(--bar);border-radius:3px;display:inline-block} .ck.on{background:var(--bar)}
+  .d-toggle{color:#3a3a38} .d-toggle .hd{font-weight:600;cursor:default} .d-toggle .tri{color:var(--dim);margin-right:6px} .d-toggle .body{padding-left:var(--s5);color:var(--mut);font-size:14.5px;margin-top:var(--s1)}
+  table.d-tbl{border-collapse:collapse;width:100%;font-size:14px} table.d-tbl th,table.d-tbl td{border-bottom:1px solid var(--line);padding:var(--s2) var(--s3);text-align:left} table.d-tbl th{color:var(--ink);font-weight:600;border-bottom:1.5px solid var(--rule)} table.d-tbl td{color:var(--mut)}
+  .d-props{font-size:13px} .d-props .row{display:flex;gap:var(--s4);padding:var(--s1) 0} .d-props .k{color:var(--dim);width:120px} .d-props .v{color:#3a3a38}
+  /* evidence (domain) — a quote bar, NOT a box */
+  .d-ev{border-left:3px solid var(--bar);padding-left:var(--s4)} .d-ev .q{font-style:italic;color:#45443f} .d-ev .m{font-size:12.5px;color:var(--mut);margin-top:2px} .d-ev .pill{font-family:var(--mono);font-size:10.5px;border:1px solid var(--bar);border-radius:4px;padding:0 5px;color:var(--ink)}
+  .d-stat{display:flex;gap:var(--s8)} .d-stat .n{font-size:22px;font-weight:700} .d-stat .l{font-size:12px;color:var(--mut)}
+  .d-flow{display:flex;gap:var(--s2);align-items:center;font-size:13px;color:var(--mut);flex-wrap:wrap} .d-flow .step{border:1px solid var(--line);border-radius:6px;padding:var(--s1) var(--s3);background:#fff}
+  /* inline database (domain) */
+  .d-db{border:1px solid var(--line);border-radius:8px;overflow:hidden} .d-db .bar{display:flex;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--line);background:#fff;font-size:12px;color:var(--mut)} .d-db .bar .on{background:var(--bar);color:#fff;border-radius:4px;padding:0 6px} .d-db table{margin:0}
+  .legend{font-size:12.5px;color:var(--mut);background:var(--sunk);border-radius:8px;padding:var(--s3) var(--s4)}
+  .map{font-size:12.5px;color:var(--mut)} .map code{font-family:var(--mono);font-size:11.5px}
+</style></head>
+<body><div class="pg">
+  <h1>Block contract</h1>
+  <p class="sub">The complete set of blocks the center pane is built from — and the only set. The AI generates them from research, the plugin renders them on build, and you insert/edit them with <span class="slash">/</span>. Notion-grade restraint: text, headings, dividers, and quote-bars carry the page; callouts are rare.</p>
+
+  <div class="legend">Provenance on each block — <span class="who">AI</span> generated from a research run · <span class="who">plugin</span> emitted on build · <span class="who">you</span> insert via the slash menu. Most blocks are all three.</div>
+
+  <hr>
+  <h2 class="cat">Text &amp; structure</h2>
+
+  <div class="blk"><div class="demo"><div class="d-h1">Heading 1</div><div class="d-h2">Heading 2</div><div class="d-h3">Heading 3</div></div>
+    <div class="spec"><b>Headings</b> — section structure, the page's skeleton. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/h1</span> <span class="slash">/h2</span> <span class="slash">/h3</span> · turn into → text, quote, toggle</div></div>
+
+  <div class="blk"><div class="demo"><p class="d-p">A paragraph. Body text carries the page — most of a desk is plain prose at a readable measure (≈66ch), not boxes.</p></div>
+    <div class="spec"><b>Paragraph</b> — the default block. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/text</span> · turn into → heading, quote, callout, list</div></div>
+
+  <div class="blk"><div class="demo"><hr style="margin:var(--s2) 0"></div>
+    <div class="spec"><b>Divider</b> — a hairline rule that separates sections. <b>This is the anti-card</b>: use a rule to group, not a border around everything. <span class="who">plugin</span><span class="who">you</span> <span class="slash">/divider</span></div></div>
+
+  <div class="blk"><div class="demo"><div class="d-quote">Every funnel question turns into a ticket for the data team. I genuinely feel like I'm flying blind.</div></div>
+    <div class="spec"><b>Quote</b> — verbatim voice (VoC). A left bar, not a box — lighter than a callout. <span class="who">AI</span><span class="who">you</span> <span class="slash">/quote</span></div></div>
+
+  <div class="blk"><div class="demo"><div class="d-callout"><span class="ic">⚠</span><div>Use a callout <b>rarely</b> — one genuine aside or warning per page. If everything is a callout, nothing is.</div></div></div>
+    <div class="spec"><b>Callout</b> — a single accented aside (note / warning / gaps). Reserve it. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/callout</span> · variants: note · warn</div></div>
+
+  <div class="blk"><div class="demo"><div class="d-code">reach.sh tiktok-search productanalytics 8
+last30days "topic" --subreddits=ProductManagement --emit=compact</div></div>
+    <div class="spec"><b>Code</b> — monospace, for run commands, JSON, snippets. <span class="who">plugin</span><span class="who">you</span> <span class="slash">/code</span> · <i>(new — to add for Notion parity)</i></div></div>
+
+  <hr>
+  <h2 class="cat">Lists</h2>
+
+  <div class="blk"><div class="demo"><ul class="d-bul"><li>20–40 product questions a month is normal for the ICP</li><li>The pain is lost momentum + distrust, not feature envy</li></ul></div>
+    <div class="spec"><b>Bulleted list</b> — highlights, unordered points. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/bullet</span></div></div>
+
+  <div class="blk"><div class="demo"><ol class="d-num"><li>Connect your event stream</li><li>Ask a few product questions</li><li>First four-minute answer = activated</li></ol></div>
+    <div class="spec"><b>Numbered list</b> — ordered steps. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/number</span></div></div>
+
+  <div class="blk"><div class="demo"><ul class="d-todo"><li><span class="ck on"></span> Docs site live</li><li><span class="ck"></span> Product Hunt launch</li></ul></div>
+    <div class="spec"><b>To-do</b> — checklist with state (launch checklist). <span class="who">plugin</span><span class="who">you</span> <span class="slash">/todo</span></div></div>
+
+  <div class="blk"><div class="demo"><div class="d-toggle"><div class="hd"><span class="tri">▾</span>Full research report</div><div class="body">Collapsed by default → expands to the findings. This is how the two-altitude desk works: briefing always visible, report on demand.</div></div></div>
+    <div class="spec"><b>Toggle</b> — collapsible disclosure; powers the two-altitude desk + nested content. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/toggle</span></div></div>
+
+  <hr>
+  <h2 class="cat">Data</h2>
+
+  <div class="blk"><div class="demo"><table class="d-tbl"><tr><th>Dimension</th><th>Plotline</th><th>Amplitude</th></tr><tr><td>Plain-English queries</td><td>core</td><td>—</td></tr><tr><td>Hero</td><td>answers</td><td>dashboards</td></tr></table></div>
+    <div class="spec"><b>Table</b> — matrices, comparisons, ranked lists. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/table</span></div></div>
+
+  <div class="blk"><div class="demo"><div class="d-props"><div class="row"><span class="k">Findings</span><span class="v">6 · 10 sourced</span></div><div class="row"><span class="k">Updated</span><span class="v">Jun 20, 2026</span></div></div></div>
+    <div class="spec"><b>Properties (key–value)</b> — page metadata, like Notion page properties. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/properties</span></div></div>
+
+  <div class="blk"><div class="demo"><div class="d-db"><div class="bar"><span>Table</span><span>Board</span><span class="on">unsourced only</span><span style="margin-left:auto">9 of 54</span></div><table class="d-tbl"><tr><th>Finding</th><th>Desk</th><th>Sourced?</th></tr><tr><td>“no one trusts the number” not attested</td><td>Customer</td><td>inferred</td></tr></table></div></div>
+    <div class="spec"><b>Inline database view</b> — a filterable/sortable collection embedded in a page (Findings · Evidence · Events). <span class="who">plugin</span><span class="who">you</span> <span class="slash">/database</span> · <i>(new — to add)</i></div></div>
+
+  <hr>
+  <h2 class="cat">Domain blocks (PMM OS)</h2>
+
+  <div class="blk"><div class="demo"><div class="d-ev"><div class="q">Every funnel question turns into a ticket for the data team. I genuinely feel like I'm flying blind.</div><div class="m">@priya.builds · X · 43 score · <span class="pill">source ↗</span></div></div></div>
+    <div class="spec"><b>Evidence / citation</b> — the chain-of-evidence block: verbatim quote → who → channel → metric → clickable source. A quote-bar, <b>not</b> a box. <span class="who">AI</span><span class="who">you</span> <span class="slash">/evidence</span></div></div>
+
+  <div class="blk"><div class="demo"><div class="d-stat"><div><div class="n">2.7M</div><div class="l">top #buildinpublic view count</div></div><div><div class="n">73</div><div class="l">cited sources</div></div></div></div>
+    <div class="spec"><b>Stat line</b> — a row of metrics. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/stats</span></div></div>
+
+  <div class="blk"><div class="demo"><div class="d-flow"><span class="step">Connect</span>→<span class="step">Ask</span>→<span class="step">First answer</span>→<span class="step">Team</span></div></div>
+    <div class="spec"><b>Flow / steps</b> — a process or funnel. <span class="who">AI</span><span class="who">plugin</span><span class="who">you</span> <span class="slash">/flow</span></div></div>
+
+  <hr>
+  <p class="map"><b>Maps to real code.</b> This contract is <code>skills/pmm-launch-kit/scripts/block-registry.mjs</code> — each type already declares <code>render()</code> + <code>markdown()</code> + slash + transform. <b>Already shipped:</b> heading · text · paragraph · callout · quote · divider · list · todo · toggle · table · key–value · evidence · statline · flow · copy. <b>To add for full Notion parity:</b> distinct H1/H2/H3 · code block · inline database view. Nothing else is allowed in the center pane — if the AI or plugin can't say it in a registry block, it doesn't go on the page.</p>
+</div></body></html>

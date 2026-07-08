@@ -1,0 +1,19 @@
+{
+  "name": "pmm-os",
+  "owner": {
+    "name": "Jovanny Tovar",
+    "url": "https://github.com/buildingwithai/pmm-os"
+  },
+  "metadata": {
+    "description": "PMM OS: cohesive PMM, GTM, PLG, product lifecycle, competitive intelligence, OSP technical marketing, coaching, campaign, PRD, prototype, and artifact workflows for Codex.",
+    "repository": "https://github.com/buildingwithai/pmm-os"
+  },
+  "plugins": [
+    {
+      "name": "pmm-os",
+      "description": "A complete PMM OS for Codex with adapted PMM, GTM, product, PLG, OSP, competitive, campaign, coaching, artifact, MCP, hook, and agent workflows.",
+      "source": "./",
+      "version": "3.0.0"
+    }
+  ]
+}

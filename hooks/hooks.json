@@ -1,0 +1,85 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/hooks/session_start.py",
+            "commandWindows": "py -3 %PLUGIN_ROOT%\\hooks\\session_start.py",
+            "timeout": 20,
+            "statusMessage": "Loading PMM OS"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/hooks/user_prompt_submit.py",
+            "commandWindows": "py -3 %PLUGIN_ROOT%\\hooks\\user_prompt_submit.py",
+            "timeout": 20,
+            "statusMessage": "Routing marketing workflow"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/hooks/subagent_start.py",
+            "commandWindows": "py -3 %PLUGIN_ROOT%\\hooks\\subagent_start.py",
+            "timeout": 20,
+            "statusMessage": "Sharing PMM OS context with subagent"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/hooks/pre_tool_use_policy.py",
+            "commandWindows": "py -3 %PLUGIN_ROOT%\\hooks\\pre_tool_use_policy.py",
+            "timeout": 20,
+            "statusMessage": "Checking marketing tool policy"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/hooks/post_tool_use_review.py",
+            "commandWindows": "py -3 %PLUGIN_ROOT%\\hooks\\post_tool_use_review.py",
+            "timeout": 20,
+            "statusMessage": "Reviewing marketing tool result"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/hooks/stop_quality_gate.py",
+            "commandWindows": "py -3 %PLUGIN_ROOT%\\hooks\\stop_quality_gate.py",
+            "timeout": 20,
+            "statusMessage": "Checking marketing deliverable quality"
+          }
+        ]
+      }
+    ]
+  }
+}

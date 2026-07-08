@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · S5 Database view</title>
+<style>
+  :root{--bg:#e9eaec;--ink:#2b2b2b;--mut:#6d6d6d;--dim:#9a9a9a;--line:#d8d7d2;--box:#fff;--fill:#d9d9d9;--prim:#3a3a3a;
+    --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);padding:var(--s8)}
+  .head{max-width:1180px;margin:0 auto var(--s4)} .head h1{font-size:18px;margin:0 0 var(--s1)} .head p{margin:0;color:var(--mut);font-size:13px}
+  .stage{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr 280px;gap:var(--s6);align-items:start}
+  .browser{background:var(--box);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .bbar{display:flex;gap:var(--s2);padding:var(--s2) var(--s3);background:#dedede;border-bottom:1px solid var(--line)} .dot{width:10px;height:10px;border-radius:50%;background:#c2c2c2}
+  .app{display:grid;grid-template-columns:160px 1fr}
+  .side{border-right:1px solid var(--line);background:#f4f4f4;padding:var(--s3);font-size:12px;color:var(--mut)} .side div{padding:2px 0} .side .active{background:var(--fill);color:var(--ink);font-weight:600;border-radius:5px;padding:2px var(--s2);margin:0 -4px}
+  .canvas{padding:var(--s6) var(--s5)}
+  .title{font-size:24px;font-weight:700;margin:0 0 var(--s4)}
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:var(--s4)}
+  .toggle span{font-size:12px;padding:var(--s1) var(--s3);color:var(--mut);border-right:1px solid var(--line)} .toggle span.on{background:var(--fill);color:var(--ink);font-weight:600} .toggle span:last-child{border-right:0}
+  .filters{display:flex;gap:var(--s2);align-items:center;margin-bottom:var(--s3);flex-wrap:wrap}
+  .chip{border:1px solid var(--line);border-radius:6px;font-size:12px;padding:var(--s1) var(--s3);color:var(--mut);background:#fafafa}
+  .chip.act{background:var(--prim);color:#fff;font-weight:600;border-color:var(--prim)}
+  .count{margin-left:auto;font-size:12px;color:var(--dim)}
+  table{border-collapse:collapse;width:100%;font-size:12.5px} th,td{border-bottom:1px solid var(--line);padding:var(--s3) var(--s2);text-align:left} th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);border-bottom:1px solid #8a8a8a} td{color:var(--mut)} td.k{color:var(--ink);font-weight:500}
+  .pill{display:inline-block;border:1px solid var(--line);border-radius:4px;font-size:11px;padding:0 6px;color:var(--mut)} .pill.no{border-style:dashed}
+  .notes{font-size:13px} .notes h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:0 0 var(--s3)}
+  .note{display:flex;gap:var(--s2);margin-bottom:var(--s3)} .num{flex:0 0 22px;height:22px;border-radius:50%;background:var(--prim);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .note p{margin:0;font-size:12.5px;line-height:1.45;color:var(--mut)} .note b{color:var(--ink)}
+  .ref{display:inline-block;font-size:10px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--mut);margin-left:4px}
+  .statebox{max-width:1180px;margin:var(--s6) auto 0;background:var(--box);border:1px dashed var(--line);border-radius:8px;padding:var(--s4)} .statebox h3{margin:0 0 var(--s2);font-size:13px;color:var(--mut)}
+  .empty{text-align:center;padding:var(--s8);color:var(--mut)} .empty .big{font-size:14px;color:var(--ink);margin-bottom:var(--s2)}
+  .resetbtn{background:#3a3a3a;color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;display:inline-block}
+</style></head>
+<body>
+  <div class="head"><h1>S5 · Database view — Findings <span class="ref">grayscale wireframe</span></h1>
+    <p>Primary job: slice a collection to answer a question. Shown: the “unsourced only” filter applied.</p></div>
+  <div class="stage">
+    <div class="browser">
+      <div class="bbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="app">
+        <nav class="side"><div>Overview</div><div>GTM readout</div>
+          <div style="margin-top:12px;font-weight:700;font-size:10px;color:#9a9a9a">RESEARCH</div>
+          <div>Desks</div><div class="active">Databases</div>
+          <div style="padding-left:14px">Findings</div><div style="padding-left:14px">Evidence</div><div style="padding-left:14px">Events</div></nav>
+        <div class="canvas">
+          <h2 class="title">Findings</h2>
+          <div class="toggle"><span class="on">Table</span><span>Board</span><span>Gallery</span></div>
+          <div class="filters">
+            <span class="chip">Desk ▾</span>
+            <span class="chip act">Sourced? · unsourced only ✕</span>
+            <span class="chip">Confidence ▾</span>
+            <span class="count">9 of 54 findings</span>
+          </div>
+          <table>
+            <tr><th>Finding</th><th>Desk</th><th>Sourced?</th><th>Confidence</th></tr>
+            <tr><td class="k">Wedge core “no one trusts the number” not directly attested</td><td>Customer</td><td><span class="pill no">inferred</span></td><td>Medium</td></tr>
+            <tr><td class="k">Product “built-in dashboards” may be table-stakes</td><td>Product</td><td><span class="pill no">unsourced</span></td><td>Low</td></tr>
+            <tr><td class="k">PM-TikTok “ranking tools” format → seeding fit</td><td>KOL</td><td><span class="pill no">channel only</span></td><td>Medium</td></tr>
+            <tr><td class="k">IG #buildinpublic volume signals demand size</td><td>Channels</td><td><span class="pill no">channel only</span></td><td>Low</td></tr>
+            <tr><td class="k">Free-tier ceiling is the master growth lever</td><td>Pricing</td><td><span class="pill no">inferred</span></td><td>Medium</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <aside class="notes"><h2>Hierarchy notes</h2>
+      <div class="note"><span class="num">1</span><p><b>Filter is the primary action.</b> The active “unsourced only” chip is the one filled control — it answers the question (where are the weak spots).</p></div>
+      <div class="note"><span class="num">2</span><p><b>Count makes the slice honest.</b> “9 of 54” shows exactly how much the filter narrowed — no hidden truncation.</p></div>
+      <div class="note"><span class="num">3</span><p><b>View toggle, quiet.</b> Table/Board/Gallery recedes (outline) so it doesn't compete with the data.</p></div>
+      <div class="note"><span class="num">4</span><p><b>Sourced? column is the trust signal.</b> inferred / unsourced / channel-only read at a glance, never by color alone (labels).</p></div>
+      <div class="note"><span class="num">5</span><p><b>Row → side peek (S6).</b> Click any row to inspect/edit without leaving the table.</p></div>
+    </aside>
+  </div>
+  <div class="statebox"><h3>STATE · Empty filter (no rows match)</h3>
+    <div class="empty"><div class="big">No findings match “unsourced · Competitive desk.”</div>
+      <div style="font-size:12px;margin-bottom:12px">Every Competitive finding is sourced — good news.</div>
+      <span class="resetbtn">Reset filters</span></div>
+  </div>
+</body></html>

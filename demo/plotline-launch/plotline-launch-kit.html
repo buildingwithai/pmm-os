@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Plotline — Launch Kit</title>
+<style>
+  :root{
+    --bg:#0c0d11; --surface:#0f1116; --side:#0a0b0e; --ink:#f3eeda; --muted:#a7a08c; --dim:#6f6a5c;
+    --accent:#19e3ff; --accent-soft:rgba(25,227,255,.10); --accent-line:rgba(25,227,255,.4);
+    --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
+    --good:#3ad29a; --warn:#f3c052; --bad:#f6776f;
+    --t1:26px; --t2:16px; --t3:13px; --t4:11px; --u:8px; --tb:48px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:var(--t3)/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .black{font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;font-weight:900}
+  h1,h2,h3{font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;font-weight:900;line-height:1.12;margin:0}
+  a{color:var(--accent);text-decoration:none}
+  ::selection{background:var(--accent);color:#021016}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:.86em;color:var(--accent)}
+  button{font-family:inherit}
+
+  .toolbar{height:var(--tb);display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--line2);background:var(--side);position:sticky;top:0;z-index:30}
+  .mark{display:flex;align-items:center;gap:9px;cursor:pointer}
+  .mark .dot{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#0077ff);display:grid;place-items:center;color:#021016;font:900 13px "Arial Black"}
+  .mark b{font-size:var(--t3);letter-spacing:.02em}.mark span{color:var(--dim);font-size:var(--t4);text-transform:uppercase;letter-spacing:.16em;margin-left:2px}
+  .sep{width:1px;height:20px;background:var(--line2)}
+  .crumb{color:var(--muted);font-size:var(--t3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}
+  .crumb b{color:var(--ink)} .crumb .arw{color:var(--dim);margin:0 7px}
+  .grow{flex:1}
+  .cmdk{display:flex;align-items:center;gap:8px;background:#15171d;border:1px solid var(--line2);color:var(--muted);border-radius:7px;padding:6px 10px;font-size:var(--t3);cursor:text;min-width:190px}
+  .cmdk kbd{margin-left:auto;border:1px solid var(--line2);border-radius:4px;padding:0 5px;font-size:10px;color:var(--dim);font-family:inherit}
+  .tbtn{background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:7px;padding:6px 11px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .tbtn:hover{color:var(--ink);border-color:var(--accent)}
+  .tbtn.on{color:#021016;background:var(--accent);border-color:var(--accent)}
+  .statusbtn{font-size:11px;font-weight:800;border:1px solid var(--line2);border-radius:999px;padding:3px 10px;background:transparent;color:var(--dim);cursor:pointer;text-transform:uppercase;letter-spacing:.08em}
+  .statusbtn.draft{color:var(--warn);border-color:rgba(243,192,82,.45)}
+  .statusbtn.review{color:var(--accent);border-color:var(--accent-line)}
+  .statusbtn.approved{color:var(--good);border-color:rgba(58,210,154,.45)}
+
+  .shell{display:grid;grid-template-columns:248px minmax(0,1fr) 336px;height:calc(100vh - var(--tb))}
+  .sidebar{background:var(--side);border-right:1px solid var(--line2);overflow:auto;padding:8px 8px 24px}
+  .work{overflow:auto}
+  .inspector{background:var(--surface);border-left:1px solid var(--line2);overflow:auto}
+
+  .grp{margin:16px 10px 4px;color:var(--dim);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.16em}
+  .nav a{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;color:var(--muted);font-size:var(--t3);font-weight:600;cursor:pointer;border-left:2px solid transparent}
+  .nav a .ix{color:var(--dim);font-size:10px;font-variant-numeric:tabular-nums;min-width:18px}
+  .nav a .nl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nav a:hover{background:rgba(255,255,255,.04);color:var(--ink)}
+  .nav a.active{background:var(--accent-soft);color:var(--ink);border-left-color:var(--accent)}
+  .nav a.active .ix{color:var(--accent)}
+  .scnt{font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .sdot{width:7px;height:7px;border-radius:50%;background:transparent;flex:0 0 auto}
+  .sdot.draft{background:var(--warn)} .sdot.review{background:var(--accent)} .sdot.approved{background:var(--good)}
+  .sidefoot{margin:18px 10px 0;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:var(--t4)}
+  .sidefoot b{color:var(--warn)}
+
+  .view{display:block;padding:32px 40px 96px;max-width:860px}
+  body.ready .view{display:none}
+  body.ready .view.active{display:block}
+  .vhead{margin-bottom:24px}
+  .vhead .eyebrow{color:var(--accent);font-size:var(--t4);font-weight:800;text-transform:uppercase;letter-spacing:.16em}
+  .vhead h1{font-size:var(--t1);margin:6px 0}
+  .vhead .sub{color:var(--muted);max-width:64ch}
+  .h{font-size:var(--t4);font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin:32px 0 10px}
+  .muted{color:var(--muted)} .small{font-size:12.5px} .dim{color:var(--dim)}
+  p{margin:0 0 12px}
+
+  .rows{border-top:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:12px 8px;border-bottom:1px solid var(--line)}
+  .row.sel-able{cursor:pointer}
+  .row.sel-able:hover{background:rgba(255,255,255,.03)}
+  .row.selected{background:var(--accent-soft);box-shadow:inset 2px 0 0 var(--accent)}
+  .row .t{font-weight:700}
+  .row .d{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .row .meta{color:var(--dim);font-size:12px;white-space:nowrap}
+  .kv{display:grid;grid-template-columns:184px 1fr;gap:0 24px;border-top:1px solid var(--line)}
+  .kv dt{color:var(--muted);font-size:12.5px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .kv dd{margin:0;padding:10px 0;border-bottom:1px solid var(--line)}
+  ul.list{list-style:none;margin:0;padding:0}
+  ul.list li{padding:8px 0 8px 18px;position:relative;border-bottom:1px solid var(--line)}
+  ul.list li::before{content:"";position:absolute;left:2px;top:16px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+
+  table{width:100%;border-collapse:collapse;font-size:var(--t3)}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{color:var(--accent);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--line2)}
+  td.num{font-variant-numeric:tabular-nums}
+
+  .badge{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--muted)}
+  .badge.cy{color:var(--accent);border-color:var(--accent-line)} .badge.bd{color:var(--bad);border-color:rgba(246,119,111,.4)}
+  .chip{display:inline-block;font-size:11.5px;color:var(--muted);border:1px solid var(--line2);border-radius:6px;padding:3px 9px;margin:0 6px 6px 0}
+
+  .callout{border:1px solid var(--line2);border-left:3px solid var(--accent);border-radius:8px;padding:14px 16px;margin:8px 0;background:rgba(25,227,255,.04)}
+  .callout.warn{border-left-color:var(--warn);background:rgba(243,192,82,.05)}
+  .stmt{font-size:15px;line-height:1.55}
+
+  .stats{display:flex;gap:40px;flex-wrap:wrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 0}
+  .stats .n{font:900 30px/1 "Arial Black";color:var(--accent)}
+  .stats .l{color:var(--muted);font-size:12px;margin-top:4px}
+
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:8px 0 14px}
+  .tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer;margin-bottom:-1px}
+  .tabs button.active{color:var(--ink);border-bottom-color:var(--accent)}
+
+  .seg{display:inline-flex;border:1px solid var(--line2);border-radius:7px;overflow:hidden}
+  .seg button{background:transparent;border:none;color:var(--muted);padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer}
+  .seg button.active{background:var(--accent);color:#021016}
+
+  .scrow{display:grid;grid-template-columns:156px 1fr 28px;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--t3)}
+  .track{height:6px;background:#1a1d24;border-radius:4px;overflow:hidden}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#0077ff);transition:width .9s ease}
+
+  .chk{display:flex;gap:11px;align-items:flex-start;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+  .chk input{margin-top:3px;accent-color:var(--accent)}
+  .chk.done .ct{color:var(--dim);text-decoration:line-through}
+
+  .flow{display:flex;flex-wrap:wrap;margin:8px 0}
+  .step{flex:1;min-width:130px;padding:14px 16px;border:1px solid var(--line);border-right:none;position:relative}
+  .step:last-child{border-right:1px solid var(--line)}
+  .step .sn{color:var(--accent);font:900 12px "Arial Black"}
+  .step .st{font-weight:700;font-size:var(--t3);margin-top:4px}
+  .step::after{content:"→";position:absolute;right:-8px;top:50%;transform:translateY(-50%);color:var(--accent);font-weight:900;background:var(--bg);padding:0 1px;z-index:2}
+  .step:last-child::after{content:"↺"}
+  .tree{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted);white-space:pre;line-height:1.8;border-top:1px solid var(--line);padding-top:12px}
+
+  .gal{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .gframe{border:1px solid var(--line2);border-radius:8px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,rgba(25,227,255,.14),rgba(0,119,255,.05),#11131a)}
+  .gframe.sel-frame{outline:2px solid var(--accent)}
+  .gpane{aspect-ratio:16/9;display:grid;place-content:center;text-align:center;position:relative}
+  .gpane .rr{position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;color:var(--accent);background:rgba(0,0,0,.45);padding:2px 6px;border-radius:5px}
+  .gpane .nm{font:900 var(--t3) "Arial Black";margin-top:4px}.gpane .hh{color:var(--muted);font-size:10.5px;margin-top:3px}
+
+  .ins-head{padding:16px 18px 10px;border-bottom:1px solid var(--line)}
+  .ins-head .eye{color:var(--accent);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.16em}
+  .ins-head h3{font-size:var(--t2);margin-top:4px}
+  #inspector-body{padding:16px 18px 48px}
+  .copyline{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+  .cbtn{border:1px solid var(--line2);background:transparent;color:var(--accent);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+  .cbtn:hover{background:var(--accent);color:#021016}
+  .star{cursor:pointer;background:none;border:none;color:var(--dim);font-size:14px}.star.on{color:var(--warn)}
+
+  .scrim{position:fixed;inset:0;background:rgba(4,5,8,.6);backdrop-filter:blur(3px);z-index:80;display:none}
+  .scrim.open{display:block}
+  .palette{position:fixed;top:14vh;left:50%;transform:translateX(-50%);width:560px;max-width:92vw;background:#13151b;border:1px solid var(--line2);border-radius:12px;z-index:81;display:none;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .palette.open{display:block}
+  .palette input{width:100%;border:none;border-bottom:1px solid var(--line2);background:transparent;color:var(--ink);padding:15px 18px;font-size:15px;outline:none}
+  .pres{max-height:52vh;overflow:auto;padding:6px}
+  .pitem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;cursor:pointer;font-size:var(--t3)}
+  .pitem .pk{color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-left:auto}
+  .pitem.cur{background:var(--accent-soft)}
+  .pitem .pi{color:var(--dim);font-size:11px;min-width:26px;font-variant-numeric:tabular-nums}
+
+  .intro{position:fixed;inset:0;z-index:90;background:radial-gradient(120% 80% at 50% 0%,#0d2230,#07080c 60%);display:none;overflow-y:auto;scroll-snap-type:y mandatory}
+  .intro.open{display:block}
+  .ipanel{min-height:100vh;display:grid;place-content:center;text-align:center;padding:8vh 8vw;scroll-snap-align:start;opacity:.25;transform:translateY(20px);transition:opacity .6s,transform .6s}
+  .ipanel.in{opacity:1;transform:none}
+  .ipanel h1{font-size:clamp(34px,8vw,82px);background:linear-gradient(120deg,var(--ink),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ipanel .s{color:var(--muted);font-size:clamp(15px,2.4vw,21px);max-width:60ch;margin:18px auto 0}
+  .ibig{display:flex;gap:clamp(20px,5vw,64px);justify-content:center;flex-wrap:wrap}
+  .ibig .n{font:900 clamp(36px,7vw,66px)/1 "Arial Black";color:var(--accent)}.ibig .l{color:var(--muted);font-size:13px;margin-top:6px}
+  .icue{position:fixed;bottom:18px;left:0;right:0;text-align:center;color:var(--dim);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+  .iact{display:inline-flex;gap:10px;margin-top:26px}
+  .iskip{position:fixed;top:16px;right:18px;z-index:91}
+
+  .deckbar{display:none}
+  body.present .sidebar,body.present .inspector,body.present .tb-extra{display:none}
+  body.present .shell{grid-template-columns:1fr}
+  body.present .view{display:none;max-width:none;padding:6vh 9vw;min-height:calc(100vh - var(--tb))}
+  body.present .view.active{display:block}
+  body.present .deckbar{display:flex;gap:10px;align-items:center;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#15171d;border:1px solid var(--line2);border-radius:999px;padding:7px 13px;z-index:50}
+  .deckbar .ct{font-size:12px;color:var(--muted);min-width:50px;text-align:center}
+
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:560px;max-width:94vw;background:var(--surface);border-left:1px solid var(--line2);transform:translateX(100%);transition:transform .26s;z-index:85;display:flex;flex-direction:column}
+  .drawer.open{transform:none;box-shadow:-16px 0 50px rgba(0,0,0,.55)}
+  .dh{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line2);font:900 14px "Arial Black"}
+  .dh button{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+  .db{overflow:auto;padding:10px 16px;flex:1}
+  .nb{margin-bottom:13px}.nb label{display:block;color:var(--accent);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px}
+  .nb textarea{width:100%;min-height:50px;background:#15171d;border:1px solid var(--line2);color:var(--ink);border-radius:7px;padding:7px;font:13px inherit;resize:vertical}
+  .df{padding:10px 16px;border-top:1px solid var(--line2)}
+
+  /* ---- Notebook: real Notion-style editor ---- */
+  .nbbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 16px;border-bottom:1px solid var(--line2)}
+  .nbb{background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:6px;padding:4px 9px;font-size:11.5px;font-weight:700;cursor:pointer}
+  .nbb:hover{color:var(--ink);border-color:var(--accent)}
+  #noteDoc{padding:6px 4px}
+  #noteDoc .ProseMirror,#noteDoc[contenteditable]{outline:none;min-height:50vh;font-size:14px;line-height:1.7;color:var(--ink)}
+  #noteDoc .ProseMirror:focus{outline:none}
+  #noteDoc h1{font-size:24px;margin:16px 0 6px}
+  #noteDoc h2{font-size:18px;margin:14px 0 6px}
+  #noteDoc h3{font-size:15px;margin:12px 0 4px}
+  #noteDoc p{margin:7px 0}
+  #noteDoc ul,#noteDoc ol{padding-left:22px;margin:7px 0}
+  #noteDoc blockquote{border-left:3px solid var(--accent);margin:10px 0;padding:2px 0 2px 14px;color:var(--muted)}
+  #noteDoc code{background:rgba(255,255,255,.07)}
+  #noteDoc a{color:var(--accent);text-decoration:underline}
+  #noteDoc ul[data-type="taskList"]{list-style:none;padding-left:2px}
+  #noteDoc ul[data-type="taskList"] li{display:flex;gap:9px;align-items:flex-start;margin:3px 0}
+  #noteDoc ul[data-type="taskList"] li>label{margin-top:3px}
+  #noteDoc ul[data-type="taskList"] li>div{flex:1}
+  #noteDoc ul[data-type="taskList"] li>div>p{margin:0}
+  #noteDoc ul[data-type="taskList"] input{accent-color:var(--accent);width:15px;height:15px}
+  #noteDoc table{border-collapse:collapse;margin:12px 0;width:auto;overflow:hidden}
+  #noteDoc th,#noteDoc td{border:1px solid var(--line2);padding:6px 10px;min-width:64px;vertical-align:top}
+  #noteDoc th{background:rgba(255,255,255,.04);font-weight:800;color:var(--ink)}
+  #noteDoc .placeholder-hint{color:var(--dim)}
+  #noteDoc .selectedCell{background:var(--accent-soft)}
+
+  #details{display:none}
+
+  /* resizable + collapsible panels */
+  .shell{position:relative;grid-template-columns:var(--sidew,248px) minmax(0,1fr) var(--insw,336px)}
+  body.sidebar-collapsed .shell{grid-template-columns:0 minmax(0,1fr) var(--insw,336px)}
+  body.inspector-collapsed .shell{grid-template-columns:var(--sidew,248px) minmax(0,1fr) 0}
+  body.sidebar-collapsed.inspector-collapsed .shell{grid-template-columns:0 minmax(0,1fr) 0}
+  .rsz{position:absolute;top:0;bottom:0;width:9px;cursor:col-resize;z-index:26}
+  .rsz:hover,.rsz.drag{background:linear-gradient(90deg,transparent,var(--accent-soft),transparent)}
+  .rsz-l{left:calc(var(--sidew,248px) - 5px)}
+  .rsz-r{right:calc(var(--insw,336px) - 5px)}
+  body.sidebar-collapsed .rsz-l,body.sidebar-collapsed .sidebar{display:none}
+  body.inspector-collapsed .rsz-r,body.inspector-collapsed .inspector{display:none}
+  .reopen{position:absolute;top:10px;z-index:27;display:none;background:#15171d;border:1px solid var(--line2);color:var(--muted);border-radius:6px;padding:5px 8px;font-size:13px;line-height:1;cursor:pointer}
+  .reopen:hover{color:var(--ink);border-color:var(--accent)}
+  .reopen-l{left:8px}.reopen-r{right:8px}
+  body.sidebar-collapsed .reopen-l{display:block}
+  body.inspector-collapsed .reopen-r{display:block}
+
+  /* modeless inline editing — Notion feel: no mode toggle, no boxy borders */
+  .work [data-path]{border-radius:4px;transition:background .12s}
+  .work [data-path]:hover{background:rgba(255,255,255,.025)}
+  .work [data-path]:focus{outline:none;background:rgba(25,227,255,.06);box-shadow:inset 2px 0 0 var(--accent)}
+  .work [data-path]:empty::before{content:"Type \2026";color:var(--dim)}
+  .work td[data-path],.work th[data-path]{cursor:text}
+
+  /* silent autosave pill */
+  #savePill{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(18px);opacity:0;pointer-events:none;background:#15171d;border:1px solid var(--line2);border-radius:999px;padding:6px 14px;font-size:12px;color:var(--muted);z-index:55;transition:opacity .2s,transform .2s}
+  #savePill.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #savePill.ok{color:var(--accent);border-color:var(--accent-line)}
+
+  /* block editor: handles, drag, bubble, slash (always-on, hover-revealed) */
+  .blk{position:relative;padding-left:22px;border-radius:6px}
+  .work .blk:hover{background:rgba(255,255,255,.02)}
+  .blk-grip{position:absolute;left:-2px;top:5px;display:none;background:none;border:none;color:var(--dim);font-size:13px;cursor:grab;padding:2px 4px;line-height:1}
+  .work .blk:hover .blk-grip{display:block}
+  .blk-grip:active{cursor:grabbing}
+  .blk.dragging{opacity:.4}
+  .blk.dropbefore{box-shadow:inset 0 2px 0 var(--accent)}
+  .blk.dropafter{box-shadow:inset 0 -2px 0 var(--accent)}
+  .blk-del{position:absolute;right:4px;top:4px;display:none;background:#15171d;border:1px solid var(--line2);color:var(--bad);border-radius:5px;font-size:11px;padding:1px 6px;cursor:pointer;z-index:3}
+  .work .blk:hover .blk-del{display:block}
+  .blk-menu{position:absolute;right:4px;top:4px;display:none;background:#15171d;border:1px solid var(--line2);color:var(--muted);border-radius:5px;font-size:13px;line-height:1;padding:1px 6px;cursor:pointer;z-index:3}
+  .work .blk:hover .blk-menu{display:block}
+  .blk-menu:hover{color:var(--ink);border-color:var(--accent)}
+  .blkmenu{position:fixed;display:none;width:184px;max-height:60vh;overflow:auto;background:#13151b;border:1px solid var(--line2);border-radius:9px;padding:5px;z-index:96;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+  .blkmenu.open{display:block}
+  .blkmenu .bm-h{padding:6px 9px 3px;color:var(--dim);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}
+  .blkmenu .bm-i{display:flex;gap:9px;align-items:center;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--ink);text-transform:capitalize}
+  .blkmenu .bm-i:hover{background:var(--accent-soft)}
+  .blkmenu .bm-ic{color:var(--accent);min-width:16px;text-align:center}
+  .blkmenu .bm-del{color:var(--bad)}
+  .blkmenu .bm-del .bm-ic{color:var(--bad)}
+  .blkmenu .bm-del:hover{background:rgba(192,52,29,.12)}
+
+  .bubble{position:fixed;display:none;gap:2px;background:#15171d;border:1px solid var(--line2);border-radius:8px;padding:4px;z-index:95;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+  .bubble.open{display:flex}
+  .bubble button{background:none;border:none;color:var(--ink);width:28px;height:26px;border-radius:5px;cursor:pointer;font-size:13px}
+  .bubble button:hover{background:var(--accent-soft);color:var(--accent)}
+
+  .slash{position:fixed;display:none;width:240px;background:#13151b;border:1px solid var(--line2);border-radius:9px;padding:5px;z-index:95;box-shadow:0 14px 40px rgba(0,0,0,.55);max-height:320px;overflow:auto}
+  .slash.open{display:block}
+  .slash .si{display:flex;gap:9px;align-items:center;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px}
+  .slash .si.cur,.slash .si:hover{background:var(--accent-soft)}
+  .slash .si .k{color:var(--dim);font-size:11px;min-width:18px}
+  .slash .si .ic{color:var(--accent);min-width:18px;text-align:center;font-size:13px}
+  .slash .sh{padding:6px 10px 3px;color:var(--dim);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}
+
+  /* comments — Google-Docs style, anchored to source text */
+  .cmark{background:rgba(255,205,60,.16);border-bottom:2px solid rgba(255,205,60,.6);border-radius:2px;cursor:pointer;padding:0 1px}
+  .cmark.active{background:rgba(255,205,60,.34)}
+  .cmadd{position:fixed;display:none;z-index:96;background:#15171d;border:1px solid var(--line2);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;color:var(--ink);cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+  .cmadd.open{display:block}
+  .cmadd:hover{border-color:var(--accent);color:var(--accent)}
+  .cmpop{position:fixed;display:none;z-index:97;width:300px;background:#13151b;border:1px solid var(--line2);border-radius:10px;padding:12px;box-shadow:0 16px 44px rgba(0,0,0,.6)}
+  .cmpop.open{display:block}
+  .cmpop .q{font-size:11px;color:var(--dim);border-left:2px solid rgba(255,205,60,.6);padding-left:8px;margin-bottom:8px;max-height:48px;overflow:hidden}
+  .cmpop textarea{width:100%;min-height:64px;background:var(--bg);border:1px solid var(--line2);border-radius:7px;color:var(--ink);padding:8px;font:inherit;font-size:13px;resize:vertical;outline:none;box-sizing:border-box}
+  .cmpop textarea:focus{border-color:var(--accent-line)}
+  .cmpop .act{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+
+  /* inspector tabs (Inspector | Comments) */
+  .instabs{display:flex;gap:4px;padding:10px 16px 4px;border-bottom:1px solid var(--line)}
+  .instab{background:none;border:none;color:var(--dim);font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;cursor:pointer}
+  .instab.on{color:var(--ink);background:var(--accent-soft)}
+  .instab .ct{color:var(--dim);font-size:10px;margin-left:3px}
+
+  /* comment cards (inspector tab + notebook feed) */
+  .cmt{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin:8px 0;cursor:pointer;transition:border-color .12s}
+  .cmt:hover{border-color:var(--accent-line)}
+  .cmt .q{font-size:11px;color:var(--muted);border-left:2px solid rgba(255,205,60,.6);padding-left:8px;margin-bottom:6px}
+  .cmt .b{font-size:13px;color:var(--ink);line-height:1.5}
+  .cmt .m{font-size:10px;color:var(--dim);margin-top:7px;display:flex;justify-content:space-between;align-items:center}
+  .cmt .del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:11px}
+  .cmt .del:hover{color:var(--bad)}
+  .cmt-empty{color:var(--dim);font-size:12px;padding:18px 4px}
+
+  /* jump-to flash */
+  @keyframes cflash{0%{background:rgba(25,227,255,.30)}100%{background:transparent}}
+  .cflash{animation:cflash 1.3s ease-out}
+
+  /* to-do blocks (in-content checkboxes) */
+  .todo{list-style:none;padding-left:2px;margin:8px 0}
+  .todo .todoi{display:flex;gap:10px;align-items:flex-start;padding:3px 0}
+  .todo .todock{margin-top:4px;accent-color:var(--accent);width:15px;height:15px;flex:0 0 auto}
+  .todo .todoi span{flex:1}
+  .todo .todoi.done span{color:var(--dim);text-decoration:line-through}
+  hr.divider{border:none;border-top:1px solid var(--line2);margin:18px 0}
+  .nbbar{display:none}
+
+  /* toggle (nested/collapsible block) */
+  .toggle{border:1px solid var(--line2);border-radius:9px;padding:5px 11px 9px;margin:8px 0;background:rgba(255,255,255,.015)}
+  .tgl-head{display:flex;align-items:center;gap:8px}
+  .tgl-x{background:none;border:none;color:var(--dim);cursor:pointer;font-size:11px;line-height:1;padding:3px;transition:transform .15s}
+  .tgl-x:hover{color:var(--ink)}
+  .toggle.collapsed .tgl-x{transform:rotate(-90deg)}
+  .tgl-title{font-weight:700;color:var(--ink);flex:1}
+  .tgl-body{padding-left:19px;margin-top:5px}
+  .tgl-body>*{margin-top:6px}
+  .toggle.collapsed .tgl-body{display:none}
+
+  /* first-run hint */
+  .hint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#15171d;border:1px solid var(--accent-line);border-radius:999px;padding:9px 16px;font-size:12.5px;color:var(--ink);z-index:70;box-shadow:0 12px 34px rgba(0,0,0,.55)}
+  .hint button{background:none;border:none;color:var(--accent);font-weight:800;cursor:pointer;margin-left:10px}
+
+  @media(max-width:1180px){.shell{grid-template-columns:230px 1fr}.inspector{display:none}}
+  @media(max-width:760px){
+    .shell{grid-template-columns:1fr;height:auto}
+    .sidebar{border-right:none;border-bottom:1px solid var(--line2);height:auto}
+    .view{padding:20px}.gal{grid-template-columns:1fr}.cmdk{min-width:42px}.cmdk .ph,.cmdk kbd{display:none}.crumb{display:none}
+  }
+  @media print{
+    .toolbar,.sidebar,.inspector,.deckbar,.scrim,.palette,.intro,.drawer{display:none!important}
+    .shell{grid-template-columns:1fr;height:auto;display:block}
+    .view{display:block!important;max-width:none;padding:14px 0;break-after:page}
+    body{background:#fff;color:#15171f}
+    :root{--ink:#15171f;--muted:#444;--line:#d8d8d8;--line2:#bbb;--accent:#0a6e85;--surface:#fff}
+    .fill{background:#0a6e85}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+
+</style>
+</head>
+<body>
+<header class="toolbar">
+  <div class="mark" id="home"><div class="dot">L</div><div><b class="black">Plotline</b><span>launch kit</span></div></div>
+  <div class="sep tb-extra"></div>
+  <div class="crumb tb-extra" id="crumb"><b>Overview</b></div>
+  <button class="statusbtn tb-extra" id="statusBtn" title="Set section status">no status</button>
+  <div class="grow"></div>
+  <div class="cmdk tb-extra" id="cmdkBtn"><span class="ph">Search &amp; jump</span><kbd>⌘K</kbd></div>
+  <button class="tbtn tb-extra" id="introBtn">Intro</button>
+  <button class="tbtn tb-extra" id="notesBtn">Notes</button>
+  <button class="tbtn" id="presentBtn">Present</button>
+  <button class="tbtn tb-extra" id="pdfBtn">PDF</button>
+</header>
+<div class="shell">
+  <button class="reopen reopen-l" id="reopenL" title="Open sidebar">›</button>
+  <button class="reopen reopen-r" id="reopenR" title="Open inspector">‹</button>
+  <div class="rsz rsz-l" id="rszL"></div>
+  <div class="rsz rsz-r" id="rszR"></div>
+  <nav class="sidebar">
+    <div class="grp">Overview</div>
+    <div class="nav"><a href="#v-overview" data-v="v-overview"><span class="ix">00</span><span class="nl">Overview</span><span class="scnt"></span><span class="sdot"></span></a></div>
+    <div class="grp">Foundation</div>
+    <div class="nav"><a href="#v-product" data-v="v-product"><span class="ix">01</span><span class="nl">Product context</span><span class="scnt"></span><span class="sdot"></span></a></div>
+    <div class="grp">Audience</div>
+    <div class="nav"><a href="#v-personas" data-v="v-personas"><span class="ix">02</span><span class="nl">ICP & personas</span><span class="scnt"></span><span class="sdot"></span></a></div>
+    <div class="grp">Strategy</div>
+    <div class="nav"><a href="#v-positioning" data-v="v-positioning"><span class="ix">03</span><span class="nl">Positioning</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-messaging" data-v="v-messaging"><span class="ix">04</span><span class="nl">Messaging</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-competitive" data-v="v-competitive"><span class="ix">05</span><span class="nl">Competitive</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-market" data-v="v-market"><span class="ix">5b</span><span class="nl">Market desk</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-pricing" data-v="v-pricing"><span class="ix">06</span><span class="nl">Pricing</span><span class="scnt"></span><span class="sdot"></span></a></div>
+    <div class="grp">Go-to-market</div>
+    <div class="nav"><a href="#v-launch" data-v="v-launch"><span class="ix">07</span><span class="nl">Launch plan</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-plg" data-v="v-plg"><span class="ix">08</span><span class="nl">PLG & loops</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-events" data-v="v-events"><span class="ix">8b</span><span class="nl">Events desk</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-channels" data-v="v-channels"><span class="ix">8c</span><span class="nl">Channels desk</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-analysts" data-v="v-analysts"><span class="ix">8d</span><span class="nl">KOL desk</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-gtm" data-v="v-gtm"><span class="ix">8e</span><span class="nl">GTM desk</span><span class="scnt"></span><span class="sdot"></span></a></div>
+    <div class="grp">Story</div>
+    <div class="nav"><a href="#v-narrative" data-v="v-narrative"><span class="ix">09</span><span class="nl">Narrative</span><span class="scnt"></span><span class="sdot"></span></a><a href="#v-campaign" data-v="v-campaign"><span class="ix">10</span><span class="nl">Campaign</span><span class="scnt"></span><span class="sdot"></span></a></div>
+    <div class="grp">Review</div>
+    <div class="nav"><a href="#v-coach" data-v="v-coach"><span class="ix">11</span><span class="nl">Coach review</span><span class="scnt"></span><span class="sdot"></span></a></div>
+    <div class="grp">Appendix</div>
+    <div class="nav"><a href="#v-exports" data-v="v-exports"><span class="ix">+</span><span class="nl">Exports</span><span class="scnt"></span><span class="sdot"></span></a></div>
+    <div class="sidefoot"><b>Launch-gating:</b> broke-ICP monetization + brand-safety perception. Make consent / AI-label / anti-fraud structural before scaling loops.<br/><span class="dim" style="font-size:10px">build 2026-06-20 18:18 UTC</span></div>
+  </nav>
+  <main class="work" id="work">
+    <article class="view" id="v-overview" data-title="Overview">
+      <div class="vhead"><div class="eyebrow">Product marketing · launch kit</div><h1>Ask your product a question.</h1><p class="sub">11 interlocking docs, grounded in the Plotline product context. The through-line: the people with the questions can't get the answers — Plotline makes it <b>ask · in plain English · in minutes.</b></p></div>
+        <div class="blk" data-block="views.v-overview.blocks.0" data-bid=""><div class="stats" data-w="stats"></div></div>
+        <div class="blk" data-block="views.v-overview.blocks.1" data-bid=""><div class="h" data-path="views.v-overview.blocks.1.h">The kit</div></div>
+        <div class="blk" data-block="views.v-overview.blocks.2" data-bid=""><div class="rows" data-w="kitrows"></div></div>
+    </article>
+    <article class="view" id="v-product" data-title="Product context">
+      <div class="vhead"><div class="eyebrow">Product Desk · 01</div><h1>Product context</h1><p class="sub">The shared brief every other doc reads from.</p></div>
+        <div class="blk" data-block="views.v-product.blocks.0" data-bid=""><dl class="kv"><dt>Product</dt><dd data-path="views.v-product.blocks.0.kv.0.1">Plotline — self-serve product analytics</dd><dt>What it does</dt><dd data-path="views.v-product.blocks.0.kv.1.1">Ask a plain-English question <code>→</code> get a funnel, cohort, or chart in seconds. No SQL.</dd><dt>Surfaces</dt><dd data-path="views.v-product.blocks.0.kv.2.1">Web app · auto-instrumented SDK · shared metric catalog</dd><dt>Pricing</dt><dd data-path="views.v-product.blocks.0.kv.3.1">Usage-based on MTU · Free / Team / Business</dd><dt>Stage</dt><dd data-path="views.v-product.blocks.0.kv.4.1">Launching 'Ask' (plain-English questions) — the feature that <i>is</i> the positioning</dd></dl></div>
+        <div class="blk" data-block="views.v-product.blocks.1" data-bid=""><div class="callout" data-path="views.v-product.blocks.1.callout"><b>POV.</b> Everyone bought 'powerful' analytics. On a team without a data department it becomes shelfware — the people with the questions can't write the query, so they file a ticket and wait.</div></div>
+        <div class="blk" data-block="views.v-product.blocks.2" data-bid=""><div class="h" data-path="views.v-product.blocks.2.h">Audience</div></div>
+        <div class="blk" data-block="views.v-product.blocks.3" data-bid=""><table><thead><tr><th>Segment</th><th>Trigger</th><th>Pain</th><th>Alternative today</th></tr></thead><tbody><tr><td data-path="views.v-product.blocks.3.table.rows.0.0">PM / growth owner</td><td data-path="views.v-product.blocks.3.table.rows.0.1">needs to know why a metric moved</td><td data-path="views.v-product.blocks.3.table.rows.0.2">blocked on the data queue for days</td><td data-path="views.v-product.blocks.3.table.rows.0.3">file a ticket · guess · wait</td></tr><tr><td data-path="views.v-product.blocks.3.table.rows.1.0">Lifecycle / PMM</td><td data-path="views.v-product.blocks.3.table.rows.1.1">measuring a campaign or activation</td><td data-path="views.v-product.blocks.3.table.rows.1.2">no shared definition of 'activated'</td><td data-path="views.v-product.blocks.3.table.rows.1.3">argue over whose number is right</td></tr><tr><td data-path="views.v-product.blocks.3.table.rows.2.0">Head of Product</td><td data-path="views.v-product.blocks.3.table.rows.2.1">wants more decisions per week</td><td data-path="views.v-product.blocks.3.table.rows.2.2">bought Vista; nobody opens it</td><td data-path="views.v-product.blocks.3.table.rows.2.3">shelfware + a data-hire ask</td></tr></tbody></table></div>
+    </article>
+    <article class="view" id="v-personas" data-title="ICP &amp; personas">
+      <div class="vhead"><div class="eyebrow">Customer Desk · 02</div><h1>ICP & personas</h1><p class="sub">Select a persona to inspect JTBD, pain, and the message that lands.</p></div>
+        <div class="blk" data-block="views.v-personas.blocks.0" data-bid=""><div class="h" data-path="views.v-personas.blocks.0.h">Personas</div></div>
+        <div class="blk" data-block="views.v-personas.blocks.1" data-bid=""><div class="rows"><div class="row sel-able" data-detail="p-priya"><div><div class="t" data-path="views.v-personas.blocks.1.rows.0.t">Priya — the PM <span class="badge cy">primary</span></div><div class="d" data-path="views.v-personas.blocks.1.rows.0.d">Answer my own product questions and ship the fix this week.</div></div><div class="meta">20–200-person B2B SaaS</div></div><div class="row sel-able" data-detail="p-marcus"><div><div class="t" data-path="views.v-personas.blocks.1.rows.1.t">Marcus — lifecycle / PMM</div><div class="d" data-path="views.v-personas.blocks.1.rows.1.d">Measure campaigns against one shared definition.</div></div><div class="meta">growth team</div></div><div class="row sel-able" data-detail="p-dana"><div><div class="t" data-path="views.v-personas.blocks.1.rows.2.t">Dana — Head of Product <span class="badge">economic buyer</span></div><div class="d" data-path="views.v-personas.blocks.1.rows.2.d">More decisions per week, no data hire, no shelfware.</div></div><div class="meta">budget owner</div></div><div class="row sel-able" data-detail="p-sam"><div><div class="t" data-path="views.v-personas.blocks.1.rows.3.t">Sam — Head of Data <span class="badge">blocker</span></div><div class="d" data-path="views.v-personas.blocks.1.rows.3.d">Stop being the bottleneck for everyone's 'why' question.</div></div><div class="meta">if present</div></div></div></div>
+        <div class="blk" data-block="views.v-personas.blocks.2" data-bid=""><div class="h" data-path="views.v-personas.blocks.2.h">Anti-ICP — design to repel</div></div>
+        <div class="blk" data-block="views.v-personas.blocks.3" data-bid=""><div class="callout warn" data-path="views.v-personas.blocks.3.callout">Data-mature orgs that want warehouse-native modeling (dbt + a BI tool), and pre-PMF teams with no usage yet. Selling to them creates churn and a 'this isn't a modeling layer' review — disqualify, don't chase.</div></div>
+    </article>
+    <article class="view" id="v-positioning" data-title="Positioning">
+      <div class="vhead"><div class="eyebrow">03 · April Dunford</div><h1>Positioning</h1><p class="sub">Statement, category, value themes, and the tagline tester.</p></div>
+        <div class="blk" data-block="views.v-positioning.blocks.0" data-bid=""><div class="callout" data-path="views.v-positioning.blocks.0.callout"><span class="eyebrow" style="color:var(--accent);font-size:10px;letter-spacing:.16em;text-transform:uppercase">Positioning statement</span><br/><span class="stmt">For product and growth teams at scaling B2B SaaS <b>without a data team to lean on</b>, <b>Plotline</b> is the <b>self-serve product analytics tool</b> that answers 'why' in plain English in minutes — unlike Vista or a SQL queue, which make the people with the questions wait on the few who can write the query.</span></div></div>
+        <div class="blk" data-block="views.v-positioning.blocks.1" data-bid=""><dl class="kv"><dt>Category</dt><dd data-path="views.v-positioning.blocks.1.kv.0.1">Self-serve product analytics — 'answers without SQL.' We deliberately don't frame as BI (invites a warehouse comparison we lose).</dd><dt>Value themes</dt><dd data-path="views.v-positioning.blocks.1.kv.1.1"><span class="chip">Plain English</span><span class="chip">No waiting</span><span class="chip">One set of numbers</span></dd><dt>Best-fit market</dt><dd data-path="views.v-positioning.blocks.1.kv.2.1">20–200-person B2B SaaS with real usage but no (or overloaded) data team</dd><dt>Where we don't win</dt><dd data-path="views.v-positioning.blocks.1.kv.3.1">Data-mature orgs wanting a modeling layer; not free like GA. We win on <i>who can use it</i>, not the deepest query.</dd></dl></div>
+        <div class="blk" data-block="views.v-positioning.blocks.2" data-bid=""><div class="h" data-path="views.v-positioning.blocks.2.h">Tagline tester — copy & star your pick</div></div>
+        <div class="blk" data-block="views.v-positioning.blocks.3" data-bid=""><div data-w="taglines"></div></div>
+    </article>
+    <article class="view" id="v-messaging" data-title="Messaging">
+      <div class="vhead"><div class="eyebrow">04 · Message architecture</div><h1>Messaging house</h1><p class="sub">POV → value prop → three pillars. Select a pillar to inspect proof; switch persona variants with the tabs.</p></div>
+        <div class="blk" data-block="views.v-messaging.blocks.0" data-bid=""><dl class="kv"><dt>Roof · POV</dt><dd data-path="views.v-messaging.blocks.0.kv.0.1">The people with the questions should be able to get the answers.</dd><dt>Value proposition</dt><dd data-path="views.v-messaging.blocks.0.kv.1.1">Ask your product data anything, in plain English, and get the answer yourself — in minutes, not a ticket queue.</dd></dl></div>
+        <div class="blk" data-block="views.v-messaging.blocks.1" data-bid=""><div class="h" data-path="views.v-messaging.blocks.1.h">Pillars</div></div>
+        <div class="blk" data-block="views.v-messaging.blocks.2" data-bid=""><div class="rows"><div class="row sel-able" data-detail="m-0"><div><div class="t" data-path="views.v-messaging.blocks.2.rows.0.t">1 · Ask in plain English</div><div class="d" data-path="views.v-messaging.blocks.2.rows.0.d">Type the question, get the analysis. No SQL.</div></div><div class="meta">proof →</div></div><div class="row sel-able" data-detail="m-1"><div><div class="t" data-path="views.v-messaging.blocks.2.rows.1.t">2 · No tickets, no waiting</div><div class="d" data-path="views.v-messaging.blocks.2.rows.1.d">Auto-instrumented + self-serve.</div></div><div class="meta">proof →</div></div><div class="row sel-able" data-detail="m-2"><div><div class="t" data-path="views.v-messaging.blocks.2.rows.2.t">3 · One set of numbers</div><div class="d" data-path="views.v-messaging.blocks.2.rows.2.d">Shared metric definitions across teams.</div></div><div class="meta">proof →</div></div></div></div>
+        <div class="blk" data-block="views.v-messaging.blocks.3" data-bid=""><div class="h" data-path="views.v-messaging.blocks.3.h">Persona message variant</div></div>
+        <div class="blk" data-block="views.v-messaging.blocks.4" data-bid=""><div class="tabs" data-w="msgtabs"></div><div class="copyline" data-w="msgvariant"></div></div>
+    </article>
+    <article class="view" id="v-competitive" data-title="Competitive">
+      <div class="vhead"><div class="eyebrow">Competitive Desk · 05</div><h1>Competitive intelligence</h1><p class="sub">Artifact of the Competitive Desk: comparison matrix + battlecards. The real incumbent is the data-queue. Select an alternative to inspect when-we-win / when-they-win + guidance.</p></div>
+        <div class="blk" data-block="views.v-competitive.blocks.0" data-bid=""><div class="h" data-path="views.v-competitive.blocks.0.h">Comparison matrix</div></div>
+        <div class="blk" data-block="views.v-competitive.blocks.1" data-bid=""><table><thead><tr><th>Dimension</th><th>Plotline</th><th>Vista</th><th>Pulse</th></tr></thead><tbody><tr><td data-path="views.v-competitive.blocks.1.table.rows.0.0">Core use case</td><td data-path="views.v-competitive.blocks.1.table.rows.0.1">Ask in plain English → answer</td><td data-path="views.v-competitive.blocks.1.table.rows.0.2">Enterprise analytics suite</td><td data-path="views.v-competitive.blocks.1.table.rows.0.3">Dashboards (the 'what')</td></tr><tr><td data-path="views.v-competitive.blocks.1.table.rows.1.0">Time to value</td><td data-path="views.v-competitive.blocks.1.table.rows.1.1">Minutes</td><td data-path="views.v-competitive.blocks.1.table.rows.1.2">Weeks (implementation)</td><td data-path="views.v-competitive.blocks.1.table.rows.1.3">Days</td></tr><tr><td data-path="views.v-competitive.blocks.1.table.rows.2.0">Who can use it</td><td data-path="views.v-competitive.blocks.1.table.rows.2.1">Anyone on the team</td><td data-path="views.v-competitive.blocks.1.table.rows.2.2">Analysts / data team</td><td data-path="views.v-competitive.blocks.1.table.rows.2.3">Dashboard builders</td></tr><tr><td data-path="views.v-competitive.blocks.1.table.rows.3.0">Pricing model</td><td data-path="views.v-competitive.blocks.1.table.rows.3.1">Usage (MTU) · seats free</td><td data-path="views.v-competitive.blocks.1.table.rows.3.2">Seat + platform fee</td><td data-path="views.v-competitive.blocks.1.table.rows.3.3">Per seat</td></tr><tr><td data-path="views.v-competitive.blocks.1.table.rows.4.0">Best fit</td><td data-path="views.v-competitive.blocks.1.table.rows.4.1">No / overloaded data team</td><td data-path="views.v-competitive.blocks.1.table.rows.4.2">Mature data org</td><td data-path="views.v-competitive.blocks.1.table.rows.4.3">Dashboard-first team</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-competitive.blocks.2" data-bid=""><div class="h" data-path="views.v-competitive.blocks.2.h">Alternatives</div></div>
+        <div class="blk" data-block="views.v-competitive.blocks.3" data-bid=""><div class="rows"><div class="row sel-able" data-detail="c-vista"><div><div class="t" data-path="views.v-competitive.blocks.3.rows.0.t">Vista Analytics</div><div class="d" data-path="views.v-competitive.blocks.3.rows.0.d">Enterprise suite — powerful, needs a maintainer, becomes shelfware</div></div><div class="meta"><span class="badge bd">primary</span></div></div><div class="row sel-able" data-detail="c-pulse"><div><div class="t" data-path="views.v-competitive.blocks.3.rows.1.t">Pulse</div><div class="d" data-path="views.v-competitive.blocks.3.rows.1.d">Mid-market point tool — see what happened, then file a ticket for why</div></div><div class="meta"><span class="badge">adjacent</span></div></div><div class="row sel-able" data-detail="c-queue"><div><div class="t" data-path="views.v-competitive.blocks.3.rows.2.t">SQL analyst + data queue</div><div class="d" data-path="views.v-competitive.blocks.3.rows.2.d">Accurate but rationed — a quick question is a multi-day ticket</div></div><div class="meta"><span class="badge">status quo</span></div></div></div></div>
+        <div class="blk" data-block="views.v-competitive.blocks.4" data-bid=""><div class="h" data-path="views.v-competitive.blocks.4.h">Objection handling</div></div>
+        <div class="blk" data-block="views.v-competitive.blocks.5" data-bid=""><div class="rows"><div class="row"><div><div class="t" data-path="views.v-competitive.blocks.5.rows.0.t">"We already have Vista."</div><div class="d" data-path="views.v-competitive.blocks.5.rows.0.d">And how many of your team actually open it? Plotline is the one your PMs use without a data person.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-competitive.blocks.5.rows.1.t">"Plain-English analytics can't be trusted."</div><div class="d" data-path="views.v-competitive.blocks.5.rows.1.d">We show the generated query and the metric definition. It's transparent, not a black box.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-competitive.blocks.5.rows.2.t">"We'll just ask our analyst."</div><div class="d" data-path="views.v-competitive.blocks.5.rows.2.d">How long is that queue right now? Plotline frees the analyst for the modeling only they can do.</div></div><div class="meta"></div></div></div></div>
+    </article>
+    <article class="view" id="v-pricing" data-title="Pricing">
+      <div class="vhead"><div class="eyebrow">Pricing Desk · 06</div><h1>Pricing & packaging</h1><p class="sub">Value metric = monthly tracked users (MTU), not seats — because the value scales with usage analyzed, and per-seat would tax the cross-team adoption we want.</p></div>
+        <div class="blk" data-block="views.v-pricing.blocks.0" data-bid=""><div class="seg" data-w="billtoggle"><button class="active" data-b="mo">Monthly</button><button data-b="yr">Annual −20%</button></div><table data-w="pricetable" style="margin-top:12px"></table></div>
+        <div class="blk" data-block="views.v-pricing.blocks.1" data-bid=""><div class="h" data-path="views.v-pricing.blocks.1.h">The cost of the queue</div></div>
+        <div class="blk" data-block="views.v-pricing.blocks.2" data-bid=""><table><thead><tr><th></th><th>Today (the queue)</th><th>With Plotline</th></tr></thead><tbody><tr><td data-path="views.v-pricing.blocks.2.table.rows.0.0">Time to an answer</td><td data-path="views.v-pricing.blocks.2.table.rows.0.1">~2 days</td><td data-path="views.v-pricing.blocks.2.table.rows.0.2">4 minutes</td></tr><tr><td data-path="views.v-pricing.blocks.2.table.rows.1.0">Who can ask</td><td data-path="views.v-pricing.blocks.2.table.rows.1.1">the analyst</td><td data-path="views.v-pricing.blocks.2.table.rows.1.2">anyone</td></tr><tr><td data-path="views.v-pricing.blocks.2.table.rows.2.0">Cost to scale</td><td data-path="views.v-pricing.blocks.2.table.rows.2.1">a data hire</td><td data-path="views.v-pricing.blocks.2.table.rows.2.2">MTU usage</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-pricing.blocks.3" data-bid=""><p data-path="views.v-pricing.blocks.3.p"><span class="small muted">Anchor the pricing page to the <i>queue you remove</i>, not 'an analytics seat.' Seats are always unlimited — that's the strategy made visible.</span></p></div>
+    </article>
+    <article class="view" id="v-launch" data-title="Launch plan">
+      <div class="vhead"><div class="eyebrow">07 · Tier-1 launch</div><h1>Go-to-market / launch plan</h1><p class="sub">Launching 'Ask' as Tier-1 — it's the differentiator and the reason a non-technical buyer chooses us. Pitch: 'Ask your product data anything, in plain English, in minutes.'</p></div>
+        <div class="blk" data-block="views.v-launch.blocks.0" data-bid=""><div class="h" data-path="views.v-launch.blocks.0.h">Timeline</div></div>
+        <div class="blk" data-block="views.v-launch.blocks.1" data-bid=""><table><thead><tr><th>Phase</th><th>Move</th></tr></thead><tbody><tr><td data-path="views.v-launch.blocks.1.table.rows.0.0"><b>T-3 wk</b></td><td data-path="views.v-launch.blocks.1.table.rows.0.1">Enablement + demo built; beta accuracy guardrail watched</td></tr><tr><td data-path="views.v-launch.blocks.1.table.rows.1.0"><b>Launch week</b></td><td data-path="views.v-launch.blocks.1.table.rows.1.1">Launch blog + founder POV + Product Hunt + homepage 'Ask' live + lifecycle email</td></tr><tr><td data-path="views.v-launch.blocks.1.table.rows.2.0"><b>T+30</b></td><td data-path="views.v-launch.blocks.1.table.rows.2.1">Read activation delta · harvest first customer outcome → case study</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-launch.blocks.2" data-bid=""><div class="h" data-path="views.v-launch.blocks.2.h">Launch activities</div></div>
+        <div class="blk" data-block="views.v-launch.blocks.3" data-bid=""><div data-w="checklist-launch"></div></div>
+        <div class="blk" data-block="views.v-launch.blocks.4" data-bid=""><div class="h" data-path="views.v-launch.blocks.4.h">Measurement</div></div>
+        <div class="blk" data-block="views.v-launch.blocks.5" data-bid=""><table><thead><tr><th>Metric</th><th>Target</th><th>Decision rule</th></tr></thead><tbody><tr><td data-path="views.v-launch.blocks.5.table.rows.0.0">Accounts running ≥1 Ask</td><td data-path="views.v-launch.blocks.5.table.rows.0.1">>50% wk1</td><td data-path="views.v-launch.blocks.5.table.rows.0.2"><30% → fix onboarding / TTV</td></tr><tr><td data-path="views.v-launch.blocks.5.table.rows.1.0">Demo → trial CVR</td><td data-path="views.v-launch.blocks.5.table.rows.1.1">beat baseline</td><td data-path="views.v-launch.blocks.5.table.rows.1.2">tune the demo question</td></tr><tr><td data-path="views.v-launch.blocks.5.table.rows.2.0">Activation w/ Ask vs without</td><td data-path="views.v-launch.blocks.5.table.rows.2.1">+10pt</td><td data-path="views.v-launch.blocks.5.table.rows.2.2">no lift → reposition the feature</td></tr><tr><td data-path="views.v-launch.blocks.5.table.rows.3.0">Trial → paid</td><td data-path="views.v-launch.blocks.5.table.rows.3.1">beat baseline</td><td data-path="views.v-launch.blocks.5.table.rows.3.2">identify the paywall trigger (MTU)</td></tr></tbody></table></div>
+    </article>
+    <article class="view" id="v-plg" data-title="PLG &amp; loops">
+      <div class="vhead"><div class="eyebrow">08 · Growth</div><h1>PLG & growth loops</h1><p class="sub">The product is the marketing — every shared chart is an ad. AHA = first real answer in under 5 minutes, no SQL.</p></div>
+        <div class="blk" data-block="views.v-plg.blocks.0" data-bid=""><div class="h" data-path="views.v-plg.blocks.0.h">Primary loop</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.1" data-bid=""><div class="flow"><div class="step"><div class="sn">01</div><div class="st" data-path="views.v-plg.blocks.1.flow.0.1">Ask (free)</div></div><div class="step"><div class="sn">02</div><div class="st" data-path="views.v-plg.blocks.1.flow.1.1">Answer in 4 min</div></div><div class="step"><div class="sn">03</div><div class="st" data-path="views.v-plg.blocks.1.flow.2.1">Invite the team</div></div><div class="step"><div class="sn">04</div><div class="st" data-path="views.v-plg.blocks.1.flow.3.1">Hit the MTU ceiling</div></div><div class="step"><div class="sn">05</div><div class="st" data-path="views.v-plg.blocks.1.flow.4.1">Upgrade → 01</div></div></div></div>
+        <div class="blk" data-block="views.v-plg.blocks.2" data-bid=""><div class="h" data-path="views.v-plg.blocks.2.h">Other loops</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.3" data-bid=""><ul class="list"><li data-path="views.v-plg.blocks.3.list.0"><b>Shared-catalog loop</b> — one person's metric definition pulls the rest of the team in to use the same numbers.</li><li data-path="views.v-plg.blocks.3.list.1"><b>Answer-sharing loop</b> — a Plotline chart pasted in Slack drives 'how did you get that?' → new users.</li><li data-path="views.v-plg.blocks.3.list.2"><b>Auto-instrument loop</b> — events captured without eng means coverage grows on its own; more to analyze, more reasons to return.</li></ul></div>
+        <div class="blk" data-block="views.v-plg.blocks.4" data-bid=""><div class="h" data-path="views.v-plg.blocks.4.h">Metric tree</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.5" data-bid=""><div class="tree" data-path="views.v-plg.blocks.5.tree">North star: weekly active question-askers
+├─ New users (from shared charts + invites)
+├─ Activation (first answer &lt;5 min)
+├─ Questions / user / week
+├─ Team seats activated / account
+└─ Free→Team (MTU ceiling · shared catalog · SSO)</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.6" data-bid=""><div class="h" data-path="views.v-plg.blocks.6.h">PQL triggers</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.7" data-bid=""><div><span class="chip">hit MTU ceiling</span><span class="chip">invited a teammate</span><span class="chip">saved a dashboard</span><span class="chip">asked 3+ questions</span><span class="chip">wants SSO</span></div></div>
+    </article>
+    <article class="view" id="v-events" data-title="Events desk">
+      <div class="vhead"><div class="eyebrow">08b · Events Desk</div><h1>Events & conferences — ranked targets</h1><p class="sub">Artifact of the Events Desk: where Plotline's ICP (PMs/growth at 20–200-person B2B SaaS) gathers, ranked by relevance (ICP fit · pipeline track record · audience · timing · cost). Exports to <code>events.csv</code>.</p></div>
+        <div class="blk" data-block="views.v-events.blocks.0" data-bid=""><div class="callout warn" data-path="views.v-events.blocks.0.callout"><b>Illustrative Events Desk output.</b> Real events; a live desk run fills exact dates, sponsorship costs, deadlines, and pipeline estimates — each with its source URL in <code>.agents/research/evidence.md</code>. Cost/timing below are marked <i>verify</i> until then.</div></div>
+        <div class="blk" data-block="views.v-events.blocks.1" data-bid=""><table><thead><tr><th>#</th><th>Event</th><th>Audience fit</th><th>Relevance</th><th>Motion</th><th>Cost band</th><th>Timing</th></tr></thead><tbody><tr><td data-path="views.v-events.blocks.1.table.rows.0.0">1</td><td data-path="views.v-events.blocks.1.table.rows.0.1"><a href="https://productled.com/summit">Product-Led Summit</a></td><td data-path="views.v-events.blocks.1.table.rows.0.2">Growth/PM leaders at PLG SaaS — bullseye ICP</td><td data-path="views.v-events.blocks.1.table.rows.0.3">92</td><td data-path="views.v-events.blocks.1.table.rows.0.4">Speak + booth</td><td data-path="views.v-events.blocks.1.table.rows.0.5">$$ (verify)</td><td data-path="views.v-events.blocks.1.table.rows.0.6">Annual · verify</td></tr><tr><td data-path="views.v-events.blocks.1.table.rows.1.0">2</td><td data-path="views.v-events.blocks.1.table.rows.1.1"><a href="https://www.mindtheproduct.com">Mind the Product (MTP Con)</a></td><td data-path="views.v-events.blocks.1.table.rows.1.2">Product managers, senior — high fit</td><td data-path="views.v-events.blocks.1.table.rows.1.3">88</td><td data-path="views.v-events.blocks.1.table.rows.1.4">Speak + side-event</td><td data-path="views.v-events.blocks.1.table.rows.1.5">$$ (verify)</td><td data-path="views.v-events.blocks.1.table.rows.1.6">Annual · verify</td></tr><tr><td data-path="views.v-events.blocks.1.table.rows.2.0">3</td><td data-path="views.v-events.blocks.1.table.rows.2.1"><a href="https://industryconference.com">INDUSTRY: The Product Conference</a></td><td data-path="views.v-events.blocks.1.table.rows.2.2">PMs across B2B SaaS — high fit</td><td data-path="views.v-events.blocks.1.table.rows.2.3">84</td><td data-path="views.v-events.blocks.1.table.rows.2.4">Booth + dinner</td><td data-path="views.v-events.blocks.1.table.rows.2.5">$$ (verify)</td><td data-path="views.v-events.blocks.1.table.rows.2.6">Annual · verify</td></tr><tr><td data-path="views.v-events.blocks.1.table.rows.3.0">4</td><td data-path="views.v-events.blocks.1.table.rows.3.1"><a href="https://www.saastrannual.com">SaaStr Annual</a></td><td data-path="views.v-events.blocks.1.table.rows.3.2">SaaS founders/GTM execs — economic buyers, big reach</td><td data-path="views.v-events.blocks.1.table.rows.3.3">79</td><td data-path="views.v-events.blocks.1.table.rows.3.4">Sponsor (brand) + side-event</td><td data-path="views.v-events.blocks.1.table.rows.3.5">$$$ (verify)</td><td data-path="views.v-events.blocks.1.table.rows.3.6">Annual · verify</td></tr><tr><td data-path="views.v-events.blocks.1.table.rows.4.0">5</td><td data-path="views.v-events.blocks.1.table.rows.4.1"><a href="https://www.joinpavilion.com">Pavilion GTM2x</a></td><td data-path="views.v-events.blocks.1.table.rows.4.2">GTM leaders — buyer-heavy, smaller</td><td data-path="views.v-events.blocks.1.table.rows.4.3">71</td><td data-path="views.v-events.blocks.1.table.rows.4.4">Speak + dinner</td><td data-path="views.v-events.blocks.1.table.rows.4.5">$$ (verify)</td><td data-path="views.v-events.blocks.1.table.rows.4.6">Annual · verify</td></tr><tr><td data-path="views.v-events.blocks.1.table.rows.5.0">6</td><td data-path="views.v-events.blocks.1.table.rows.5.1"><a href="https://amplitude.com/amplify">Amplitude Amplify</a></td><td data-path="views.v-events.blocks.1.table.rows.5.2">Analytics practitioners — competitor turf (offensive)</td><td data-path="views.v-events.blocks.1.table.rows.5.3">64</td><td data-path="views.v-events.blocks.1.table.rows.5.4">Side-event / hallway</td><td data-path="views.v-events.blocks.1.table.rows.5.5">$ (verify)</td><td data-path="views.v-events.blocks.1.table.rows.5.6">Annual · verify</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-events.blocks.2" data-bid=""><p data-path="views.v-events.blocks.2.p"><span class="small"><b>Why the top picks rank highest:</b> Product-Led Summit and MTP put us in front of the exact PM/growth buyer who feels the data-queue pain, with a speaking slot to demo "ask in plain English." SaaStr ranks on reach + economic buyers despite higher cost; Amplify is low-relevance but high-<i>offensive</i> value (their audience is mid-migration).</span></p></div>
+        <div class="blk" data-block="views.v-events.blocks.3" data-bid=""><p data-path="views.v-events.blocks.3.p"><span class="small muted"><b>Verify before committing budget:</b> all cost bands + dates are placeholders until the live Events Desk run; confirm CFP/sponsorship deadlines against the launch window first.</span></p></div>
+    </article>
+    <article class="view" id="v-market" data-title="Market">
+      <div class="vhead"><div class="eyebrow">Market Desk</div><h1>Market & category brief</h1><p class="sub">Artifact of the Market Desk: SWOT + Porter's Five Forces + why-now for the self-serve product-analytics category, from the strategic-analysis frameworks.</p></div>
+        <div class="blk" data-block="views.v-market.blocks.0" data-bid=""><div class="callout warn" data-path="views.v-market.blocks.0.callout"><b>Illustrative Market Desk output.</b> A live run sources each force/trend from analyst posts, reviews, and last-30-days sentiment.</div></div>
+        <div class="blk" data-block="views.v-market.blocks.1" data-bid=""><dl class="kv"><dt>Category</dt><dd data-path="views.v-market.blocks.1.kv.0.1">Self-serve product analytics ("answers without SQL") — an emerging cut of product analytics</dd><dt>Why now</dt><dd data-path="views.v-market.blocks.1.kv.1.1">Data teams are the bottleneck; the 'be data-driven' mandate hit non-technical teams; LLM-era UX made plain-English querying an expectation, not a moonshot</dd><dt>Whitespace</dt><dd data-path="views.v-market.blocks.1.kv.2.1">The non-technical self-server — incumbents optimize for the analyst, not the PM who has the question</dd></dl></div>
+        <div class="blk" data-block="views.v-market.blocks.2" data-bid=""><div class="h" data-path="views.v-market.blocks.2.h">SWOT</div></div>
+        <div class="blk" data-block="views.v-market.blocks.3" data-bid=""><table><thead><tr><th>Strengths</th><th>Weaknesses</th></tr></thead><tbody><tr><td data-path="views.v-market.blocks.3.table.rows.0.0">Plain-English Ask · 4-min time-to-answer · doesn't become shelfware</td><td data-path="views.v-market.blocks.3.table.rows.0.1">Not warehouse-native; thinner deep-modeling; low brand vs incumbents</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-market.blocks.4" data-bid=""><table><thead><tr><th>Opportunities</th><th>Threats</th></tr></thead><tbody><tr><td data-path="views.v-market.blocks.4.table.rows.0.0">Non-technical buyers underserved · the AI-analytics wave · a clean PLG self-serve motion</td><td data-path="views.v-market.blocks.4.table.rows.0.1">Incumbents bolt on AI query · analytics commoditized to free tiers · DIY (SQL+BI) is entrenched</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-market.blocks.5" data-bid=""><div class="h" data-path="views.v-market.blocks.5.h">Porter's Five Forces</div></div>
+        <div class="blk" data-block="views.v-market.blocks.6" data-bid=""><table><thead><tr><th>Force</th><th>Read</th></tr></thead><tbody><tr><td data-path="views.v-market.blocks.6.table.rows.0.0">Rivalry</td><td data-path="views.v-market.blocks.6.table.rows.0.1">High — Amplitude, Mixpanel, PostHog, Heap</td></tr><tr><td data-path="views.v-market.blocks.6.table.rows.1.0">Buyer power</td><td data-path="views.v-market.blocks.6.table.rows.1.1">Medium — many cheap options, but switching cost rises with instrumentation</td></tr><tr><td data-path="views.v-market.blocks.6.table.rows.2.0">Substitutes</td><td data-path="views.v-market.blocks.6.table.rows.2.1">High — SQL + BI, spreadsheets, 'ask the analyst'</td></tr><tr><td data-path="views.v-market.blocks.6.table.rows.3.0">New entrants</td><td data-path="views.v-market.blocks.6.table.rows.3.1">High — LLM-analytics startups entering constantly</td></tr><tr><td data-path="views.v-market.blocks.6.table.rows.4.0">Supplier power</td><td data-path="views.v-market.blocks.6.table.rows.4.1">Low — commodity infra</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-market.blocks.7" data-bid=""><p data-path="views.v-market.blocks.7.p"><span class="small muted"><b>Verify on live run:</b> force ratings + the 'incumbents add AI query' threat are directional until sourced.</span></p></div>
+    </article>
+    <article class="view" id="v-channels" data-title="Channels">
+      <div class="vhead"><div class="eyebrow">Channels Desk</div><h1>Channel & community map</h1><p class="sub">Artifact of the Channels Desk: where Plotline's ICP (PMs/growth at 20–200-person B2B SaaS) gathers, ranked by reach × fit × effort. Exports <code>channels.csv</code>.</p></div>
+        <div class="blk" data-block="views.v-channels.blocks.0" data-bid=""><div class="callout warn" data-path="views.v-channels.blocks.0.callout"><b>Illustrative Channels Desk output.</b> A live run fills member counts + engagement per community from agent-reach + last30days.</div></div>
+        <div class="blk" data-block="views.v-channels.blocks.1" data-bid=""><table><thead><tr><th>#</th><th>Channel</th><th>Type</th><th>ICP fit</th><th>Effort</th><th>Play</th></tr></thead><tbody><tr><td data-path="views.v-channels.blocks.1.table.rows.0.0">1</td><td data-path="views.v-channels.blocks.1.table.rows.0.1"><a href="https://www.lennysnewsletter.com">Lenny's Newsletter / Podcast</a></td><td data-path="views.v-channels.blocks.1.table.rows.0.2">Newsletter + pod</td><td data-path="views.v-channels.blocks.1.table.rows.0.3">PMs/growth — bullseye, huge reach</td><td data-path="views.v-channels.blocks.1.table.rows.0.4">Med ($$)</td><td data-path="views.v-channels.blocks.1.table.rows.0.5">Sponsor + guest post</td></tr><tr><td data-path="views.v-channels.blocks.1.table.rows.1.0">2</td><td data-path="views.v-channels.blocks.1.table.rows.1.1"><a href="https://reddit.com/r/ProductManagement">r/ProductManagement</a></td><td data-path="views.v-channels.blocks.1.table.rows.1.2">Reddit</td><td data-path="views.v-channels.blocks.1.table.rows.1.3">PMs — high fit, large</td><td data-path="views.v-channels.blocks.1.table.rows.1.4">Low</td><td data-path="views.v-channels.blocks.1.table.rows.1.5">Organic value + AMA</td></tr><tr><td data-path="views.v-channels.blocks.1.table.rows.2.0">3</td><td data-path="views.v-channels.blocks.1.table.rows.2.1"><a href="https://www.mindtheproduct.com">Mind the Product</a></td><td data-path="views.v-channels.blocks.1.table.rows.2.2">Community + events</td><td data-path="views.v-channels.blocks.1.table.rows.2.3">PMs — high fit</td><td data-path="views.v-channels.blocks.1.table.rows.2.4">Med</td><td data-path="views.v-channels.blocks.1.table.rows.2.5">Speak + community</td></tr><tr><td data-path="views.v-channels.blocks.1.table.rows.3.0">4</td><td data-path="views.v-channels.blocks.1.table.rows.3.1"><a href="https://www.reforge.com">Reforge</a></td><td data-path="views.v-channels.blocks.1.table.rows.3.2">Community + courses</td><td data-path="views.v-channels.blocks.1.table.rows.3.3">Growth/PM leaders — high fit</td><td data-path="views.v-channels.blocks.1.table.rows.3.4">Med</td><td data-path="views.v-channels.blocks.1.table.rows.3.5">Collab / guest</td></tr><tr><td data-path="views.v-channels.blocks.1.table.rows.4.0">5</td><td data-path="views.v-channels.blocks.1.table.rows.4.1"><a href="https://www.producthunt.com">Product Hunt</a></td><td data-path="views.v-channels.blocks.1.table.rows.4.2">Launch</td><td data-path="views.v-channels.blocks.1.table.rows.4.3">Builders — med fit, big spike</td><td data-path="views.v-channels.blocks.1.table.rows.4.4">Low</td><td data-path="views.v-channels.blocks.1.table.rows.4.5">Launch 'Ask'</td></tr><tr><td data-path="views.v-channels.blocks.1.table.rows.5.0">6</td><td data-path="views.v-channels.blocks.1.table.rows.5.1"><a href="https://news.ycombinator.com">Hacker News</a></td><td data-path="views.v-channels.blocks.1.table.rows.5.2">Forum</td><td data-path="views.v-channels.blocks.1.table.rows.5.3">Technical founders — med fit</td><td data-path="views.v-channels.blocks.1.table.rows.5.4">Low</td><td data-path="views.v-channels.blocks.1.table.rows.5.5">Show HN</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-channels.blocks.2" data-bid=""><p data-path="views.v-channels.blocks.2.p"><span class="small"><b>Why these rank:</b> Lenny + r/ProductManagement put us in front of the exact PM who feels the data-queue pain; Reforge/MTP reach the growth-leader buyer; PH/HN are spike plays for launch week.</span></p></div>
+    </article>
+    <article class="view" id="v-analysts" data-title="Analysts &amp; KOLs">
+      <div class="vhead"><div class="eyebrow">Analyst & Influencer Desk</div><h1>Analyst & influence map</h1><p class="sub">Artifact of the KOL Desk: the people who shape the product-analytics / PM narrative, ranked by relevance × reach. Exports <code>kol-list.csv</code>.</p></div>
+        <div class="blk" data-block="views.v-analysts.blocks.0" data-bid=""><div class="callout warn" data-path="views.v-analysts.blocks.0.callout"><b>Illustrative KOL Desk output.</b> A live run fills reach figures, recent activity, and leanings per person.</div></div>
+        <div class="blk" data-block="views.v-analysts.blocks.1" data-bid=""><table><thead><tr><th>#</th><th>Name</th><th>Type</th><th>Reach</th><th>Relevance</th><th>Play</th></tr></thead><tbody><tr><td data-path="views.v-analysts.blocks.1.table.rows.0.0">1</td><td data-path="views.v-analysts.blocks.1.table.rows.0.1">Lenny Rachitsky</td><td data-path="views.v-analysts.blocks.1.table.rows.0.2">Newsletter / podcast</td><td data-path="views.v-analysts.blocks.1.table.rows.0.3">Very large</td><td data-path="views.v-analysts.blocks.1.table.rows.0.4">PM/growth audience — bullseye</td><td data-path="views.v-analysts.blocks.1.table.rows.0.5">Guest + seed</td></tr><tr><td data-path="views.v-analysts.blocks.1.table.rows.1.0">2</td><td data-path="views.v-analysts.blocks.1.table.rows.1.1">April Dunford</td><td data-path="views.v-analysts.blocks.1.table.rows.1.2">Positioning author / speaker</td><td data-path="views.v-analysts.blocks.1.table.rows.1.3">Large</td><td data-path="views.v-analysts.blocks.1.table.rows.1.4">Shapes how we position</td><td data-path="views.v-analysts.blocks.1.table.rows.1.5">Brief / endorse</td></tr><tr><td data-path="views.v-analysts.blocks.1.table.rows.2.0">3</td><td data-path="views.v-analysts.blocks.1.table.rows.2.1">Elena Verna</td><td data-path="views.v-analysts.blocks.1.table.rows.2.2">Growth advisor / writer</td><td data-path="views.v-analysts.blocks.1.table.rows.2.3">Large</td><td data-path="views.v-analysts.blocks.1.table.rows.2.4">Growth-PM buyer</td><td data-path="views.v-analysts.blocks.1.table.rows.2.5">Collab / guest</td></tr><tr><td data-path="views.v-analysts.blocks.1.table.rows.3.0">4</td><td data-path="views.v-analysts.blocks.1.table.rows.3.1">Reforge (Brian Balfour)</td><td data-path="views.v-analysts.blocks.1.table.rows.3.2">Community / education</td><td data-path="views.v-analysts.blocks.1.table.rows.3.3">Large</td><td data-path="views.v-analysts.blocks.1.table.rows.3.4">Growth-leader audience</td><td data-path="views.v-analysts.blocks.1.table.rows.3.5">Partner content</td></tr><tr><td data-path="views.v-analysts.blocks.1.table.rows.4.0">5</td><td data-path="views.v-analysts.blocks.1.table.rows.4.1">G2 · analyst grids</td><td data-path="views.v-analysts.blocks.1.table.rows.4.2">Analyst</td><td data-path="views.v-analysts.blocks.1.table.rows.4.3">Medium</td><td data-path="views.v-analysts.blocks.1.table.rows.4.4">Category placement</td><td data-path="views.v-analysts.blocks.1.table.rows.4.5">Monitor + submit</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-analysts.blocks.2" data-bid=""><p data-path="views.v-analysts.blocks.2.p"><span class="small muted"><b>Verify on live run:</b> leanings + recent activity per person; confirm each is actively posting on this space before outreach.</span></p></div>
+    </article>
+    <article class="view" id="v-gtm" data-title="GTM desk">
+      <div class="vhead"><div class="eyebrow">GTM & Launch Desk</div><h1>Launch-motion brief + tactics map</h1><p class="sub">Artifact of the GTM/Launch Desk: how comparable products launched + which tactics fit Plotline, ranked by evidence-of-ROI × fit × effort. Exports <code>launch-tactics.csv</code>.</p></div>
+        <div class="blk" data-block="views.v-gtm.blocks.0" data-bid=""><div class="callout warn" data-path="views.v-gtm.blocks.0.callout"><b>Illustrative GTM Desk output.</b> A live run sources each tactic from comparable-launch retros (PostHog, Amplitude, June) + last-30-days launch sentiment.</div></div>
+        <div class="blk" data-block="views.v-gtm.blocks.1" data-bid=""><dl class="kv"><dt>Recommended motion</dt><dd data-path="views.v-gtm.blocks.1.kv.0.1">Product-led (self-serve free tier) + sales-assist for Business/SSO — the category is PLG-first</dd><dt>Activation / aha</dt><dd data-path="views.v-gtm.blocks.1.kv.1.1">First real answer in under 5 min, no SQL — onboarding optimizes to it</dd><dt>Launch tier</dt><dd data-path="views.v-gtm.blocks.1.kv.2.1">Tier-1 marquee for 'Ask' (the differentiator)</dd></dl></div>
+        <div class="blk" data-block="views.v-gtm.blocks.2" data-bid=""><div class="h" data-path="views.v-gtm.blocks.2.h">Launch-tactics map</div></div>
+        <div class="blk" data-block="views.v-gtm.blocks.3" data-bid=""><table><thead><tr><th>#</th><th>Tactic</th><th>Fit</th><th>Evidence (comparable)</th><th>Effort</th></tr></thead><tbody><tr><td data-path="views.v-gtm.blocks.3.table.rows.0.0">1</td><td data-path="views.v-gtm.blocks.3.table.rows.0.1">Product Hunt launch</td><td data-path="views.v-gtm.blocks.3.table.rows.0.2">High — PLG, builder audience</td><td data-path="views.v-gtm.blocks.3.table.rows.0.3">June / PostHog launched on PH</td><td data-path="views.v-gtm.blocks.3.table.rows.0.4">Low</td></tr><tr><td data-path="views.v-gtm.blocks.3.table.rows.1.0">2</td><td data-path="views.v-gtm.blocks.3.table.rows.1.1">Founder POV blog + Show HN</td><td data-path="views.v-gtm.blocks.3.table.rows.1.2">High — technical credibility</td><td data-path="views.v-gtm.blocks.3.table.rows.1.3">PostHog grew on HN + content</td><td data-path="views.v-gtm.blocks.3.table.rows.1.4">Low</td></tr><tr><td data-path="views.v-gtm.blocks.3.table.rows.2.0">3</td><td data-path="views.v-gtm.blocks.3.table.rows.2.1">Interactive 'ask a question' demo</td><td data-path="views.v-gtm.blocks.3.table.rows.2.2">High — the product is the marketing</td><td data-path="views.v-gtm.blocks.3.table.rows.2.3">Amplitude/Heap lead with demo</td><td data-path="views.v-gtm.blocks.3.table.rows.2.4">Med</td></tr><tr><td data-path="views.v-gtm.blocks.3.table.rows.3.0">4</td><td data-path="views.v-gtm.blocks.3.table.rows.3.1">Lenny's + r/ProductManagement</td><td data-path="views.v-gtm.blocks.3.table.rows.3.2">High — exact ICP</td><td data-path="views.v-gtm.blocks.3.table.rows.3.3">(see Channels desk)</td><td data-path="views.v-gtm.blocks.3.table.rows.3.4">Med</td></tr><tr><td data-path="views.v-gtm.blocks.3.table.rows.4.0">5</td><td data-path="views.v-gtm.blocks.3.table.rows.4.1">Paid search 'Vista alternative'</td><td data-path="views.v-gtm.blocks.3.table.rows.4.2">Med — capture intent</td><td data-path="views.v-gtm.blocks.3.table.rows.4.3">competitor-alternative SEM</td><td data-path="views.v-gtm.blocks.3.table.rows.4.4">Med (phase 2)</td></tr></tbody></table></div>
+        <div class="blk" data-block="views.v-gtm.blocks.4" data-bid=""><p data-path="views.v-gtm.blocks.4.p"><span class="small"><b>Why this order:</b> PLG products win launch week on Product Hunt + community + a self-serve demo, not paid. Paid 'alternative' search is a phase-2 capture play once the funnel converts.</span></p></div>
+    </article>
+    <article class="view" id="v-narrative" data-title="Narrative">
+      <div class="vhead"><div class="eyebrow">09 · Story</div><h1>Brand / sales narrative</h1><p class="sub">The change → stakes → villain → promised land → proof → flag.</p></div>
+        <div class="blk" data-block="views.v-narrative.blocks.0" data-bid=""><div class="rows"><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.0.t">1 · The change</div><div class="d" data-path="views.v-narrative.blocks.0.rows.0.d">Every team is told to be 'data-driven' — but the people who need answers aren't the ones who can write SQL.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.1.t">2 · The stakes</div><div class="d" data-path="views.v-narrative.blocks.0.rows.1.d">So every question becomes a ticket. Decisions wait days, or get made on gut and relitigated next week.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.2.t">3 · The villain</div><div class="d" data-path="views.v-narrative.blocks.0.rows.2.d">Not the tools — the bottleneck: the gap between who has the question and who can get the answer.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.3.t">4 · The promised land</div><div class="d" data-path="views.v-narrative.blocks.0.rows.3.d">Ask in plain English, get the answer yourself, in minutes — on numbers the whole team shares.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.4.t">5 · The proof</div><div class="d" data-path="views.v-narrative.blocks.0.rows.4.d">Median first answer: 4 minutes. 71% of active users write no SQL. The tool that doesn't become shelfware.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.5.t">6 · The flag</div><div class="d" data-path="views.v-narrative.blocks.0.rows.5.d">Product analytics the people with the questions can finally run themselves.</div></div><div class="meta"></div></div></div></div>
+        <div class="blk" data-block="views.v-narrative.blocks.1" data-bid=""><div class="h" data-path="views.v-narrative.blocks.1.h">Lines to copy</div></div>
+        <div class="blk" data-block="views.v-narrative.blocks.2" data-bid=""><div class="copyline"><span data-path="views.v-narrative.blocks.2.copy.0">"Four minutes, not a ticket."</span><button class="cbtn" data-copy="Four minutes, not a ticket.">Copy</button></div></div>
+        <div class="blk" data-block="views.v-narrative.blocks.3" data-bid=""><div class="copyline"><span data-path="views.v-narrative.blocks.3.copy.0">Press: "The analytics tool built for the people who actually have the questions."</span><button class="cbtn" data-copy="The analytics tool built for the people who actually have the questions — no SQL, no data-team queue.">Copy</button></div></div>
+    </article>
+    <article class="view" id="v-campaign" data-title="Campaign">
+      <div class="vhead"><div class="eyebrow">10 · "Ask, Don't Wait"</div><h1>Launch campaign</h1><p class="sub">Flagship campaign. Big idea: contrast the multi-day ticket queue with a four-minute answer.</p></div>
+        <div class="blk" data-block="views.v-campaign.blocks.0" data-bid=""><div class="stats" style="gap:32px"><div><div class="n" style="font-size:22px">wk1</div><div class="l">Ask adoption</div></div><div><div class="n" style="font-size:22px">+10pt</div><div class="l">Activation lift</div></div><div><div class="n" style="font-size:22px">beat</div><div class="l">Trial→paid</div></div><div><div class="n" style="font-size:22px">4 min</div><div class="l">Time to answer</div></div></div></div>
+        <div class="blk" data-block="views.v-campaign.blocks.1" data-bid=""><dl class="kv"><dt>Big idea</dt><dd data-path="views.v-campaign.blocks.1.kv.0.1">Contrast the multi-day ticket queue with a four-minute answer. 'Ask, don't wait.'</dd><dt>Channels</dt><dd data-path="views.v-campaign.blocks.1.kv.1.1">Founder POV + blog (credibility) · Product Hunt (spike) · r/ProductManagement · lifecycle (activation) · paid search 'Vista alternative' (phase 2)</dd><dt>Deliverables</dt><dd data-path="views.v-campaign.blocks.1.kv.2.1">Launch blog · founder POV · interactive demo · 5 social posts · homepage hero · 'Ask' product page · battlecard · lifecycle email · FAQ</dd><dt>Guardrails</dt><dd data-path="views.v-campaign.blocks.1.kv.3.1">Show the generated query (no black box) · scope the accuracy claim · never imply we replace a data warehouse</dd></dl></div>
+    </article>
+    <article class="view" id="v-coach" data-title="Coach review">
+      <div class="vhead"><div class="eyebrow">11 · Pressure-test</div><h1>PMM coach review</h1><p class="sub">Senior-PMM scorecard (bars animate when this view opens) + required revisions.</p></div>
+        <div class="blk" data-block="views.v-coach.blocks.0" data-bid=""><div class="h" data-path="views.v-coach.blocks.0.h">Scorecard</div></div>
+        <div class="blk" data-block="views.v-coach.blocks.1" data-bid=""><div data-w="scorecard"></div></div>
+        <div class="blk" data-block="views.v-coach.blocks.2" data-bid=""><div class="h" data-path="views.v-coach.blocks.2.h">Required revisions before launch</div></div>
+        <div class="blk" data-block="views.v-coach.blocks.3" data-bid=""><div data-w="checklist-rev"></div></div>
+        <div class="blk" data-block="views.v-coach.blocks.4" data-bid=""><div class="callout warn" data-path="views.v-coach.blocks.4.callout"><b>Verdict:</b> greenlight — the positioning is specific and honest about where it loses. <b>Close the proof gap</b> (a named customer + a quantified outcome) before the Tier-1 marquee claims go live.</div></div>
+    </article>
+    <article class="view" id="v-exports" data-title="Exports">
+      <div class="vhead"><div class="eyebrow">Appendix</div><h1>Exports & source docs</h1><p class="sub">Generated by the artifact factory. Links resolve when this file sits in the launch folder next to generated-docs/.</p></div>
+        <div class="blk" data-block="views.v-exports.blocks.0" data-bid=""><div class="h" data-path="views.v-exports.blocks.0.h">Export files</div></div>
+        <div class="blk" data-block="views.v-exports.blocks.1" data-bid=""><div class="rows" data-w="exportFiles"></div></div>
+        <div class="blk" data-block="views.v-exports.blocks.2" data-bid=""><div class="h" data-path="views.v-exports.blocks.2.h">Source markdown</div></div>
+        <div class="blk" data-block="views.v-exports.blocks.3" data-bid=""><div class="rows" data-w="exportDocs"></div></div>
+    </article>
+  </main>
+  <aside class="inspector">
+    <div class="instabs"><button class="instab on" id="tabInspect">Inspector</button><button class="instab" id="tabComments">Comments<span class="ct" id="cmtCount"></span></button></div>
+    <div id="pane-inspect">
+      <div class="ins-head"><div class="eye" id="ins-eye">Inspector</div><h3 id="ins-title">Select an item</h3></div>
+      <div id="inspector-body"><p class="muted small">Pick a section, then select a row to inspect its details here.</p></div>
+    </div>
+    <div id="pane-comments" style="display:none"><div id="comments-body"></div></div>
+  </aside>
+</div>
+<div id="details">
+  <div data-id="p-priya" data-eye="Persona · primary" data-title="Priya — the PM"><div class="blk" data-block="details.p-priya.blocks.0" data-bid=""><dl class="kv"><dt>JTBD</dt><dd data-path="details.p-priya.blocks.0.kv.0.1">Answer my own product questions and ship the fix this week.</dd><dt>Pain</dt><dd data-path="details.p-priya.blocks.0.kv.1.1">Blocked on the data queue; decisions wait days.</dd><dt>Channel</dt><dd data-path="details.p-priya.blocks.0.kv.2.1">Lives in the product + Slack</dd></dl></div>
+        <div class="blk" data-block="details.p-priya.blocks.1" data-bid=""><div class="copyline"><span data-path="details.p-priya.blocks.1.copy.0">"Stop filing tickets to ask why trial users churn."</span><button class="cbtn" data-copy="Stop filing tickets to ask why trial users churn. Ask Plotline, get the funnel, ship the fix this week.">Copy</button></div></div></div>
+  <div data-id="p-marcus" data-eye="Persona" data-title="Marcus — lifecycle / PMM"><div class="blk" data-block="details.p-marcus.blocks.0" data-bid=""><dl class="kv"><dt>JTBD</dt><dd data-path="details.p-marcus.blocks.0.kv.0.1">Measure campaigns and activation against one shared definition.</dd><dt>Pain</dt><dd data-path="details.p-marcus.blocks.0.kv.1.1">Nobody agrees what 'activated' means; numbers don't reconcile.</dd></dl></div>
+        <div class="blk" data-block="details.p-marcus.blocks.1" data-bid=""><div class="copyline"><span data-path="details.p-marcus.blocks.1.copy.0">"Measure every campaign against the same definition of 'activated.'"</span><button class="cbtn" data-copy="Measure every campaign against the same definition of 'activated' — no SQL, no data-team queue.">Copy</button></div></div></div>
+  <div data-id="p-dana" data-eye="Persona · economic buyer" data-title="Dana — Head of Product"><div class="blk" data-block="details.p-dana.blocks.0" data-bid=""><dl class="kv"><dt>JTBD</dt><dd data-path="details.p-dana.blocks.0.kv.0.1">Get more decisions per week without adding a data hire.</dd><dt>Pain</dt><dd data-path="details.p-dana.blocks.0.kv.1.1">Bought Vista; it's shelfware. The data team is a bottleneck.</dd></dl></div>
+        <div class="blk" data-block="details.p-dana.blocks.1" data-bid=""><div class="copyline"><span data-path="details.p-dana.blocks.1.copy.0">"More decisions per week, on numbers everyone trusts."</span><button class="cbtn" data-copy="More decisions per week, on numbers everyone trusts, without adding a data hire.">Copy</button></div></div></div>
+  <div data-id="p-sam" data-eye="Persona · blocker" data-title="Sam — Head of Data"><div class="blk" data-block="details.p-sam.blocks.0" data-bid=""><dl class="kv"><dt>JTBD</dt><dd data-path="details.p-sam.blocks.0.kv.0.1">Stop being the bottleneck for everyone's 'why' question.</dd><dt>Reframe</dt><dd data-path="details.p-sam.blocks.0.kv.1.1">Not a threat — Plotline frees the queue for the modeling only the data team can do.</dd></dl></div>
+        <div class="blk" data-block="details.p-sam.blocks.1" data-bid=""><div class="copyline"><span data-path="details.p-sam.blocks.1.copy.0">"Plotline takes the self-serve questions off your queue."</span><button class="cbtn" data-copy="Plotline takes the self-serve 'why' questions off your queue so your team does the modeling only they can.">Copy</button></div></div></div>
+  <div data-id="m-0" data-eye="Pillar 1" data-title="Ask in plain English"><div class="blk" data-block="details.m-0.blocks.0" data-bid=""><p data-path="details.m-0.blocks.0.p">Type the question — 'where do trial users drop off before inviting a teammate?' — and get a funnel back. No query language, no report to hunt for.</p></div>
+        <div class="blk" data-block="details.m-0.blocks.1" data-bid=""><div class="h" data-path="details.m-0.blocks.1.h">Proof</div></div>
+        <div class="blk" data-block="details.m-0.blocks.2" data-bid=""><ul class="list"><li data-path="details.m-0.blocks.2.list.0">4-min median time to first answer</li><li data-path="details.m-0.blocks.2.list.1">71% of weekly active users write no SQL</li><li data-path="details.m-0.blocks.2.list.2">The generated query is shown, not hidden</li></ul></div>
+        <div class="blk" data-block="details.m-0.blocks.3" data-bid=""><div class="h" data-path="details.m-0.blocks.3.h">Features</div></div>
+        <div class="blk" data-block="details.m-0.blocks.4" data-bid=""><div><span class="chip">plain-English Ask</span><span class="chip">auto-funnels</span><span class="chip">cohorts</span><span class="chip">saved dashboards</span></div></div></div>
+  <div data-id="m-1" data-eye="Pillar 2" data-title="No tickets, no waiting"><div class="blk" data-block="details.m-1.blocks.0" data-bid=""><p data-path="details.m-1.blocks.0.p">Auto-instrumentation captures events without an engineering ticket; self-serve means no analyst in the loop for the common question.</p></div>
+        <div class="blk" data-block="details.m-1.blocks.1" data-bid=""><div class="h" data-path="details.m-1.blocks.1.h">Proof</div></div>
+        <div class="blk" data-block="details.m-1.blocks.2" data-bid=""><ul class="list"><li data-path="details.m-1.blocks.2.list.0">No eng ticket to add an event</li><li data-path="details.m-1.blocks.2.list.1">No analyst queue for the common 'why'</li><li data-path="details.m-1.blocks.2.list.2">~2-day queue → minutes</li></ul></div></div>
+  <div data-id="m-2" data-eye="Pillar 3" data-title="One set of numbers"><div class="blk" data-block="details.m-2.blocks.0" data-bid=""><p data-path="details.m-2.blocks.0.p">Shared metric definitions — 'active', 'activated', 'MTU' — used across product and marketing, so numbers reconcile across teams.</p></div>
+        <div class="blk" data-block="details.m-2.blocks.1" data-bid=""><div class="h" data-path="details.m-2.blocks.1.h">Proof</div></div>
+        <div class="blk" data-block="details.m-2.blocks.2" data-bid=""><ul class="list"><li data-path="details.m-2.blocks.2.list.0">Shared metric catalog</li><li data-path="details.m-2.blocks.2.list.1">One definition, every team</li><li data-path="details.m-2.blocks.2.list.2">(proof gap: quantify 'fewer reconciliation arguments' — needs a customer quote)</li></ul></div></div>
+  <div data-id="c-vista" data-eye="Battlecard" data-title="vs Vista Analytics"><div class="blk" data-block="details.c-vista.blocks.0" data-bid=""><div class="h" data-path="details.c-vista.blocks.0.h">When we win</div></div>
+        <div class="blk" data-block="details.c-vista.blocks.1" data-bid=""><p data-path="details.c-vista.blocks.1.p">No/overloaded data team · Vista is already shelfware there · the user is non-technical · the speed of one answer matters.</p></div>
+        <div class="blk" data-block="details.c-vista.blocks.2" data-bid=""><div class="h" data-path="details.c-vista.blocks.2.h">When they win</div></div>
+        <div class="blk" data-block="details.c-vista.blocks.3" data-bid=""><p data-path="details.c-vista.blocks.3.p">A mature data org wanting warehouse-native modeling + governance at enterprise scale. Disqualify, don't oversell.</p></div>
+        <div class="blk" data-block="details.c-vista.blocks.4" data-bid=""><div class="h" data-path="details.c-vista.blocks.4.h">Guidance</div></div>
+        <div class="blk" data-block="details.c-vista.blocks.5" data-bid=""><p data-path="details.c-vista.blocks.5.p">Don't fight on feature depth (their home field). Reframe to adoption + time-to-value: 'how many seats actually log in weekly?'</p></div></div>
+  <div data-id="c-pulse" data-eye="Battlecard" data-title="vs Pulse"><div class="blk" data-block="details.c-pulse.blocks.0" data-bid=""><div class="h" data-path="details.c-pulse.blocks.0.h">When we win</div></div>
+        <div class="blk" data-block="details.c-pulse.blocks.1" data-bid=""><p data-path="details.c-pulse.blocks.1.p">Pulse shows what happened, then you file a ticket to ask why. Plotline answers the follow-up yourself.</p></div>
+        <div class="blk" data-block="details.c-pulse.blocks.2" data-bid=""><div class="h" data-path="details.c-pulse.blocks.2.h">When they win</div></div>
+        <div class="blk" data-block="details.c-pulse.blocks.3" data-bid=""><p data-path="details.c-pulse.blocks.3.p">Buyer only wants dashboards and already has someone to build and maintain them.</p></div>
+        <div class="blk" data-block="details.c-pulse.blocks.4" data-bid=""><div class="h" data-path="details.c-pulse.blocks.4.h">Guidance</div></div>
+        <div class="blk" data-block="details.c-pulse.blocks.5" data-bid=""><p data-path="details.c-pulse.blocks.5.p">'Pulse tells you what. Plotline tells you why — without the next ticket.'</p></div></div>
+  <div data-id="c-queue" data-eye="Battlecard" data-title="vs SQL analyst + data queue"><div class="blk" data-block="details.c-queue.blocks.0" data-bid=""><div class="h" data-path="details.c-queue.blocks.0.h">When we win</div></div>
+        <div class="blk" data-block="details.c-queue.blocks.1" data-bid=""><p data-path="details.c-queue.blocks.1.p">Speed + self-serve: the common 'why' question in minutes, not a multi-day ticket.</p></div>
+        <div class="blk" data-block="details.c-queue.blocks.2" data-bid=""><div class="h" data-path="details.c-queue.blocks.2.h">When they win</div></div>
+        <div class="blk" data-block="details.c-queue.blocks.3" data-bid=""><p data-path="details.c-queue.blocks.3.p">Deep, novel modeling that genuinely needs SQL and the warehouse.</p></div>
+        <div class="blk" data-block="details.c-queue.blocks.4" data-bid=""><div class="h" data-path="details.c-queue.blocks.4.h">Guidance</div></div>
+        <div class="blk" data-block="details.c-queue.blocks.5" data-bid=""><p data-path="details.c-queue.blocks.5.p">'Keep the analyst for the hard modeling. Plotline clears the queue of the 80% they shouldn't be doing.'</p></div></div>
+</div>
+<div class="scrim" id="scrim"></div>
+<div class="palette" id="palette"><input id="pInput" placeholder="Jump to a section or item…" autocomplete="off"/><div class="pres" id="pRes"></div></div>
+<div class="drawer" id="notes">
+  <div class="dh">Notebook <button id="notesClose">✕</button></div>
+  <div class="db"><div id="noteDoc"></div></div>
+  <div class="df"><button class="tbtn" id="notesClear">Clear</button> <span class="muted small">autosaved · type “/” or select text to format</span></div>
+</div>
+<div class="intro" id="intro">
+  <button class="tbtn iskip" id="introSkip">Skip ✕</button>
+  <div id="introPanels"></div>
+  <div class="icue">scroll ↓</div>
+</div>
+<div class="deckbar"><button class="tbtn" id="prevSlide">←</button><span class="ct" id="slideCt"></span><button class="tbtn" id="nextSlide">→</button><button class="tbtn on" id="exitPresent">Exit</button></div>
+<div id="savePill">Saved ✓</div>
+<div class="bubble" id="bubble"><button data-cmd="bold" title="Bold"><b>B</b></button><button data-cmd="italic" title="Italic"><i>I</i></button><button data-cmd="createLink" title="Link">↗</button><button data-cmd="removeFormat" title="Clear">⌫</button></div>
+<div class="slash" id="slash"></div>
+<div class="cmadd" id="cmAdd">💬 Comment</div>
+<div class="cmpop" id="cmPop"><div class="q" id="cmQuote"></div><textarea id="cmText" placeholder="Add a comment…"></textarea><div class="act"><button class="tbtn" id="cmCancel">Cancel</button><button class="tbtn on" id="cmSave">Comment</button></div></div>
+<script>window.KIT={"stats":[["4 min","median time to first answer",4],["~2 days","the data-queue it replaces",2],["71%","of active users write no SQL",71],["$0","to start · 10k MTU free",0]],"kit":[["01","Product context","v-product"],["02","ICP & personas","v-personas"],["03","Positioning","v-positioning"],["04","Messaging","v-messaging"],["05","Competitive","v-competitive"],["06","Pricing","v-pricing"],["07","Launch plan","v-launch"],["08","PLG & loops","v-plg"],["09","Narrative","v-narrative"],["10","Campaign","v-campaign"],["11","Coach review","v-coach"]],"taglines":["Ask your product a question.","Answers, not a ticket queue.","Product analytics without the SQL.","Four minutes, not four days.","The analytics your whole team actually opens.","Stop arguing about whose number is right."],"msgVariants":[["Priya (PM)","Stop filing tickets to ask why trial users churn. Ask Plotline, get the funnel, ship the fix this week."],["Marcus (PMM)","Measure every campaign against the same definition of 'activated' — no SQL, no data-team queue."],["Dana (Head of Product)","More decisions per week, on numbers everyone trusts, without adding a data hire."],["Sam (Head of Data)","Plotline takes the self-serve 'why' questions off your queue so your team does the modeling only they can."]],"pricing":{"tiers":[["Free","$0","10k MTU"],["Team","usage","to 100k MTU"],["Business","custom","SSO · gov"]],"features":[["Monthly tracked users","10k","to 100k","500k+"],["Seats","unlimited","unlimited","unlimited"],["Plain-English Ask","✓","✓","✓"],["Shared metric catalog","—","✓","✓"],["SSO · roles · audit","—","—","✓"]]},"scorecard":[["Positioning clarity",5],["Differentiation",4],["ICP specificity",5],["Evidence / proof",3],["Pricing logic",5],["Launch readiness",4],["Competitive defense",4]],"launchActs":["Sales enablement: deck, battlecard vs Vista, talk track (T-7)","Demo video + interactive 'ask a question' demo (T-10)","Homepage hero + 'Ask' product page (T-7)","Lifecycle email + in-product first-run tooltip (T-3)","Launch blog + founder POV (T-0)","Product Hunt + r/ProductManagement (T-0)","Accuracy guardrail green in beta (go / no-go)","Paid search on 'Vista alternative' (phase 2)"],"revisions":["Close the proof gap: land one named customer + a quantified outcome for the case study.","Scope the 'Ask' accuracy claim to common question types; publish what it does and doesn't do.","Always show the generated query + metric definition so answers aren't a black box.","Model each beta account's seat→MTU bill; grandfather increases for 2 cycles.","Instrument the metric tree before launch (activation delta, free→Team)."],"palette":[["Priya — the PM","v-personas","p-priya"],["Marcus — the PMM","v-personas","p-marcus"],["Dana — Head of Product","v-personas","p-dana"],["Sam — Head of Data","v-personas","p-sam"],["Pillar: Plain English","v-messaging","m-0"],["Pillar: No waiting","v-messaging","m-1"],["Pillar: One set of numbers","v-messaging","m-2"],["vs Vista","v-competitive","c-vista"],["vs Pulse","v-competitive","c-pulse"],["vs the data queue","v-competitive","c-queue"]],"exportFiles":[["events.csv","CSV · ranked event targets"],["launch-tactics.csv","CSV · ranked launch tactics"],["campaign-brief.docx","Word · campaign brief"],["launch-deck.pptx","PowerPoint · deck"],["social-posts.csv","CSV · social posts"],["battlecard.docx","Word · battlecard"],["pricing-model.xlsx","Excel · pricing model"],["metrics.json","PLG metrics"]],"exportDocs":["01-product-context","02-icp-and-personas","03-positioning","04-messaging-house","05-competitive-intelligence","06-pricing-packaging","07-gtm-launch-plan","08-plg-growth-loops","09-sales-brand-narrative","10-campaign-brief","11-pmm-coach-review"],"intro":[{"kind":"title","eyebrow":"Plotline · launch kit","h":"Ask your product<br/>a question.","s":"Self-serve product analytics — and the strategy to launch it."},{"kind":"stats","eyebrow":"The bottleneck, in numbers"},{"kind":"line","h":"The people with the questions<br/>can't get the answers.","s":"So every question becomes a ticket in the data-team queue. Decisions wait days — or get made on gut."},{"kind":"cta","h":"Plotline answers in four minutes.","s":"Ask in plain English · no SQL · no ticket · one set of numbers."}]};window.KITCOMMENTS=[];window.KITBLOCKMENU=[{"type":"text","label":"Text","icon":"¶","template":{"type":"text","p":"New text"}},{"type":"heading","label":"Heading","icon":"H","template":{"type":"heading","h":"New heading"}},{"type":"todo","label":"To-do list","icon":"☑","template":{"type":"todo","todo":[["New to-do",false]]}},{"type":"list","label":"Bulleted list","icon":"•","template":{"type":"list","list":["New item"]}},{"type":"table","label":"Table","icon":"⊞","template":{"type":"table","table":{"head":["Column A","Column B","Column C"],"rows":[["","",""],["","",""]]}}},{"type":"callout","label":"Callout","icon":"!","template":{"type":"callout","callout":"New callout"}},{"type":"quote","label":"Quote","icon":"❝","template":{"type":"quote","quote":"New quote"}},{"type":"divider","label":"Divider","icon":"—","template":{"type":"divider","divider":true}},{"type":"toggle","label":"Toggle list","icon":"▸","template":{"type":"toggle","title":"Toggle","children":[{"type":"text","p":"Hidden detail — click ▾ to collapse."}]}}];window.KITTRANSFORM={"text":["heading","quote","callout","todo","list"],"heading":["text","quote","callout"],"quote":["text","callout","heading"],"callout":["text","quote","heading"],"list":["todo","text"],"todo":["list","text"]};</script>
+<script>
+(function () {
+  "use strict";
+  var KIT = window.KIT || {};
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+  var save = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  var load = function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+  var safe = function (fn) { try { fn(); } catch (e) { console.error('[pmm-kit]', e); } };
+  var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); };
+
+  var VIEWS = $$('.view'), NAV = $$('.nav a'), defaults = {}, curView = 'v-overview', curDetail = null;
+  var STATUS = load('kit_status', {}), STORDER = ['none', 'draft', 'review', 'approved'];
+  var SLABEL = { none: 'no status', draft: 'draft', review: 'review', approved: 'approved' };
+  var fillEl = function (w, html) { var el = $('[data-w="' + w + '"]'); if (el) el.innerHTML = html; return el; };
+
+  /* ---------------- widgets (data-driven from KIT) ---------------- */
+  safe(function () { fillEl('stats', (KIT.stats || []).map(function (s) { return '<div><div class="n" data-count="' + s[2] + '">' + s[0] + '</div><div class="l">' + s[1] + '</div></div>'; }).join('')); });
+
+  safe(function () {
+    var el = fillEl('kitrows', (KIT.kit || []).map(function (k) { return '<div class="row sel-able" data-go="' + k[2] + '"><div><div class="t">' + k[0] + ' · ' + k[1] + '</div></div><div class="meta">open →</div></div>'; }).join(''));
+    if (el) $$('[data-go]', el).forEach(function (r) { r.addEventListener('click', function () { go(r.dataset.go); }); });
+  });
+
+  safe(function () {
+    var stars = load('kit_stars', {});
+    var el = fillEl('taglines', (KIT.taglines || []).map(function (t, i) { return '<div class="copyline"><span><button class="star ' + (stars[i] ? 'on' : '') + '" data-star="' + i + '">★</button> ' + t + '</span><button class="cbtn" data-copy="' + esc(t) + '">Copy</button></div>'; }).join(''));
+    if (el) $$('[data-star]', el).forEach(function (s) { s.addEventListener('click', function () { var i = s.dataset.star; stars[i] = !stars[i]; s.classList.toggle('on'); save('kit_stars', stars); }); });
+    bindCopy();
+  });
+
+  safe(function () {
+    var MV = KIT.msgVariants || [];
+    fillEl('msgtabs', MV.map(function (m, i) { return '<button class="' + (i ? '' : 'active') + '" data-t="' + i + '">' + m[0] + '</button>'; }).join(''));
+    function show(i) { $$('[data-w="msgtabs"] button').forEach(function (b, j) { b.classList.toggle('active', i === j); }); fillEl('msgvariant', '<span>"' + MV[i][1] + '"</span><button class="cbtn" data-copy="' + esc(MV[i][1]) + '">Copy</button>'); bindCopy(); }
+    $$('[data-w="msgtabs"] button').forEach(function (b) { b.addEventListener('click', function () { show(+b.dataset.t); }); });
+    if (MV.length) show(0);
+  });
+
+  safe(function () {
+    var P = KIT.pricing; if (!P) return;
+    function render(b) {
+      var idx = b === 'mo' ? 1 : 2;
+      var html = '<thead><tr><th>Capability</th>' + P.tiers.map(function (t) { return '<th>' + t[0] + '</th>'; }).join('') + '</tr></thead><tbody>';
+      html += '<tr><td>Price</td>' + P.tiers.map(function (t) { return '<td class="num"><b style="color:var(--accent)">' + t[idx] + '</b> <span class="dim">/' + (b === 'mo' ? 'mo' : 'yr') + '</span></td>'; }).join('') + '</tr>';
+      html += P.features.map(function (f) { return '<tr>' + f.map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>'; }).join('');
+      var tbl = $('[data-w="pricetable"]'); if (tbl) tbl.innerHTML = html + '</tbody>';
+    }
+    render('mo');
+    $$('[data-w="billtoggle"] button').forEach(function (b) { b.addEventListener('click', function () { $$('[data-w="billtoggle"] button').forEach(function (x) { x.classList.remove('active'); }); b.classList.add('active'); render(b.dataset.b); }); });
+  });
+
+  safe(function () {
+    var d = $('#days'); if (!d) return;
+    function calc() { var c = $('[data-w="calculator"]'); var uc = c ? (+c.dataset.unitcost || 0) : 0, ours = c ? (+c.dataset.ours || 0) : 0; var n = +d.value || 0, r = n * uc; var rc = $('#rentCost'), sv = $('#savings'); if (rc) rc.textContent = '$' + r.toLocaleString(); if (sv) sv.textContent = '$' + (r - ours).toLocaleString(); }
+    d.addEventListener('input', calc); calc();
+  });
+
+  function checklist(w, key, items) {
+    var host = $('[data-w="' + w + '"]'); if (!host) return;
+    var done = load(key, {});
+    function render() {
+      host.innerHTML = items.map(function (a, i) { return '<label class="chk ' + (done[i] ? 'done' : '') + '"><input type="checkbox" data-i="' + i + '" ' + (done[i] ? 'checked' : '') + '><span class="ct">' + a + '</span></label>'; }).join('');
+      $$('input[data-i]', host).forEach(function (c) { c.addEventListener('change', function () { done[c.dataset.i] = c.checked; save(key, done); render(); refreshSidebar(); }); });
+    }
+    render();
+  }
+  safe(function () { checklist('checklist-launch', 'kit_acts', KIT.launchActs || []); });
+  safe(function () { checklist('checklist-rev', 'kit_rev', KIT.revisions || []); });
+
+  safe(function () { fillEl('scorecard', (KIT.scorecard || []).map(function (s) { return '<div class="scrow"><span>' + s[0] + '</span><div class="track"><div class="fill" data-w-fill="' + (s[1] / 5 * 100) + '"></div></div><b style="color:var(--accent)">' + s[1] + '</b></div>'; }).join('')); });
+  function animateBars() { $$('[data-w-fill]').forEach(function (f) { f.style.width = f.getAttribute('data-w-fill') + '%'; }); }
+
+  safe(function () {
+    var G = KIT.gallery || [];
+    var el = fillEl('gallery', G.map(function (g, i) { return '<div class="gframe" data-g="' + i + '"><div class="gpane" style="aspect-ratio:' + g[1].replace(':', '/') + '"><div class="rr">' + g[1] + '</div><div><div class="nm">' + g[0] + '</div><div class="hh">drop a reference here</div></div></div></div>'; }).join(''));
+    if (el) $$('.gframe', el).forEach(function (f) { f.addEventListener('click', function () { pickGal(+f.dataset.g); }); });
+    defaults['v-gallery'] = { fn: function () { pickGal(0); } };
+  });
+  function pickGal(i) {
+    var g = (KIT.gallery || [])[i]; if (!g) return;
+    $('#ins-eye').textContent = 'Image prompt'; $('#ins-title').textContent = g[0] + ' · ' + g[1];
+    $('#inspector-body').innerHTML = '<p class="small">' + g[2] + '</p><div class="copyline"><span class="small dim">aspect ' + g[1] + '</span><button class="cbtn" data-copy="' + esc(g[2]) + '">Copy prompt</button></div>'; bindCopy();
+    $$('.gframe').forEach(function (f) { f.classList.remove('sel-frame'); }); var fr = $('.gframe[data-g="' + i + '"]'); if (fr) fr.classList.add('sel-frame');
+  }
+
+  safe(function () {
+    fillEl('exportFiles', (KIT.exportFiles || []).map(function (e) { return '<a class="row sel-able" href="exports/' + e[0] + '" download><div><div class="t">' + e[0] + '</div><div class="d">' + e[1] + '</div></div><div class="meta">⤓</div></a>'; }).join(''));
+    fillEl('exportDocs', (KIT.exportDocs || []).map(function (x) { return '<a class="row sel-able" href="' + x + '.md"><div><div class="t">' + x + '.md</div></div><div class="meta">→</div></a>'; }).join(''));
+  });
+
+  /* ---------------- IA: crumb / status / sidebar ---------------- */
+  function crumb() {
+    var v = $('#' + curView), name = v ? v.dataset.title : '';
+    var html = '<b>' + esc(name) + '</b>';
+    if (curDetail) { var d = $('#details [data-id="' + curDetail + '"]'); var t = d ? d.dataset.title : ''; if (t) html += '<span class="arw">›</span>' + esc(t); }
+    $('#crumb').innerHTML = html;
+    var st = STATUS[curView] || 'none'; var b = $('#statusBtn'); b.className = 'statusbtn tb-extra ' + (st === 'none' ? '' : st); b.textContent = SLABEL[st];
+  }
+  function hash() { var h = '#' + curView + (curDetail ? ('~' + curDetail) : ''); if (location.hash !== h) history.replaceState(null, '', h); }
+  function refreshSidebar() {
+    NAV.forEach(function (a) {
+      var v = a.dataset.v, st = STATUS[v] || 'none';
+      var dot = $('.sdot', a); if (dot) dot.className = 'sdot ' + (st === 'none' ? '' : st);
+      var cnt = $('.scnt', a); if (cnt) {
+        cnt.textContent = '';
+        if (v === 'v-launch') { var d1 = load('kit_acts', {}); cnt.textContent = Object.keys(d1).filter(function (k) { return d1[k]; }).length + '/' + (KIT.launchActs || []).length; }
+        if (v === 'v-coach') { var d2 = load('kit_rev', {}); cnt.textContent = Object.keys(d2).filter(function (k) { return d2[k]; }).length + '/' + (KIT.revisions || []).length; }
+      }
+    });
+  }
+
+  /* ---------------- view switching + inspector ---------------- */
+  function resetInspector() { $('#ins-eye').textContent = 'Inspector'; $('#ins-title').textContent = 'Select an item'; $('#inspector-body').innerHTML = '<p class="muted small">Select a row in this section to inspect its details here.</p>'; }
+  function selectDetail(id) {
+    var el = $('#details [data-id="' + id + '"]'); if (!el) return;
+    curDetail = id;
+    $('#ins-eye').textContent = el.dataset.eye || 'Detail'; $('#ins-title').textContent = el.dataset.title || '';
+    $('#inspector-body').innerHTML = el.innerHTML; bindCopy(); if (window.__showInspectTab) window.__showInspectTab();
+    $$('.row.selected').forEach(function (r) { r.classList.remove('selected'); });
+    var row = $('.row[data-detail="' + id + '"]'); if (row) row.classList.add('selected');
+    crumb(); hash();
+  }
+  function setView(id, detail) {
+    if (!$('#' + id)) id = 'v-overview';
+    curView = id; curDetail = null;
+    VIEWS.forEach(function (v) { v.classList.toggle('active', v.id === id); });
+    NAV.forEach(function (a) { a.classList.toggle('active', a.dataset.v === id); });
+    $('.work').scrollTop = 0; resetInspector();
+    var d = defaults[id];
+    if (detail) selectDetail(detail);
+    else if (d && d.detail) selectDetail(d.detail);
+    else if (d && d.fn) safe(d.fn);
+    crumb(); hash(); save('kit_last', id);
+    if (id === 'v-coach') animateBars();
+    if (present) deckLabel();
+    (window.__viewHooks || []).forEach(function (fn) { try { fn(id); } catch (e) {} });
+  }
+  function go(id, detail) { if (present) { var i = VIEWS.findIndex(function (v) { return v.id === id; }); if (i >= 0) slide = i; } setView(id, detail); }
+  NAV.forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); go(a.dataset.v); }); });
+  $('#home').addEventListener('click', function () { go('v-overview'); });
+  document.addEventListener('click', function (e) { if (document.body.classList.contains('editing')) return; var r = e.target.closest('.row[data-detail]'); if (r) selectDetail(r.dataset.detail); });
+
+  defaults['v-personas'] = { detail: 'p-mason' };
+  defaults['v-messaging'] = { detail: 'm-0' };
+  defaults['v-competitive'] = { detail: 'c-manual' };
+
+  $('#statusBtn').addEventListener('click', function () {
+    var st = STATUS[curView] || 'none'; var nx = STORDER[(STORDER.indexOf(st) + 1) % STORDER.length];
+    if (nx === 'none') delete STATUS[curView]; else STATUS[curView] = nx;
+    save('kit_status', STATUS); crumb(); refreshSidebar();
+  });
+
+  /* ---------------- copy ---------------- */
+  function bindCopy() { $$('.cbtn').forEach(function (b) { if (b._b) return; b._b = 1; b.addEventListener('click', function (e) { e.stopPropagation(); if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy || ''); var o = b.textContent; b.textContent = '✓'; setTimeout(function () { b.textContent = o; }, 1000); }); }); }
+  bindCopy();
+
+  /* ---------------- count-up ---------------- */
+  function up(el, attr) { var tgt = +el.dataset[attr]; if (!tgt) return; var raw = el.textContent, cur = 0, st = tgt / 35; var t = setInterval(function () { cur += st; if (cur >= tgt) { el.textContent = (attr === 'count' ? raw : tgt.toLocaleString()); clearInterval(t); } else { el.textContent = tgt >= 1000 ? Math.round(cur).toLocaleString() : Math.round(cur); } }, 22); }
+  safe(function () { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { up(e.target, 'count'); io.unobserve(e.target); } }); }); $$('[data-count]').forEach(function (el) { io.observe(el); }); });
+
+  /* ---------------- command palette ---------------- */
+  var IDX = [];
+  NAV.forEach(function (a) { IDX.push({ label: $('.nl', a).textContent, view: a.dataset.v, kind: 'Section' }); });
+  (KIT.palette || []).forEach(function (x) { IDX.push({ label: x[0], view: x[1], detail: x[2], kind: 'Item' }); });
+  var pCur = 0, pList = [];
+  function openPal() { $('#scrim').classList.add('open'); $('#palette').classList.add('open'); $('#pInput').value = ''; renderPal(''); setTimeout(function () { $('#pInput').focus(); }, 10); }
+  function closePal() { $('#scrim').classList.remove('open'); $('#palette').classList.remove('open'); }
+  function renderPal(q) {
+    q = q.toLowerCase(); pList = IDX.filter(function (it) { return it.label.toLowerCase().indexOf(q) >= 0; }); if (pCur >= pList.length) pCur = 0;
+    $('#pRes').innerHTML = pList.map(function (it, i) { return '<div class="pitem ' + (i === pCur ? 'cur' : '') + '" data-i="' + i + '"><span class="pi">' + (it.kind === 'Section' ? '§' : '·') + '</span>' + esc(it.label) + '<span class="pk">' + it.kind + '</span></div>'; }).join('') || '<div class="pitem">No matches</div>';
+    $$('#pRes .pitem[data-i]').forEach(function (el) { el.addEventListener('click', function () { choosePal(+el.dataset.i); }); });
+  }
+  function choosePal(i) { var it = pList[i]; if (!it) return; closePal(); go(it.view, it.detail); }
+  $('#cmdkBtn').addEventListener('click', openPal);
+  $('#scrim').addEventListener('click', closePal);
+  $('#pInput').addEventListener('input', function (e) { pCur = 0; renderPal(e.target.value); });
+  $('#pInput').addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); pCur = Math.min(pCur + 1, pList.length - 1); renderPal($('#pInput').value); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); pCur = Math.max(pCur - 1, 0); renderPal($('#pInput').value); }
+    else if (e.key === 'Enter') choosePal(pCur);
+    else if (e.key === 'Escape') closePal();
+  });
+  document.addEventListener('keydown', function (e) { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPal(); } });
+
+  /* ---------------- Notebook: TipTap, modeless (markdown shortcuts + bubble + slash) ---------------- */
+  safe(function () {
+    var KEY = 'kit_notebook', nbEditor = null, built = false;
+    var doc = $('#noteDoc');
+    var SEED = load(KEY, '') || '<h2>Notebook</h2><p>Write freely. Type <code>#</code> / <code>-</code> / <code>&gt;</code> / <code>[]</code> at the start of a line for blocks, hit <code>/</code> for the menu, or select text to format.</p><ul data-type="taskList"><li data-checked="false"><label><input type="checkbox"><span></span></label><div><p>a checkbox to tick</p></div></li></ul>';
+    function openNb() { $('#notes').classList.add('open'); if (!built) { built = true; build(); } }
+    function closeNb() { $('#notes').classList.remove('open'); }
+    $('#notesBtn').addEventListener('click', function () { $('#notes').classList.contains('open') ? closeNb() : openNb(); });
+    $('#notesClose').addEventListener('click', closeNb);
+    $('#notesClear').addEventListener('click', function () { if (confirm('Clear the notebook?')) { save(KEY, ''); if (nbEditor) nbEditor.commands.setContent('<p></p>'); else doc.innerHTML = ''; } });
+    window.__nbOpen = openNb;
+
+    // floating bubble for the notebook (TipTap BubbleMenu drives show/hide + position)
+    var nbBubble = document.createElement('div');
+    nbBubble.className = 'bubble'; nbBubble.id = 'nbBubble';
+    nbBubble.innerHTML = '<button data-c="bold" title="Bold"><b>B</b></button><button data-c="italic" title="Italic"><i>I</i></button><button data-c="h2" title="Heading">H</button><button data-c="bullet" title="List">•</button><button data-c="task" title="Checklist">☑</button><button data-c="quote" title="Quote">❝</button><button data-c="link" title="Link">↗</button>';
+    document.body.appendChild(nbBubble);
+
+    // notebook slash menu (own element — no collision with the middle-pane slash)
+    var nbSlash = document.createElement('div');
+    nbSlash.className = 'slash'; nbSlash.id = 'nbSlash';
+    document.body.appendChild(nbSlash);
+
+    function build() {
+      var names = ['core', 'starter-kit', 'extension-link', 'extension-task-list', 'extension-task-item', 'extension-table', 'extension-table-row', 'extension-table-header', 'extension-table-cell', 'extension-placeholder', 'extension-bubble-menu'];
+      var U = names.map(function (n) { return 'https://esm.sh/@tiptap/' + n + '@2?deps=@tiptap/core@2,@tiptap/pm@2'; });
+      Promise.all(U.map(function (u) { return import(u); })).then(function (m) {
+        var Editor = m[0].Editor, SK = m[1].default, Link = m[2].default, TaskList = m[3].default, TaskItem = m[4].default,
+          Table = m[5].default, TR = m[6].default, TH = m[7].default, TD = m[8].default, Placeholder = m[9].default, BubbleMenu = m[10].default;
+        nbEditor = new Editor({
+          element: doc, content: SEED,
+          extensions: [
+            SK, Link.configure({ openOnClick: false }), TaskList, TaskItem.configure({ nested: true }),
+            Table.configure({ resizable: true }), TR, TH, TD,
+            Placeholder.configure({ placeholder: 'Type “/” for blocks, or just write…' }),
+            BubbleMenu.configure({ element: nbBubble, tippyOptions: { duration: 80 } })
+          ],
+          onUpdate: function (o) { save(KEY, o.editor.getHTML()); }
+        });
+        window.__nbEditor = nbEditor;
+        wireBubble(); wireSlash();
+      }).catch(function () {
+        doc.setAttribute('contenteditable', 'true'); doc.innerHTML = SEED;
+        doc.addEventListener('input', function () { save(KEY, doc.innerHTML); });
+      });
+    }
+
+    function wireBubble() {
+      nbBubble.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      $$('button', nbBubble).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var c = nbEditor.chain().focus(), k = b.getAttribute('data-c');
+          if (k === 'bold') c.toggleBold().run();
+          else if (k === 'italic') c.toggleItalic().run();
+          else if (k === 'h2') c.toggleHeading({ level: 2 }).run();
+          else if (k === 'bullet') c.toggleBulletList().run();
+          else if (k === 'task') c.toggleTaskList().run();
+          else if (k === 'quote') c.toggleBlockquote().run();
+          else if (k === 'link') { var u = prompt('Link URL:'); if (u) c.extendMarkRange('link').setLink({ href: u }).run(); else c.run(); }
+        });
+      });
+    }
+
+    function wireSlash() {
+      var NB = [
+        ['Heading 1', function (c) { c.toggleHeading({ level: 1 }).run(); }, 'H'],
+        ['Heading 2', function (c) { c.toggleHeading({ level: 2 }).run(); }, 'H'],
+        ['Text', function (c) { c.setParagraph().run(); }, '¶'],
+        ['Bulleted list', function (c) { c.toggleBulletList().run(); }, '•'],
+        ['Numbered list', function (c) { c.toggleOrderedList().run(); }, '1'],
+        ['Checklist', function (c) { c.toggleTaskList().run(); }, '☑'],
+        ['Table', function (c) { c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); }, '⊞'],
+        ['Quote', function (c) { c.toggleBlockquote().run(); }, '❝'],
+        ['Divider', function (c) { c.setHorizontalRule().run(); }, '—']
+      ];
+      var idx = 0, open = false;
+      function render() { nbSlash.innerHTML = '<div class="sh">Notebook block</div>' + NB.map(function (s, i) { return '<div class="si ' + (i === idx ? 'cur' : '') + '" data-i="' + i + '"><span class="ic">' + s[2] + '</span>' + s[0] + '</div>'; }).join(''); $$('.si', nbSlash).forEach(function (el) { el.addEventListener('mousedown', function (ev) { ev.preventDefault(); pick(+el.dataset.i); }); }); }
+      function pick(i) { close(); try { var f = nbEditor.state.selection.from; nbEditor.chain().focus().deleteRange({ from: f - 1, to: f }).run(); } catch (e) {} NB[i][1](nbEditor.chain().focus()); }
+      function show() {
+        open = true; idx = 0; render();
+        var sel = window.getSelection(); var r = (sel && sel.rangeCount) ? sel.getRangeAt(0).getBoundingClientRect() : doc.getBoundingClientRect();
+        nbSlash.style.left = Math.max(8, r.left) + 'px'; nbSlash.style.top = (r.bottom + 6) + 'px'; nbSlash.classList.add('open');
+      }
+      function close() { open = false; nbSlash.classList.remove('open'); }
+      doc.addEventListener('keyup', function (e) { if (e.key === '/') setTimeout(show, 0); });
+      doc.addEventListener('keydown', function (e) {
+        if (!open) return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(idx + 1, NB.length - 1); render(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); idx = Math.max(idx - 1, 0); render(); }
+        else if (e.key === 'Enter') { e.preventDefault(); pick(idx); }
+        else if (e.key === 'Escape') close();
+      });
+      doc.addEventListener('blur', function () { setTimeout(close, 150); });
+    }
+  });
+
+  /* ---------------- cinematic intro ---------------- */
+  safe(function () {
+    var intro = $('#intro'), panels = KIT.intro || [], stats = KIT.stats || [];
+    var html = panels.map(function (p) {
+      if (p.kind === 'title') return '<section class="ipanel"><div><div class="eyebrow" style="color:var(--accent);font-size:11px;letter-spacing:.16em;text-transform:uppercase">' + p.eyebrow + '</div><h1 style="margin-top:12px">' + p.h + '</h1><p class="s">' + p.s + '</p></div></section>';
+      if (p.kind === 'stats') return '<section class="ipanel"><div><p class="eyebrow" style="color:var(--accent);font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:18px">' + p.eyebrow + '</p><div class="ibig">' + stats.slice(0, 3).map(function (s) { return '<div><div class="n" data-icount="' + s[2] + '">0</div><div class="l">' + s[1] + '</div></div>'; }).join('') + '</div></div></section>';
+      if (p.kind === 'line') return '<section class="ipanel"><h1 style="font-size:clamp(28px,6vw,58px)">' + p.h + '</h1><p class="s">' + p.s + '</p></section>';
+      if (p.kind === 'cta') return '<section class="ipanel"><div><h1 class="black" style="font-size:clamp(28px,6vw,58px);color:var(--accent);-webkit-text-fill-color:initial;background:none">' + p.h + '</h1><p class="s">' + p.s + '</p><div class="iact"><button class="tbtn on" id="introEnter">Enter the kit →</button></div></div></section>';
+      return '';
+    }).join('');
+    $('#introPanels').innerHTML = html;
+    var iio = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); $$('[data-icount]', e.target).forEach(function (el) { if (!el._d) { el._d = 1; up(el, 'icount'); } }); } }); }, { root: intro, threshold: .4 });
+    $$('.ipanel', intro).forEach(function (p) { iio.observe(p); });
+    function open() { intro.classList.add('open'); intro.scrollTop = 0; var f = $('.ipanel', intro); if (f) f.classList.add('in'); }
+    function close() { intro.classList.remove('open'); save('kit_intro_seen', 1); }
+    $('#introBtn').addEventListener('click', open);
+    $('#introSkip').addEventListener('click', close);
+    intro.addEventListener('click', function (e) { if (e.target && e.target.id === 'introEnter') close(); });
+    if (!load('kit_intro_seen', 0)) open();
+  });
+
+  /* ---------------- present mode ---------------- */
+  var present = false, slide = 0;
+  function deckLabel() { $('#slideCt').textContent = (slide + 1) + ' / ' + VIEWS.length; }
+  function deck(i) { slide = (i + VIEWS.length) % VIEWS.length; setView(VIEWS[slide].id); }
+  function toggle(on) { present = on; document.body.classList.toggle('present', on); $('#presentBtn').textContent = on ? 'Exit' : 'Present'; $('#presentBtn').classList.toggle('on', on); if (on) deck(slide); }
+  $('#presentBtn').addEventListener('click', function () { toggle(!present); });
+  $('#exitPresent').addEventListener('click', function () { toggle(false); });
+  $('#nextSlide').addEventListener('click', function () { deck(slide + 1); });
+  $('#prevSlide').addEventListener('click', function () { deck(slide - 1); });
+  document.addEventListener('keydown', function (e) { if (!present) return; if (e.key === 'ArrowRight' || e.key === ' ') deck(slide + 1); if (e.key === 'ArrowLeft') deck(slide - 1); if (e.key === 'Escape') toggle(false); });
+
+  $('#pdfBtn').addEventListener('click', function () { window.print(); });
+
+  /* ---------------- resizable + collapsible panels ---------------- */
+  safe(function () {
+    var root = document.documentElement;
+    var sidew = load('kit_sidew', 248), insw = load('kit_insw', 336);
+    root.style.setProperty('--sidew', sidew + 'px'); root.style.setProperty('--insw', insw + 'px');
+    if (load('kit_side_col', 0)) document.body.classList.add('sidebar-collapsed');
+    if (load('kit_ins_col', 0)) document.body.classList.add('inspector-collapsed');
+    function drag(handle, which) {
+      if (!handle) return;
+      handle.addEventListener('mousedown', function (e) {
+        e.preventDefault(); handle.classList.add('drag');
+        var startX = e.clientX, start = which === 'l' ? sidew : insw;
+        function mv(ev) {
+          var dx = ev.clientX - startX, w = which === 'l' ? start + dx : start - dx;
+          w = Math.max(0, Math.min(which === 'l' ? 460 : 520, w));
+          if (which === 'l') { sidew = w; root.style.setProperty('--sidew', w + 'px'); document.body.classList.toggle('sidebar-collapsed', w < 120); }
+          else { insw = w; root.style.setProperty('--insw', w + 'px'); document.body.classList.toggle('inspector-collapsed', w < 150); }
+        }
+        function done() {
+          document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', done); handle.classList.remove('drag');
+          if (which === 'l') { var c = document.body.classList.contains('sidebar-collapsed'); save('kit_side_col', c ? 1 : 0); if (!c) { sidew = Math.max(170, sidew); root.style.setProperty('--sidew', sidew + 'px'); save('kit_sidew', sidew); } }
+          else { var c2 = document.body.classList.contains('inspector-collapsed'); save('kit_ins_col', c2 ? 1 : 0); if (!c2) { insw = Math.max(240, insw); root.style.setProperty('--insw', insw + 'px'); save('kit_insw', insw); } }
+        }
+        document.addEventListener('mousemove', mv); document.addEventListener('mouseup', done);
+      });
+    }
+    drag($('#rszL'), 'l'); drag($('#rszR'), 'r');
+    var rl = $('#reopenL'), rr = $('#reopenR');
+    if (rl) rl.addEventListener('click', function () { document.body.classList.remove('sidebar-collapsed'); sidew = Math.max(200, sidew); root.style.setProperty('--sidew', sidew + 'px'); save('kit_side_col', 0); save('kit_sidew', sidew); });
+    if (rr) rr.addEventListener('click', function () { document.body.classList.remove('inspector-collapsed'); insw = Math.max(280, insw); root.style.setProperty('--insw', insw + 'px'); save('kit_ins_col', 0); save('kit_insw', insw); });
+  });
+
+  /* ---------------- modeless inline editor (always-on under the server) ---------------- */
+  safe(function () {
+    var bubble = $('#bubble'), slash = $('#slash'), pill = $('#savePill');
+    var CONTENT = null, dirty = {};
+    var underServer = location.protocol !== 'file:';
+
+    function flashPill(t, ok) { if (!pill) return; pill.textContent = t; pill.classList.toggle('ok', !!ok); pill.classList.add('show'); clearTimeout(pill._t); pill._t = setTimeout(function () { pill.classList.remove('show'); }, 1400); }
+    function setCE() { $$('.view.active [data-path]').forEach(function (el) { el.setAttribute('contenteditable', 'true'); }); }
+    function addChrome() {
+      $$('.view.active .blk').forEach(function (b) {
+        if (!$('.blk-grip', b)) { var g = document.createElement('button'); g.className = 'blk-grip'; g.textContent = '⠿'; g.setAttribute('draggable', 'true'); b.insertBefore(g, b.firstChild); }
+        if (!$('.blk-menu', b)) { var m = document.createElement('button'); m.className = 'blk-menu'; m.textContent = '⋯'; m.title = 'Block options'; b.appendChild(m); }
+      });
+    }
+    function refresh() { setCE(); addChrome(); }
+
+    if (underServer) fetch('kit-content.json').then(function (r) { return r.json(); }).then(function (j) { CONTENT = j; }).catch(function () { CONTENT = null; });
+    refresh();
+    (window.__viewHooks = window.__viewHooks || []).push(function () { refresh(); });
+
+    var setByPath = function (obj, path, val) { var s = path.split('.'), c = obj; for (var i = 0; i < s.length - 1; i++) { if (c[s[i]] == null) return; c = c[s[i]]; } c[s[s.length - 1]] = val; };
+    var loc = function (el) { var b = el && el.closest ? el.closest('.blk') : null; if (!b) return null; var m = /^views\.([^.]+)\.blocks\.(\d+)$/.exec(b.getAttribute('data-block') || ''); return m ? { view: m[1], idx: +m[2], blk: b } : null; };
+    var persistLocal = function (p, h) { var e = load('kit_edits', {}); e[p] = h; save('kit_edits', e); };
+
+    function pushSave(path, html) {
+      persistLocal(path, html);
+      if (!underServer) { flashPill('Saved locally'); return; }
+      window.__lastSelfSave = Date.now();
+      fetch('api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ edits: [{ path: path, value: html }] }) })
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+        .then(function () { window.__lastSelfSave = Date.now(); flashPill('Saved ✓', true); })
+        .catch(function () { flashPill('Saved locally'); });
+    }
+
+    /* type → buffer; leave a block → save (no reload) */
+    document.addEventListener('input', function (e) {
+      var el = e.target.closest && e.target.closest('.work [data-path]'); if (!el) return;
+      dirty[el.getAttribute('data-path')] = el.innerHTML.trim();
+    });
+    document.addEventListener('focusout', function (e) {
+      var el = e.target.closest && e.target.closest('.work [data-path]'); if (!el) return;
+      var p = el.getAttribute('data-path'); if (!(p in dirty)) return;
+      pushSave(p, el.innerHTML.trim()); delete dirty[p];
+    });
+
+    /* bubble format bar on selection (native execCommand) */
+    document.addEventListener('selectionchange', function () {
+      var sel = document.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) { bubble.classList.remove('open'); return; }
+      var n = sel.anchorNode, host = n && (n.nodeType === 1 ? n : n.parentNode); host = host && host.closest ? host.closest('.work [data-path]') : null;
+      if (!host) { bubble.classList.remove('open'); return; }
+      var r = sel.getRangeAt(0).getBoundingClientRect();
+      bubble.style.left = Math.max(8, r.left + r.width / 2 - 72) + 'px'; bubble.style.top = Math.max(8, r.top - 42) + 'px'; bubble.classList.add('open');
+    });
+    bubble.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    $$('button', bubble).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var cmd = btn.getAttribute('data-cmd'), sel = document.getSelection();
+        var host = sel && sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentNode) : null;
+        host = host && host.closest ? host.closest('.work [data-path]') : null;
+        if (cmd === 'createLink') { var u = prompt('Link URL:'); if (u) document.execCommand('createLink', false, u); }
+        else document.execCommand(cmd, false, null);
+        if (host) pushSave(host.getAttribute('data-path'), host.innerHTML.trim());
+      });
+    });
+
+    /* slash — insert a structural block (needs server) */
+    // slash menu is registry-driven: [label, type, icon, template]
+    var SLASH = (window.KITBLOCKMENU || []).map(function (m) { return [m.label, m.type, m.icon, m.template]; });
+    var slashHost = null, slashIdx = 0;
+    function renderSlash() { slash.innerHTML = '<div class="sh">Insert block</div>' + SLASH.map(function (s, i) { return '<div class="si ' + (i === slashIdx ? 'cur' : '') + '" data-i="' + i + '"><span class="ic">' + s[2] + '</span>' + s[0] + '</div>'; }).join(''); $$('.si', slash).forEach(function (el) { el.addEventListener('mousedown', function (ev) { ev.preventDefault(); insertBlock(+el.dataset.i); }); }); }
+    function insertBlock(i) {
+      slash.classList.remove('open'); var l = slashHost && loc(slashHost); if (!l || !SLASH[i]) return;
+      if (!CONTENT) { flashPill('Insert needs the editor server'); return; }
+      var html = slashHost.innerHTML.replace(/\/(&nbsp;|\s)*$/, '').trim();
+      setByPath(CONTENT, slashHost.getAttribute('data-path'), html);
+      var nb = JSON.parse(JSON.stringify(SLASH[i][3])); nb.id = newId();
+      CONTENT.views[l.view].blocks.splice(l.idx + 1, 0, nb); saveFull();
+    }
+    document.addEventListener('keydown', function (e) {
+      if (slash.classList.contains('open')) {
+        if (e.key === 'ArrowDown') { e.preventDefault(); slashIdx = Math.min(slashIdx + 1, SLASH.length - 1); renderSlash(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); slashIdx = Math.max(slashIdx - 1, 0); renderSlash(); }
+        else if (e.key === 'Enter') { e.preventDefault(); insertBlock(slashIdx); }
+        else if (e.key === 'Escape') slash.classList.remove('open');
+        return;
+      }
+      if (e.key === '/') { var host = (document.activeElement && document.activeElement.closest) ? document.activeElement.closest('.work [data-path]') : null; if (host && !host.closest('table')) { slashHost = host; slashIdx = 0; setTimeout(function () { renderSlash(); var r = host.getBoundingClientRect(); slash.style.left = Math.max(8, r.left) + 'px'; slash.style.top = (r.bottom + 6) + 'px'; slash.classList.add('open'); }, 0); } }
+    });
+    document.addEventListener('click', function (e) { if (!slash.contains(e.target) && !$('#cmAdd').contains(e.target)) slash.classList.remove('open'); });
+
+    /* block menu (⋯): turn into · duplicate · delete — registry-driven */
+    function newId() { return 'blk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+    function textOf(b) { if (b.h != null) return b.h; if (b.p != null) return b.p; if (b.quote != null) return b.quote; if (b.callout != null) return b.callout; if (Array.isArray(b.list)) return b.list.join('\n'); if (Array.isArray(b.todo)) return b.todo.map(function (t) { return t[0]; }).join('\n'); return ''; }
+    function listOf(b) { if (Array.isArray(b.list)) return b.list.slice(); if (Array.isArray(b.todo)) return b.todo.map(function (t) { return t[0]; }); var t = textOf(b); return t ? t.split('\n') : ['']; }
+    function convertBlock(b, to) {
+      var keep = b.id ? { id: b.id } : {};
+      if (to === 'heading') return Object.assign({ type: 'heading' }, keep, { h: textOf(b) });
+      if (to === 'text') return Object.assign({ type: 'text' }, keep, { p: textOf(b) });
+      if (to === 'quote') return Object.assign({ type: 'quote' }, keep, { quote: textOf(b) });
+      if (to === 'callout') return Object.assign({ type: 'callout' }, keep, { callout: textOf(b) });
+      if (to === 'list') return Object.assign({ type: 'list' }, keep, { list: listOf(b) });
+      if (to === 'todo') return Object.assign({ type: 'todo' }, keep, { todo: listOf(b).map(function (t) { return [t, false]; }) });
+      return b;
+    }
+    var TRANSFORM = window.KITTRANSFORM || {};
+    var blkMenu = document.createElement('div'); blkMenu.className = 'blkmenu'; blkMenu.id = 'blkMenu'; document.body.appendChild(blkMenu);
+    function openBlkMenu(btn) {
+      var l = loc(btn); if (!l) return; if (!CONTENT) { flashPill('Block options need the editor server'); return; }
+      var b = CONTENT.views[l.view].blocks[l.idx]; if (!b) return;
+      var tos = TRANSFORM[b.type] || [];
+      var html = tos.length ? '<div class="bm-h">Turn into</div>' + tos.map(function (t) { return '<div class="bm-i" data-act="turn" data-to="' + t + '"><span class="bm-ic">⤳</span>' + t + '</div>'; }).join('') : '';
+      var sections = $$('.nav a').filter(function (a) { return a.dataset.v && a.dataset.v !== l.view; }).map(function (a) { var nl = $('.nl', a); return [a.dataset.v, (nl ? nl.textContent : a.textContent).trim()]; });
+      if (sections.length) html += '<div class="bm-h">Move to</div>' + sections.map(function (s) { return '<div class="bm-i" data-act="move" data-to="' + s[0] + '"><span class="bm-ic">→</span>' + s[1] + '</div>'; }).join('');
+      html += '<div class="bm-h">Block</div><div class="bm-i" data-act="dup"><span class="bm-ic">⧉</span>Duplicate</div><div class="bm-i bm-del" data-act="del"><span class="bm-ic">✕</span>Delete</div>';
+      blkMenu.innerHTML = html;
+      var r = btn.getBoundingClientRect(); blkMenu.style.left = Math.max(8, Math.min(window.innerWidth - 196, r.left - 150)) + 'px'; blkMenu.style.top = (r.bottom + 4) + 'px';
+      blkMenu.classList.add('open'); blkMenu._loc = l;
+    }
+    function closeBlkMenu() { blkMenu.classList.remove('open'); blkMenu._loc = null; }
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('.blk-menu');
+      if (btn) { e.stopPropagation(); openBlkMenu(btn); return; }
+      var item = e.target.closest && e.target.closest('.blkmenu .bm-i');
+      if (item && blkMenu._loc) {
+        var l = blkMenu._loc, arr = CONTENT.views[l.view].blocks, b = arr[l.idx], act = item.getAttribute('data-act');
+        if (act === 'turn') arr[l.idx] = convertBlock(b, item.getAttribute('data-to'));
+        else if (act === 'dup') { var cl = JSON.parse(JSON.stringify(b)); cl.id = newId(); arr.splice(l.idx + 1, 0, cl); }
+        else if (act === 'move') { var to = item.getAttribute('data-to'); if (CONTENT.views[to]) { var mv = arr.splice(l.idx, 1)[0]; CONTENT.views[to].blocks.push(mv); } }
+        else if (act === 'del') { if (!confirm('Delete this block?')) { closeBlkMenu(); return; } arr.splice(l.idx, 1); }
+        closeBlkMenu(); saveFull(); return;
+      }
+      if (!blkMenu.contains(e.target)) closeBlkMenu();
+    });
+
+    /* toggle (nested block) collapse */
+    document.addEventListener('click', function (e) { var x = e.target.closest && e.target.closest('.tgl-x'); if (!x) return; var t = x.closest('.toggle'); if (t) t.classList.toggle('collapsed'); });
+
+    /* drag reorder (structural) */
+    var dragFrom = null;
+    document.addEventListener('dragstart', function (e) { var g = e.target.closest && e.target.closest('.blk-grip'); if (!g) return; var b = g.closest('.blk'); dragFrom = b.getAttribute('data-block'); b.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    document.addEventListener('dragover', function (e) { if (!dragFrom) return; var b = e.target.closest && e.target.closest('.blk'); if (!b) return; e.preventDefault(); $$('.blk').forEach(function (x) { x.classList.remove('dropbefore', 'dropafter'); }); var r = b.getBoundingClientRect(); b.classList.add(e.clientY < r.top + r.height / 2 ? 'dropbefore' : 'dropafter'); });
+    document.addEventListener('drop', function (e) {
+      if (!dragFrom) return; e.preventDefault();
+      var b = e.target.closest && e.target.closest('.blk'); var before = b && e.clientY < (b.getBoundingClientRect().top + b.getBoundingClientRect().height / 2);
+      $$('.blk').forEach(function (x) { x.classList.remove('dropbefore', 'dropafter', 'dragging'); });
+      var f = /^views\.([^.]+)\.blocks\.(\d+)$/.exec(dragFrom), t = b ? /^views\.([^.]+)\.blocks\.(\d+)$/.exec(b.getAttribute('data-block') || '') : null; dragFrom = null;
+      if (!f || !t || f[1] !== t[1]) return; if (!CONTENT) { flashPill('Reorder needs the editor server'); return; }
+      var arr = CONTENT.views[f[1]].blocks, fi = +f[2], ti = +t[2]; var it = arr.splice(fi, 1)[0]; if (fi < ti) ti--; if (!before) ti++; arr.splice(ti, 0, it); saveFull();
+    });
+    document.addEventListener('dragend', function () { $$('.blk').forEach(function (x) { x.classList.remove('dropbefore', 'dropafter', 'dragging'); }); });
+
+    function saveFull() { if (!CONTENT) return; flashPill('Saving…'); fetch('api/save-full', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(CONTENT) }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function () { save('kit_edits', {}); flashPill('Saved ✓ rebuilding…', true); setTimeout(function () { location.reload(); }, 600); }).catch(function () { flashPill('Structural edits need the editor server'); }); }
+  });
+
+  /* ---------------- comments: highlight → anchored comment (tab + notebook feed) ---------------- */
+  safe(function () {
+    var underServer = location.protocol !== 'file:';
+    var seeded = (window.KITCOMMENTS && window.KITCOMMENTS.length) ? window.KITCOMMENTS : load('kit_comments', []);
+    var COMMENTS = Array.isArray(seeded) ? seeded.slice() : [];
+    var addBtn = $('#cmAdd'), pop = $('#cmPop'), qEl = $('#cmQuote'), txt = $('#cmText');
+    var body = $('#comments-body'), countEl = $('#cmtCount');
+    var pending = null;
+
+    function persist() { save('kit_comments', COMMENTS); if (underServer) fetch('api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(COMMENTS) }).catch(function () {}); }
+    function nearestPath(node) { var el = node && (node.nodeType === 1 ? node : node.parentNode); return el && el.closest ? el.closest('.work [data-path]') : null; }
+    function sectionName(vid) { var a = $('.nav a[data-v="' + vid + '"]'); return a ? a.textContent.trim() : vid; }
+    function flash(el) { el.classList.remove('cflash'); void el.offsetWidth; el.classList.add('cflash'); }
+
+    /* comment chip on selection */
+    document.addEventListener('selectionchange', function () {
+      if (pop.classList.contains('open')) return;
+      var sel = document.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) { addBtn.classList.remove('open'); return; }
+      var host = nearestPath(sel.anchorNode); if (!host) { addBtn.classList.remove('open'); return; }
+      var r = sel.getRangeAt(0).getBoundingClientRect();
+      addBtn.style.left = Math.min(window.innerWidth - 120, r.left + r.width / 2 - 40) + 'px';
+      addBtn.style.top = (r.bottom + 8) + 'px'; addBtn.classList.add('open');
+    });
+    addBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    addBtn.addEventListener('click', function () {
+      var sel = document.getSelection(); if (!sel || sel.isCollapsed) return;
+      var host = nearestPath(sel.anchorNode); if (!host) return;
+      var blk0 = host.closest('.blk');
+      pending = { path: host.getAttribute('data-path'), bid: blk0 ? (blk0.getAttribute('data-bid') || '') : '', quote: sel.toString().trim().slice(0, 240), view: (host.closest('.view') || {}).id || curView };
+      qEl.textContent = '“' + pending.quote + '”'; txt.value = '';
+      var r = sel.getRangeAt(0).getBoundingClientRect();
+      pop.style.left = Math.min(window.innerWidth - 320, Math.max(8, r.left)) + 'px'; pop.style.top = (r.bottom + 10) + 'px';
+      addBtn.classList.remove('open'); pop.classList.add('open'); setTimeout(function () { txt.focus(); }, 0);
+    });
+    $('#cmCancel').addEventListener('click', function () { pop.classList.remove('open'); pending = null; });
+    $('#cmSave').addEventListener('click', function () {
+      if (!pending || !txt.value.trim()) { pop.classList.remove('open'); pending = null; return; }
+      var c = { id: 'c' + Date.now().toString(36), bid: pending.bid, path: pending.path, quote: pending.quote, body: txt.value.trim(), view: pending.view, ts: Date.now() };
+      COMMENTS.push(c); persist(); pop.classList.remove('open'); pending = null;
+      renderAll(); applyMarks(); feedNotebook(c); showTab('comments');
+    });
+
+    function clearMarks() { $$('.cmark').forEach(function (m) { var p = m.parentNode; while (m.firstChild) p.insertBefore(m.firstChild, m); p.removeChild(m); if (p.normalize) p.normalize(); }); }
+    function wrapText(host, quote, id) {
+      var walker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT, null), node;
+      while ((node = walker.nextNode())) {
+        var i = node.nodeValue.indexOf(quote);
+        if (i >= 0) { var range = document.createRange(); range.setStart(node, i); range.setEnd(node, i + quote.length); var span = document.createElement('span'); span.className = 'cmark'; span.setAttribute('data-cmt', id); try { range.surroundContents(span); } catch (e) {} return true; }
+      }
+      return false;
+    }
+    function applyMarks() { clearMarks(); COMMENTS.forEach(function (c) { if (!c.quote) return; var host = c.bid ? $('.view.active .blk[data-bid="' + c.bid + '"]') : $('.view.active [data-path="' + c.path + '"]'); if (host) wrapText(host, c.quote, c.id); }); }
+
+    document.addEventListener('click', function (e) { var m = e.target.closest('.cmark'); if (!m) return; showTab('comments'); var card = $('.cmt[data-id="' + m.getAttribute('data-cmt') + '"]'); if (card) { card.scrollIntoView({ block: 'center' }); flash(card); } });
+
+    function renderAll() {
+      if (countEl) countEl.textContent = COMMENTS.length ? '(' + COMMENTS.length + ')' : '';
+      if (!body) return;
+      if (!COMMENTS.length) { body.innerHTML = '<div class="cmt-empty">No comments yet. Select text in a section, then click “💬 Comment”.</div>'; return; }
+      body.innerHTML = COMMENTS.slice().reverse().map(function (c) { return '<div class="cmt" data-id="' + c.id + '"><div class="q">“' + esc(c.quote) + '”</div><div class="b">' + esc(c.body) + '</div><div class="m"><span>' + esc(sectionName(c.view)) + '</span><button class="del" data-del="' + c.id + '">delete</button></div></div>'; }).join('');
+    }
+    if (body) body.addEventListener('click', function (e) {
+      var del = e.target.closest('.del');
+      if (del) { e.stopPropagation(); var id = del.getAttribute('data-del'); COMMENTS = COMMENTS.filter(function (x) { return x.id !== id; }); persist(); renderAll(); applyMarks(); return; }
+      var card = e.target.closest('.cmt'); if (!card) return;
+      var cid = card.getAttribute('data-id'), c = COMMENTS.filter(function (x) { return x.id === cid; })[0]; if (!c) return;
+      var realView = c.view;
+      if (c.bid) { var blk = $('.blk[data-bid="' + c.bid + '"]'); if (blk) { var vw = (blk.closest('.view') || {}).id; if (vw) realView = vw; } }
+      if (realView !== c.view) { c.view = realView; persist(); renderAll(); }
+      if (realView !== curView) setView(realView);
+      setTimeout(function () { var mk = $('.cmark[data-cmt="' + cid + '"]'); $$('.cmark').forEach(function (x) { x.classList.remove('active'); }); if (mk) { mk.scrollIntoView({ block: 'center' }); flash(mk); mk.classList.add('active'); } }, 70);
+    });
+
+    function showTab(which) {
+      var insp = which === 'inspect';
+      $('#pane-inspect').style.display = insp ? '' : 'none';
+      $('#pane-comments').style.display = insp ? 'none' : '';
+      $('#tabInspect').classList.toggle('on', insp);
+      $('#tabComments').classList.toggle('on', !insp);
+    }
+    $('#tabInspect').addEventListener('click', function () { showTab('inspect'); });
+    $('#tabComments').addEventListener('click', function () { showTab('comments'); });
+    window.__showInspectTab = function () { showTab('inspect'); };
+
+    function feedNotebook(c) {
+      var html = '<blockquote><p>💬 <em>“' + esc(c.quote.slice(0, 90)) + '”</em> — ' + esc(c.body) + ' <span style="opacity:.6">(' + esc(sectionName(c.view)) + ')</span></p></blockquote>';
+      var ed = window.__nbEditor;
+      if (ed) { try { ed.chain().focus('end').insertContent(html).run(); } catch (e) {} }
+      else { try { save('kit_notebook', (load('kit_notebook', '') || '') + html); } catch (x) {} }
+    }
+
+    (window.__viewHooks = window.__viewHooks || []).push(function () { applyMarks(); });
+    renderAll(); applyMarks();
+    if (window.KITCOMMENTS && window.KITCOMMENTS.length) save('kit_comments', COMMENTS);
+  });
+
+  /* ---------------- live reload (under kit-server) ---------------- */
+  safe(function () { if (location.protocol === 'file:') return; try { var es = new EventSource('api/events'); es.onmessage = function (ev) { if (ev.data === 'reload' && Date.now() - (window.__lastSelfSave || 0) > 4000) location.reload(); }; } catch (e) {} });
+
+  /* ---------- apply offline edits saved locally (survive reload without server) ---------- */
+  safe(function () { var e = load('kit_edits', {}); Object.keys(e).forEach(function (p) { var el = $('[data-path="' + p + '"]'); if (el && el.innerHTML !== e[p]) el.innerHTML = e[p]; }); });
+
+  /* ---------- in-content to-do checkboxes (toggle + persist) ---------- */
+  safe(function () {
+    var st = load('kit_todos', {});
+    $$('.todock').forEach(function (c) { var k = c.getAttribute('data-todo'); if (k in st) c.checked = st[k]; var li = c.closest('.todoi'); if (li) li.classList.toggle('done', c.checked); });
+    document.addEventListener('change', function (e) { var c = e.target.closest ? e.target.closest('.todock') : null; if (!c) return; var k = c.getAttribute('data-todo'); st[k] = c.checked; save('kit_todos', st); var li = c.closest('.todoi'); if (li) li.classList.toggle('done', c.checked); });
+  });
+
+  /* ---------- first-run hint ---------- */
+  safe(function () {
+    if (load('kit_hint_seen', 0)) return;
+    var h = document.createElement('div'); h.className = 'hint';
+    h.innerHTML = 'Tip — click <b>Edit</b> to change any text inline, or <b>Notes</b> for a notebook.<button id="hintX">got it</button>';
+    document.body.appendChild(h);
+    function dismiss() { if (h.parentNode) h.remove(); save('kit_hint_seen', 1); }
+    var x = $('#hintX'); if (x) x.addEventListener('click', dismiss); setTimeout(dismiss, 11000);
+  });
+
+  /* ---------------- boot ---------------- */
+  refreshSidebar();
+  document.body.classList.add('ready');
+  var h = (location.hash || '').replace('#', '');
+  if (h) { var parts = h.split('~'); setView(parts[0], parts[1]); }
+  else setView(load('kit_last', 'v-overview'));
+})();
+
+</script>
+</body>
+</html>

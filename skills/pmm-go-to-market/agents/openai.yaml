@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pmm Go To Market"
+  short_description: "Plan launches, GTM campaigns, rollout strategy, timelines, enablement, channels, comms, and measurement."
+  brand_color: "#111827"
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "marketing-os"
+      description: "Bundled read-only MCP server for PMM resources and workflow routing."
+      transport: "stdio"

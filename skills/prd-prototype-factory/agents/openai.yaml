@@ -1,0 +1,20 @@
+name: PRD Prototype Factory
+description: Generates PRDs, user stories, acceptance criteria, analytics events, prototype briefs, and HTML prototype scaffolds for iteration, new-feature, and 0-1 product scenarios.
+invocation:
+  mode: auto
+  keywords:
+    - PRD
+    - product requirements
+    - requirements document
+    - user stories
+    - acceptance criteria
+    - prototype
+    - wireframe
+    - mockup
+    - HTML prototype
+    - UI flow
+tools:
+  optional:
+    - marketing-os.prd_plan_builder
+    - marketing-os.prototype_brief_builder
+    - marketing-os.artifact_bundle_plan

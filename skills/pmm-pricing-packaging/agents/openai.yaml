@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pmm Pricing Packaging"
+  short_description: "Recommend pricing models, packaging tiers, value metrics, SKU changes, pricing-page guidance, and monetization rollout plans."
+  brand_color: "#111827"
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "marketing-os"
+      description: "Bundled read-only MCP server for PMM resources and workflow routing."
+      transport: "stdio"

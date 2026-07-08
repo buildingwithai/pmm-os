@@ -1,0 +1,9 @@
+name: PMM Artifact Factory
+description: Create multi-format deliverable packs for launches, campaigns, PMM strategy, sales enablement, and marketing execution.
+invocation:
+  mode: auto
+  confidence: medium
+tools:
+  required: []
+  suggested:
+    - marketing-os

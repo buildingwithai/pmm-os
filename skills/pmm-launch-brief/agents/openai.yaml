@@ -1,0 +1,8 @@
+display_name: Pmm Launch Brief
+category: product-marketing
+invocation_policy: automatic when the user request matches the skill description
+allowed_tools:
+  - Read
+  - Write
+  - mcp__marketing-os__launch_plan_builder
+  - mcp__marketing-os__artifact_bundle_plan

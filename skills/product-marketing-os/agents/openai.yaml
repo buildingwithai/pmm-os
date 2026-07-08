@@ -1,0 +1,15 @@
+interface:
+  display_name: "Product Marketing OS"
+  short_description: "Orchestrates PMM, GTM, launch, pricing, messaging, and measurement workflows."
+  icon_small: "../../assets/icon.svg"
+  icon_large: "../../assets/logo.svg"
+  brand_color: "#111827"
+  default_prompt: "Use Product Marketing OS to turn this product or feature into messaging, GTM, enablement, and measurement artifacts."
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "marketing-os"
+      description: "Bundled read-only MCP server for PMM resources, launch planning, skill lookup, and MCP recommendations."
+      transport: "stdio"

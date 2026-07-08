@@ -1,0 +1,21 @@
+name: Product Lifecycle OS
+description: Full product management loop from market and user research to strategy, PRD, prototype, release, impact analysis, feedback synthesis, and iteration planning.
+invocation:
+  mode: auto
+  keywords:
+    - product lifecycle
+    - product strategy
+    - roadmap
+    - PRD
+    - prototype
+    - product planning
+    - feature launch
+    - release management
+    - impact analysis
+    - feedback synthesis
+tools:
+  optional:
+    - marketing-os.pm_lifecycle_plan
+    - marketing-os.prd_plan_builder
+    - marketing-os.prototype_brief_builder
+    - marketing-os.post_launch_learning_plan
