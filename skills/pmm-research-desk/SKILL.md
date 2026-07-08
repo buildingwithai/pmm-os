@@ -90,9 +90,13 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
        — **exclude `youtube`**. YouTube *transcript* fetching is the slowest + most
        rate-limited source (yt-dlp hits HTTP 429 / "confirm you're not a bot" and burns the
        retry budget); it adds little to pain/competitor text research and is what stalls runs.
-     - **Creator/discovery desks** (channels, analyst/KOL): include `youtube` deliberately —
-       but still `timeout 360 …` the call, and prefer `reach.sh yt`/`tiktok-search`/`ig-search`
-       for the social hashtag signal.
+     - **Creator/discovery desks** (channels, analyst/KOL): include `youtube` deliberately,
+       and **always pass `--deep`** — video depth scales with it (YouTube full transcripts:
+       2 default → **8 deep**, ~5,000 words each; TikTok/IG: 20 results + 5 transcripts
+       default → **40 results + 8 transcripts deep**). Prefer `reach.sh yt`/`tiktok-search`/
+       `ig-search` for the raw hashtag/creator sweep (full result list with engagement
+       counts), and record videos-scanned vs transcripts-pulled per platform in the run
+       file — video coverage is a matrix cell: count it or log why not.
      - **Always**: `timeout 420 python3 .../last30days.py …` (hard ceiling), and run **one
        topic per command into its own `runs/<date>-<desk>-<engine>.md` file** — never blob
        two heavy topics into one fire-and-forget background job (a stalled topic then hides
