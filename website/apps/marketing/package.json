@@ -1,0 +1,61 @@
+{
+  "name": "idkwidk-marketing",
+  "version": "0.3.1",
+  "private": true,
+  "description": "The Usertour-style marketing, blog, docs, and pricing front end for the idkWidk SaaS template",
+  "author": "buildingwithai",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildingwithai/idkWidk.git"
+  },
+  "homepage": "https://github.com/buildingwithai/idkWidk",
+  "bugs": {
+    "url": "https://github.com/buildingwithai/idkWidk/issues"
+  },
+  "keywords": [
+    "usertour",
+    "website-template",
+    "blog-template",
+    "pricing-page",
+    "docs-template",
+    "nextjs",
+    "tailwindcss"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.3.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.6.0",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.5.0",
+    "tw-animate-css": "^1.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "brace-expansion": "1.1.13",
+    "postcss": "8.5.14"
+  }
+}

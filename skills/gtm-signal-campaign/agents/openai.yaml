@@ -1,0 +1,9 @@
+name: GTM Signal Campaign
+description: Turn account signals into research briefs, sequences, and campaign measurement plans.
+invocation:
+  mode: auto
+  confidence: medium
+tools:
+  required: []
+  suggested:
+    - marketing-os

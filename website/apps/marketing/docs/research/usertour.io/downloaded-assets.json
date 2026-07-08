@@ -1,0 +1,106 @@
+{
+  "images": [
+    {
+      "source": "https://www.usertour.io/images/logo-dark.svg",
+      "file": "01-logo-dark.svg",
+      "bytes": 10023
+    },
+    {
+      "source": "https://www.usertour.io/images/logo-light.svg",
+      "file": "02-logo-light.svg",
+      "bytes": 10010
+    },
+    {
+      "source": "https://www.usertour.io/images/tour-05.jpg",
+      "file": "03-tour-05.jpg",
+      "bytes": 578781
+    },
+    {
+      "source": "https://www.usertour.io/_next/image?url=%2Fimages%2Favastar-05.png&w=640&q=75",
+      "file": "04-image.bin",
+      "bytes": 150918
+    },
+    {
+      "source": "https://www.usertour.io/images/builder-02.png",
+      "file": "05-builder-02.png",
+      "bytes": 123866
+    },
+    {
+      "source": "https://www.usertour.io/images/theme.png",
+      "file": "06-theme.png",
+      "bytes": 72010
+    },
+    {
+      "source": "https://www.usertour.io/images/analytics.png",
+      "file": "07-analytics.png",
+      "bytes": 90953
+    },
+    {
+      "source": "https://www.usertour.io/images/rules.png",
+      "file": "08-rules.png",
+      "bytes": 161723
+    },
+    {
+      "source": "https://www.usertour.io/images/bottom-bg.jpg",
+      "file": "09-bottom-bg.jpg",
+      "bytes": 403683
+    }
+  ],
+  "seo": [
+    {
+      "source": "https://www.usertour.io/manifest.json",
+      "file": "01-manifest.json",
+      "bytes": 1048
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon.png",
+      "file": "02-favicon.png",
+      "bytes": 16050
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon.png",
+      "file": "03-favicon.png",
+      "bytes": 16050
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon-48x48.png",
+      "file": "04-favicon-48x48.png",
+      "bytes": 976
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon-72x72.png",
+      "file": "05-favicon-72x72.png",
+      "bytes": 1412
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon-96x96.png",
+      "file": "06-favicon-96x96.png",
+      "bytes": 1797
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon-144x144.png",
+      "file": "07-favicon-144x144.png",
+      "bytes": 2580
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon-180x180.png",
+      "file": "08-favicon-180x180.png",
+      "bytes": 3192
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon-256x256.png",
+      "file": "09-favicon-256x256.png",
+      "bytes": 4873
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon-384x384.png",
+      "file": "10-favicon-384x384.png",
+      "bytes": 7826
+    },
+    {
+      "source": "https://www.usertour.io/favicon/favicon-512x512.png",
+      "file": "11-favicon-512x512.png",
+      "bytes": 11227
+    }
+  ]
+}

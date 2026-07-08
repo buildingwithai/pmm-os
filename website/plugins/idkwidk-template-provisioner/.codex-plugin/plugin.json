@@ -1,0 +1,45 @@
+{
+  "name": "idkwidk-template-provisioner",
+  "version": "0.1.0",
+  "description": "Guided setup for the idkWidk SaaS template across GitHub, Vercel, Convex, Clerk, and Codex without leaking organization credentials into the repo.",
+  "author": {
+    "name": "Jovanny"
+  },
+  "license": "MIT",
+  "keywords": [
+    "idkwidk",
+    "saas-template",
+    "provisioning",
+    "github",
+    "vercel",
+    "convex",
+    "clerk",
+    "keychain",
+    "secure-setup"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "idkWidk Template Provisioner",
+    "shortDescription": "Walks a user or agent through secure SaaS template setup.",
+    "longDescription": "idkWidk Template Provisioner is a local setup guide for this template. It stores reusable provider access outside the repo, runs read-only checks before live provider creation, explains every step in plain language, and keeps project-specific runtime values in ignored env files or provider env stores.",
+    "developerName": "Jovanny",
+    "category": "Development",
+    "capabilities": [
+      "Plan",
+      "Verify",
+      "Document",
+      "Provider Setup",
+      "Secure Credential Storage",
+      "GitHub Provisioning",
+      "Vercel Provisioning",
+      "Convex Provisioning",
+      "Clerk Setup"
+    ],
+    "defaultPrompt": [
+      "Use idkWidk Template Provisioner as the setup control center. Run npm run setup:agent -- --project <project-slug>, use the JSON form when automation needs a parseable next action, explain whether user input is required, and do not run live provider mutations without explicit user approval.",
+      "Use idkWidk Template Provisioner as the new-project factory. Run npm run setup:factory -- --project <project-slug>, then npm run setup:completion -- --project <project-slug>, explain each step in plain English, store reusable provider credentials only in the local vault/keychain, and do not run live provider mutations without explicit user approval.",
+      "Use idkWidk Template Provisioner. Run npm run setup:bootstrap -- --project <project-slug> first for the lowest-lift guided path, explain the result in plain English, and do not run live provider mutations without explicit user approval.",
+      "Use idkWidk Template Provisioner to set up this SaaS template on a new computer. Run npm run setup:onboard -- --project <project-slug>, keep organization tokens in the local vault, keep project env files ignored, and verify provider readbacks before claiming setup is done."
+    ]
+  }
+}

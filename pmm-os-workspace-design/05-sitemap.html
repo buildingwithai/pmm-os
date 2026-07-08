@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PMM OS Workspace — Information Architecture</title>
+<style>
+  /* Apple-grade tokens (from apple-grade-design-course/design-tokens-starter.css) — inlined for a
+     self-contained file. Neutrals carry; ONE accent; 8pt grid; real type scale; light + dark. */
+  :root{
+    --gray-0:#fff; --gray-50:#f7f8fa; --gray-100:#eef0f3; --gray-200:#dfe3e8; --gray-300:#c5ccd4;
+    --gray-400:#9aa3ad; --gray-500:#6b7480; --gray-600:#4d555f; --gray-700:#363c44; --gray-900:#15181c; --gray-950:#0c0e11;
+    --accent-500:#2f6bff; --accent-600:#1f56e6; --accent-100:#dbe9ff;
+    --surface-background:var(--gray-50); --surface-raised:var(--gray-0); --surface-sunken:var(--gray-100);
+    --text-primary:var(--gray-900); --text-secondary:var(--gray-600); --text-tertiary:var(--gray-500);
+    --border-default:var(--gray-200); --border-strong:var(--gray-300); --action-primary:var(--accent-500); --focus-ring:var(--accent-500);
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;--space-16:64px;
+    --radius-sm:6px;--radius-md:10px;--radius-lg:16px;
+    --font-sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --font-mono:ui-monospace,'SF Mono',monospace;
+    --text-display:34px;--leading-display:40px; --text-title-2:22px;--leading-title-2:28px; --text-title-3:20px;
+    --text-headline:17px; --text-body:17px;--leading-body:25px; --text-subhead:15px; --text-footnote:13px; --text-caption:12px;
+    --weight-regular:400;--weight-medium:500;--weight-semibold:600;--weight-bold:700;
+    --measure:72ch; --elevation-rest:0 1px 2px rgba(12,14,17,.08); --elevation-raised:0 4px 12px rgba(12,14,17,.10);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --surface-background:var(--gray-950); --surface-raised:var(--gray-900); --surface-sunken:#08090b;
+    --text-primary:var(--gray-50); --text-secondary:var(--gray-300); --text-tertiary:var(--gray-400);
+    --border-default:var(--gray-700); --border-strong:#454c55; --action-primary:#8cb8ff; --accent-100:#1b2b4a;
+    --elevation-rest:none; --elevation-raised:none;
+  }}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface-background);color:var(--text-primary);font-family:var(--font-sans);
+    font-size:var(--text-body);line-height:var(--leading-body);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:var(--space-16) var(--space-6) var(--space-16)}
+  header{margin-bottom:var(--space-10)}
+  .eyebrow{font-size:var(--text-caption);letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);font-weight:var(--weight-semibold);margin:0 0 var(--space-2)}
+  h1{font-size:var(--text-display);line-height:var(--leading-display);font-weight:var(--weight-bold);letter-spacing:-.02em;margin:0 0 var(--space-3)}
+  .lede{font-size:var(--text-title-3);color:var(--text-secondary);font-weight:var(--weight-regular);margin:0;max-width:var(--measure)}
+  .menubar{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-6)}
+  .pill{font-size:var(--text-subhead);font-weight:var(--weight-medium);color:var(--text-secondary);
+    background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:var(--space-1) var(--space-3)}
+  .pill.lead{color:var(--action-primary);border-color:var(--action-primary);background:var(--accent-100)}
+  /* the tree */
+  .tree{margin-top:var(--space-10)}
+  .sec{margin-bottom:var(--space-8)}
+  .sec > .node{padding-left:var(--space-4);border-left:3px solid var(--action-primary)}
+  .node{padding:var(--space-1) 0}
+  .name{font-size:var(--text-headline);font-weight:var(--weight-semibold);letter-spacing:-.01em}
+  .sec > .node .name{font-size:var(--text-title-3);font-weight:var(--weight-bold)}
+  .purpose{color:var(--text-secondary);font-size:var(--text-subhead);margin-left:var(--space-3)}
+  .count{color:var(--text-tertiary);font-size:var(--text-footnote);font-variant-numeric:tabular-nums;margin-left:var(--space-2)}
+  ul.kids{list-style:none;margin:var(--space-2) 0 0;padding-left:var(--space-5);border-left:1px solid var(--border-default)}
+  ul.kids li{padding:var(--space-1) 0 var(--space-1) var(--space-3);position:relative}
+  ul.kids li::before{content:"";position:absolute;left:0;top:50%;width:var(--space-3);height:1px;background:var(--border-default)}
+  ul.kids .name{font-weight:var(--weight-medium);font-size:var(--text-body)}
+  .leaf{color:var(--text-tertiary);font-size:var(--text-footnote)}
+  /* cross-link panel — distinct surface, not a uniform card */
+  .panel{margin-top:var(--space-12);background:var(--surface-raised);border:1px solid var(--border-default);
+    border-radius:var(--radius-md);padding:var(--space-6);box-shadow:var(--elevation-rest)}
+  .panel h2{font-size:var(--text-title-3);font-weight:var(--weight-semibold);margin:0 0 var(--space-3)}
+  .panel p{color:var(--text-secondary);margin:0 0 var(--space-3);font-size:var(--text-subhead);max-width:var(--measure)}
+  .panel code{font-family:var(--font-mono);font-size:var(--text-footnote);background:var(--surface-sunken);
+    padding:2px var(--space-1);border-radius:var(--radius-sm);color:var(--text-secondary)}
+  .meta{display:flex;gap:var(--space-8);margin-top:var(--space-4);flex-wrap:wrap}
+  .meta div{font-size:var(--text-footnote)}
+  .meta b{display:block;font-size:var(--text-title-2);font-weight:var(--weight-bold);color:var(--text-primary);font-variant-numeric:tabular-nums}
+  .meta span{color:var(--text-tertiary)}
+  footer{margin-top:var(--space-12);padding-top:var(--space-5);border-top:1px solid var(--border-default);
+    color:var(--text-tertiary);font-size:var(--text-footnote)}
+  a{color:var(--action-primary)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:var(--radius-sm)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">PMM OS Research Workspace · Phase 5</p>
+    <h1>Information architecture</h1>
+    <p class="lede">Five destinations, three levels deep. The left page-tree below becomes the workspace menu — organized the way a PMM thinks: the research, the strategy drawn from it, the readout you present, and the databases that cut across all of it.</p>
+    <nav class="menubar" aria-label="Top-level destinations">
+      <span class="pill lead">Overview</span>
+      <span class="pill">Research desks</span>
+      <span class="pill">Strategy</span>
+      <span class="pill">GTM readout</span>
+      <span class="pill">Databases</span>
+    </nav>
+  </header>
+
+  <main class="tree">
+    <section class="sec">
+      <div class="node"><span class="name">Overview</span><span class="purpose">exec summary + project health</span></div>
+    </section>
+
+    <section class="sec">
+      <div class="node"><span class="name">Research desks</span><span class="count">9 desks · 54 findings</span></div>
+      <ul class="kids">
+        <li><span class="name">Customer desk</span> <span class="leaf">6 findings · artifact: personas</span></li>
+        <li><span class="name">Competitive desk</span> <span class="leaf">6 findings · artifact: matrix + battlecards</span></li>
+        <li><span class="name">Market desk</span> <span class="leaf">6 findings · SWOT, 5 forces</span></li>
+        <li><span class="name">Pricing desk</span> <span class="leaf">6 findings · tier model</span></li>
+        <li><span class="name">Channels desk</span> <span class="leaf">6 findings · channel map</span></li>
+        <li><span class="name">KOL desk</span> <span class="leaf">6 findings · creator list</span></li>
+        <li><span class="name">Events desk</span> <span class="leaf">30 events · field target list</span></li>
+        <li><span class="name">GTM desk</span> <span class="leaf">6 findings · the motion</span></li>
+        <li><span class="name">Product desk</span> <span class="leaf">6 findings · context spine</span></li>
+      </ul>
+    </section>
+
+    <section class="sec">
+      <div class="node"><span class="name">Strategy</span><span class="purpose">claims @-link to the findings that support them</span></div>
+      <ul class="kids">
+        <li><span class="name">Positioning</span> <span class="leaf">statement · category · alternatives</span></li>
+        <li><span class="name">Messaging</span> <span class="leaf">pillars · objections · per-persona</span></li>
+        <li><span class="name">Narrative</span> <span class="leaf">six-beat story + proof</span></li>
+        <li><span class="name">Campaign</span> <span class="leaf">big idea · channels · assets</span></li>
+        <li><span class="name">Coach review</span> <span class="leaf">scorecard · revisions</span></li>
+      </ul>
+    </section>
+
+    <section class="sec">
+      <div class="node"><span class="name">GTM readout</span><span class="purpose">answer-first · opens Present mode</span></div>
+    </section>
+
+    <section class="sec">
+      <div class="node"><span class="name">Databases</span><span class="purpose">cross-cutting collections · table · board · gallery</span></div>
+      <ul class="kids">
+        <li><span class="name">Findings</span> <span class="leaf">54 rows · filter sourced / unsourced</span></li>
+        <li><span class="name">Evidence / Sources</span> <span class="leaf">73 cited sources</span></li>
+        <li><span class="name">Events</span> <span class="leaf">30 rows · filter area + quarter</span></li>
+      </ul>
+    </section>
+  </main>
+
+  <section class="panel" aria-labelledby="xl">
+    <h2 id="xl">It's a graph, not a pure tree</h2>
+    <p>A <strong>finding</strong> lives under its desk, appears in the Findings database, and is reached by Strategy backlinks. A <strong>source</strong> opens as a side-peek from any citation. The Events desk and Events database share the same records. Primary parent = the desk; databases and backlinks are secondary entry points, deep-linkable as <code>#v-&lt;page&gt;</code>.</p>
+    <div class="meta">
+      <div><b>5</b><span>top-level destinations</span></div>
+      <div><b>3</b><span>levels deep (max)</span></div>
+      <div><b>10</b><span>screen types (Phase 4)</span></div>
+      <div><b>0</b><span>auth / billing screens</span></div>
+    </div>
+  </section>
+
+  <footer>
+    Desktop web is the target; a read/present mobile app-map is sketched but deferred (see <a href="05-sitemap-and-app-map.md">05-sitemap-and-app-map.md</a>). This grouping is a hypothesis — Phase 6 (card sort) validates it with the user.
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "pmm-os",
+  "owner": {
+    "name": "Jovanny Tovar",
+    "url": "https://github.com/buildingwithai/pmm-os"
+  },
+  "metadata": {
+    "description": "Marketplace hosting the PMM OS plugin \u2014 a Product Marketing Operating System with built-in research."
+  },
+  "plugins": [
+    {
+      "name": "pmm-os",
+      "description": "Product Marketing Operating System: 40+ PMM, GTM, and PLG skills, two built-in research engines (last30days + Agent-Reach), and an interactive launch-kit generator.",
+      "version": "3.0.1",
+      "author": {
+        "name": "Jovanny Tovar",
+        "url": "https://github.com/buildingwithai/pmm-os"
+      },
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/buildingwithai/pmm-os"
+    }
+  ]
+}

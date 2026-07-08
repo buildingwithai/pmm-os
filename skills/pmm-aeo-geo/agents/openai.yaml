@@ -1,0 +1,9 @@
+name: AEO and GEO Strategy
+description: Audit and improve AI assistant visibility, LLM citations, and answer-engine positioning.
+invocation:
+  mode: auto
+  confidence: medium
+tools:
+  required: []
+  suggested:
+    - marketing-os

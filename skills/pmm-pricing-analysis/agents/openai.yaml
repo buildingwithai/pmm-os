@@ -1,0 +1,9 @@
+display_name: Pmm Pricing Analysis
+category: product-marketing
+invocation_policy: automatic when the user request matches the skill description
+allowed_tools:
+  - Read
+  - Write
+  - WebSearch
+  - mcp__marketing-os__pricing_analysis_builder
+  - mcp__marketing-os__recommend_mcp_servers

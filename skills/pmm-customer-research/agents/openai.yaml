@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pmm Customer Research"
+  short_description: "Develop ICPs, personas, JTBD, voice-of-customer themes, win-loss insights, interview guides, and research synthesis."
+  brand_color: "#111827"
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "marketing-os"
+      description: "Bundled read-only MCP server for PMM resources and workflow routing."
+      transport: "stdio"

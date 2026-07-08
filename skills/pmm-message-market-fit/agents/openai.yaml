@@ -1,0 +1,9 @@
+name: Message Market Fit
+description: Audit and test messaging against ICP specificity, differentiation, clarity, emotion, and actionability.
+invocation:
+  mode: auto
+  confidence: medium
+tools:
+  required: []
+  suggested:
+    - marketing-os

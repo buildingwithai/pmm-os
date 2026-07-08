@@ -1,0 +1,32 @@
+{
+  "name": "idkwidk-marketplace",
+  "interface": {
+    "displayName": "idkWidk"
+  },
+  "plugins": [
+    {
+      "name": "idk-widk",
+      "source": {
+        "source": "local",
+        "path": "./plugins/idk-widk"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development"
+    },
+    {
+      "name": "idkwidk-template-provisioner",
+      "source": {
+        "source": "local",
+        "path": "./plugins/idkwidk-template-provisioner"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development"
+    }
+  ]
+}

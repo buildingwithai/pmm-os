@@ -1,0 +1,38 @@
+{
+  "name": "pmm-os",
+  "version": "3.0.1",
+  "description": "Product Marketing Operating System: 40+ PMM, GTM, and PLG skills, two built-in research engines (last30days + Agent-Reach), and an interactive launch-kit generator for Claude Code and Codex.",
+  "author": {
+    "name": "Jovanny Tovar",
+    "url": "https://github.com/buildingwithai/pmm-os"
+  },
+  "homepage": "https://github.com/buildingwithai/pmm-os",
+  "repository": "https://github.com/buildingwithai/pmm-os",
+  "license": "MIT",
+  "keywords": [
+    "product-marketing",
+    "pmm",
+    "gtm",
+    "plg",
+    "positioning",
+    "messaging",
+    "competitive-intelligence",
+    "pricing",
+    "launch",
+    "sales-enablement",
+    "customer-research",
+    "research",
+    "deep-research",
+    "last30days",
+    "agent-reach",
+    "reddit",
+    "twitter",
+    "youtube",
+    "tiktok",
+    "hacker-news",
+    "polymarket",
+    "github",
+    "launch-kit",
+    "marketing"
+  ]
+}

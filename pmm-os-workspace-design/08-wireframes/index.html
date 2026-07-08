@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframes · PMM OS Workspace</title>
+<style>
+  :root{--bg:#e9eaec;--ink:#2b2b2b;--mut:#6d6d6d;--dim:#9a9a9a;--line:#b9b9b9;--box:#fff;--prim:#3a3a3a;
+    --s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);padding:var(--s8)}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 var(--s2)} .sub{color:var(--mut);font-size:14px;margin:0 0 var(--s6)}
+  .grid{display:grid;gap:var(--s3)}
+  a.card{display:flex;justify-content:space-between;align-items:center;text-decoration:none;color:inherit;background:var(--box);border:1px solid var(--line);border-radius:8px;padding:var(--s4)}
+  a.card:hover{border-color:#8a8a8a}
+  .id{font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.06em}
+  .nm{font-size:16px;font-weight:600;margin-top:2px} .ds{font-size:12.5px;color:var(--mut);margin-top:2px}
+  .go{font-size:13px;color:var(--mut)}
+  .pending{margin-top:var(--s6);padding:var(--s4);border:1px dashed var(--line);border-radius:8px;background:#f2f2f2;font-size:13px;color:var(--mut)}
+  .pending b{color:var(--ink)}
+</style></head>
+<body><div class="wrap">
+  <h1>Wireframes — PMM OS Research Workspace</h1>
+  <p class="sub">Phase 8 · grayscale, low-fi · structure before color. The four highest-traffic screens, each with hierarchy notes + key states.</p>
+  <div class="grid">
+    <a class="card" href="S1-workspace-shell.html"><div><div class="id">S1 · HERO</div><div class="nm">Workspace shell</div><div class="ds">The 3-pane frame: two-zone sidebar · main · side-peek. + empty &amp; collapsed states.</div></div><span class="go">open ▸</span></a>
+    <a class="card" href="S3-desk-page.html"><div><div class="id">S3 · HERO</div><div class="nm">Desk page — two-altitude cited report</div><div class="ds">Briefing → Full report (Insight→Evidence→Implication) → Artifact → Gaps. + thin state.</div></div><span class="go">open ▸</span></a>
+    <a class="card" href="S5-database-view.html"><div><div class="id">S5 · HERO</div><div class="nm">Database view — Findings</div><div class="ds">View toggle · filters · sourced? column. Shown filtered to “unsourced only.” + empty-filter state.</div></div><span class="go">open ▸</span></a>
+    <a class="card" href="S6-side-peek.html"><div><div class="id">S6 · HERO</div><div class="nm">Side peek — source record</div><div class="ds">Verify a source over dimmed context; “backs these findings.” + no-URL state.</div></div><span class="go">open ▸</span></a>
+  </div>
+  <div class="pending"><b>Remaining 6 screens</b> (after your review of the hero 4): S2 Overview/Home · S4 Finding page · S7 Strategy page · S8 GTM readout · S9 Present mode · S10 Command palette.</div>
+</div></body></html>

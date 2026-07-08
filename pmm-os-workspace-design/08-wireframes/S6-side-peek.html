@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · S6 Side peek</title>
+<style>
+  :root{--bg:#e9eaec;--ink:#2b2b2b;--mut:#6d6d6d;--dim:#9a9a9a;--line:#d8d7d2;--box:#fff;--fill:#d9d9d9;--prim:#3a3a3a;
+    --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);padding:var(--s8)}
+  .head{max-width:1180px;margin:0 auto var(--s4)} .head h1{font-size:18px;margin:0 0 var(--s1)} .head p{margin:0;color:var(--mut);font-size:13px}
+  .stage{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr 280px;gap:var(--s6);align-items:start}
+  .browser{background:var(--box);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .bbar{display:flex;gap:var(--s2);padding:var(--s2) var(--s3);background:#dedede;border-bottom:1px solid var(--line)} .dot{width:10px;height:10px;border-radius:50%;background:#c2c2c2}
+  .app{display:grid;grid-template-columns:1fr 360px;height:520px;position:relative}
+  .main{padding:var(--s6);overflow:hidden;position:relative}
+  .scrim{position:absolute;inset:0;background:rgba(40,40,40,.18)} /* peek dims context but keeps place */
+  .main .title{font-size:22px;font-weight:700;margin:0 0 var(--s3);color:#555}
+  .main .bar{height:10px;background:#e0e0e0;border-radius:3px;margin:var(--s2) 0} .w90{width:90%}.w70{width:70%}.w60{width:60%}
+  .evrow{border:1px solid var(--line);border-left:2px solid #8a8a8a;background:#f3f3f3;border-radius:6px;padding:var(--s3);margin:var(--s3) 0;font-size:12.5px;font-style:italic;color:#666;position:relative}
+  .evrow .open{position:absolute;right:8px;bottom:8px;border:1px solid #8a8a8a;border-radius:4px;font-size:10px;padding:0 6px;font-style:normal;font-weight:600;color:#2b2b2b}
+  /* peek */
+  .peek{border-left:1px solid var(--line);background:var(--box);box-shadow:-8px 0 24px -12px rgba(0,0,0,.25);padding:var(--s5);display:flex;flex-direction:column;z-index:2}
+  .peekhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--s4)}
+  .kind{font-size:10px;letter-spacing:.09em;font-weight:700;color:var(--dim)} .x{font-size:16px;color:var(--mut)}
+  .quote{font-size:15px;font-style:italic;line-height:1.5;color:var(--ink);border-left:2px solid #8a8a8a;padding-left:var(--s3);margin:0 0 var(--s4)}
+  .field{display:flex;justify-content:space-between;font-size:12.5px;padding:var(--s2) 0;border-bottom:1px solid #ededed} .field span:first-child{color:var(--dim)} .field span:last-child{color:var(--ink);font-weight:500}
+  .lbl{font-size:11px;letter-spacing:.06em;color:var(--dim);font-weight:700;margin:var(--s5) 0 var(--s2)}
+  .backs{font-size:12.5px;color:var(--mut)} .backs div{padding:var(--s1) 0;border-bottom:1px solid #f0f0f0}
+  .actions{margin-top:auto;padding-top:var(--s5);display:flex;flex-direction:column;gap:var(--s2)}
+  .prim{background:var(--prim);color:#fff;font-size:13px;font-weight:600;padding:var(--s3);border-radius:6px;text-align:center}
+  .sec{border:1px solid var(--line);color:var(--ink);font-size:13px;padding:var(--s3);border-radius:6px;text-align:center;background:#fafafa}
+  .notes{font-size:13px} .notes h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:0 0 var(--s3)}
+  .note{display:flex;gap:var(--s2);margin-bottom:var(--s3)} .num{flex:0 0 22px;height:22px;border-radius:50%;background:var(--prim);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .note p{margin:0;font-size:12.5px;line-height:1.45;color:var(--mut)} .note b{color:var(--ink)}
+  .ref{display:inline-block;font-size:10px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--mut);margin-left:4px}
+  .statebox{max-width:1180px;margin:var(--s6) auto 0;background:var(--box);border:1px dashed var(--line);border-radius:8px;padding:var(--s4)} .statebox h3{margin:0 0 var(--s2);font-size:13px;color:var(--mut)}
+</style></head>
+<body>
+  <div class="head"><h1>S6 · Side peek — source record <span class="ref">grayscale wireframe</span></h1>
+    <p>Primary job: inspect/verify one record without losing your place. Opens from a citation tap (S3) or a row (S5).</p></div>
+  <div class="stage">
+    <div class="browser">
+      <div class="bbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="app">
+        <div class="main">
+          <div class="title">Customer desk</div>
+          <div class="bar w90"></div><div class="bar w70"></div>
+          <div class="evrow">“Every funnel question turns into a ticket for the data team. I genuinely feel like I'm flying blind.”<span class="open">opened ▸</span></div>
+          <div class="bar w60"></div><div class="bar w90"></div>
+          <div class="scrim"></div>
+        </div>
+        <aside class="peek">
+          <div class="peekhead"><span class="kind">SOURCE · X / TWITTER</span><span class="x">✕</span></div>
+          <p class="quote">Every funnel question turns into a ticket for the data team. I genuinely feel like I'm flying blind.</p>
+          <div class="field"><span>Author</span><span>@priya.builds</span></div>
+          <div class="field"><span>Channel</span><span>X</span></div>
+          <div class="field"><span>Engagement</span><span>43 score · 2 likes</span></div>
+          <div class="field"><span>Captured</span><span>Jun 20, 2026</span></div>
+          <div class="lbl">BACKS THESE FINDINGS</div>
+          <div class="backs"><div>Customer · “flying blind” is the native register</div><div>Messaging · mirror the phrase in headline copy</div></div>
+          <div class="actions"><span class="prim">Open original ↗</span><span class="sec">Jump to full page</span></div>
+        </aside>
+      </div>
+    </div>
+    <aside class="notes"><h2>Hierarchy notes</h2>
+      <div class="note"><span class="num">1</span><p><b>Peek over context, not away from it.</b> The page dims (scrim) but stays put; closing returns to the same scroll position — the Notion behavior you kept.</p></div>
+      <div class="note"><span class="num">2</span><p><b>The quote leads.</b> Largest text in the panel — the evidence is the point; fields recede beneath it.</p></div>
+      <div class="note"><span class="num">3</span><p><b>One primary action.</b> <b>Open original ↗</b> (filled) verifies the claim at the source; “Jump to full page” recedes (outline).</p></div>
+      <div class="note"><span class="num">4</span><p><b>“Backs these findings” closes the loop.</b> Shows a source's weight — which claims rest on it (reverse of the citation).</p></div>
+      <div class="note"><span class="num">5</span><p><b>Elevation, once.</b> A single left shadow lifts the peek above the page — one elevation level, not a shadow per element.</p></div>
+    </aside>
+  </div>
+  <div class="statebox"><h3>STATE · No URL (channel-level capture, e.g. TikTok/IG)</h3>
+    <p style="font-size:13px;color:#6d6d6d;margin:0">“Open original” is replaced by an honest note: <i>“Captured at channel level only — @handle on TikTok, no per-post URL. Re-run with URL capture to link.”</i> Primary action becomes “Jump to full page.”</p>
+  </div>
+</body></html>

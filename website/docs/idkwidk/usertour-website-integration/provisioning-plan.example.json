@@ -1,0 +1,38 @@
+{
+  "projectName": "my-saas",
+  "profile": "personal",
+  "mode": "dry-run-first",
+  "providers": {
+    "github": {
+      "enabled": true,
+      "action": "create-or-connect-repository"
+    },
+    "vercel": {
+      "enabled": true,
+      "action": "create-or-link-project"
+    },
+    "convex": {
+      "enabled": true,
+      "action": "create-project-deployments"
+    },
+    "clerk": {
+      "enabled": true,
+      "action": "create-application"
+    },
+    "codex": {
+      "enabled": true,
+      "action": "prepare-secure-workspace-setup"
+    }
+  },
+  "safety": {
+    "dryRunRequiredFirst": true,
+    "neverPrintSecrets": true,
+    "neverStoreOrgTokensInEnv": true,
+    "requireConfirmationBeforeMutation": true,
+    "writeProjectSpecificKeysOnly": true
+  },
+  "ports": {
+    "dashboard": 3015,
+    "marketing": 3020
+  }
+}

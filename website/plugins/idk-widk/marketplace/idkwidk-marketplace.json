@@ -1,0 +1,20 @@
+{
+  "name": "idkwidk-local-marketplace",
+  "interface": {
+    "displayName": "idkWidk Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "idk-widk",
+      "source": {
+        "source": "local",
+        "path": "./idk-widk"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development"
+    }
+  ]
+}

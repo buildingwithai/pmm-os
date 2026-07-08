@@ -1,0 +1,1380 @@
+{
+  "consultingStandard": {
+    "principles": [
+      {
+        "principle": "Pyramid Principle / answer-first storyline (Minto, SCQA)",
+        "what": "Barbara Minto's McKinsey-born structure: state the single governing thought (the answer/recommendation) first, support it with 3-4 grouped arguments, back each argument with evidence at the base. The narrative entry point is SCQA — Situation (uncontroversial context), Complication (what changed / why act now), Question (the question that raises), Answer (the governing thought). Never build up to the conclusion; deliver it immediately so every detail that follows is framed by it.",
+        "howWeAdopt": "The pipeline's synthesis stage must emit a 'governing thought' field FIRST — one sentence answering the user's core question — before any body content is generated. Deliverable templates open with SCQA (2-3 sentences of situation/complication, then the answer), and the generator is forbidden from chronological 'here's what we researched' openings. A QA gate rejects any output whose first paragraph does not contain the recommendation."
+      },
+      {
+        "principle": "One message per slide/page + action titles",
+        "what": "Every MBB slide title is a complete declarative sentence stating the takeaway — 'Costs grew 7%/yr, double revenue growth', never 'Cost overview'. Each slide carries exactly one insight with one visual; nothing in the title that isn't proven in the body, nothing in the body irrelevant to the title. Slides with two messages get split into two slides.",
+        "howWeAdopt": "Every section/page the plugin generates is keyed by a full-sentence claim (the action title), stored as a structured field, with body evidence attached to that claim. The renderer enforces one claim per section; if the synthesizer produces a section supporting two distinct claims, it must split it. Label-style headings ('Market Overview', 'Competitive Landscape') are lint errors — headings must assert something."
+      },
+      {
+        "principle": "The so-what discipline",
+        "what": "Every analysis must pass the 'So what?' test: data → implication → decision relevance. A slide that only describes what is happening is unfinished; it must say why it matters and what it implies for the client's decision. The so-what lives at the individual slide level (in the action title and annotations), not deferred to a final summary. Recommendations are the so-what packaged for the stakeholder.",
+        "howWeAdopt": "Add a mandatory so-what pass after synthesis: for each finding, the pipeline must generate an 'implication' field ('...which means [persona] should [action] because [stake]'). Findings with an empty or circular implication are demoted to appendix or cut. The reviewer prompt literally asks 'So what? Would this change what the PMM does Monday morning?' and fails sections that stop at observation."
+      },
+      {
+        "principle": "MECE decomposition",
+        "what": "Mutually Exclusive, Collectively Exhaustive: break the problem into 2-4 buckets per level with no overlaps and no gaps, expressed as an issue tree of open (what/how/why) questions whose leaves are individually testable. More than ~5 branches at a level means you're not grouping; overlap means double-counting; gaps mean a blind spot the client will find.",
+        "howWeAdopt": "The research planner decomposes the user's question into a MECE issue tree BEFORE any searching — each leaf is a testable sub-question phrased as an open question, and each search/fetch is tagged to exactly one leaf. A structural check verifies no orphan searches (evidence not mapped to a leaf) and no empty leaves (branch asserted but never investigated); empty leaves are flagged as explicit gaps rather than silently dropped."
+      },
+      {
+        "principle": "80/20 research depth (don't boil the ocean)",
+        "what": "20% of the analysis yields 80% of the answer, so consultants prioritize issue-tree branches by impact (often with an impact × ease 2x2), investigate only the branches that can change the answer, and 'pluck low-hanging fruit first'. Depth is spent where the answer is sensitive; everything else gets a fast pass or is skipped with an explicit note. Simplicity over completeness — show exactly what's needed to make the case.",
+        "howWeAdopt": "The planner assigns each issue-tree branch a priority score (impact-on-answer × evidence-availability) and allocates the search/fetch budget accordingly — e.g., 3-5 deep fetches on the two load-bearing branches, 1 quick search on the rest. Fixed depth-per-topic is the anti-pattern; the plugin's adaptive scope model spends tokens where the recommendation is sensitive, and de-scoped branches are named in a 'not investigated' note instead of vanishing."
+      },
+      {
+        "principle": "Day-1 hypothesis (hypothesis-driven research)",
+        "what": "Figure out the likely answer before you start: write an Initial Hypothesis on day 1, derive the issue tree by asking 'what needs to be true for this to be true?', then gather only the facts that prove or disprove it — iterating when refuted. It's a road map, not a conclusion: the cardinal sin is forcing facts to fit the hypothesis. McKinsey also synthesizes continuously — a 'Day 1 answer' is maintained and updated so a defensible story exists at all times.",
+        "howWeAdopt": "Before any web call, the pipeline generates and STORES a day-1 hypothesis ('Likely answer: X, because A/B/C') plus the disconfirming evidence that would kill it. Each research finding is scored as supporting/refuting/neutral against it, and the hypothesis is rewritten when refuted (logged, so the pivot is visible). The running 'current best answer' is updated after every research batch — meaning the pipeline can stop early and still ship a coherent answer, mirroring the elevator test."
+      },
+      {
+        "principle": "Ghost decks / storyboarding before analysis",
+        "what": "Before building anything real, consultants create a 'ghost deck': every planned page with only its action title (a full argument sentence), a one-line sketch of the intended exhibit, and status — no charts, no data. Reading the ghost titles end-to-end must already tell the story; if the logic breaks at ghost stage, no design saves it. It also coordinates parallel workstreams and catches duplicate/contradictory analyses before they're built.",
+        "howWeAdopt": "Insert a ghost-outline stage between research and drafting: the pipeline emits the full deliverable skeleton — ordered action titles + intended evidence per section — and validates it (do the titles read as one coherent paragraph? does each title have mapped evidence?) BEFORE generating body prose. This is also the natural human-in-the-loop checkpoint: show the user the ghost outline for approval, so structural rework happens at 20 lines instead of 20 pages."
+      },
+      {
+        "principle": "Fact-based claims with source discipline",
+        "what": "Every number on an MBB slide ties to a named source in a footnote (source, date, methodology); estimates are labeled as estimates and assumptions made explicit. 'If you cannot footnote it, you should not be citing it.' The deliverable is a closed-loop system: any conclusion must be traceable back through the chain to raw source material without hesitation, because senior readers are trained to attack unsourced claims. Unverified working material is explicitly disclaimed.",
+        "howWeAdopt": "Every quantitative or competitive claim the pipeline writes carries a machine-readable citation (URL + date accessed + quote/locator), rendered as a source line. Claims are typed — fact (sourced) / estimate (method stated) / assumption (flagged) — and a verification pass re-checks load-bearing numbers against a second source before they enter the executive summary. Anything the model 'knows' but cannot source is either re-searched or explicitly labeled as unverified, never silently asserted."
+      },
+      {
+        "principle": "Executive summary craft (SCR, the hardest slide)",
+        "what": "The exec summary is the first page and the one consultants spend the most time perfecting: it compresses the entire storyline via Situation-Complication-Resolution, spends most of its space on the Resolution, and uses the bold-claim + bullet-evidence pattern where the bolded sentences alone tell the complete story. Bullets state findings and implications, never process ('We analyzed...' is banned). It must work standalone — many executives read nothing else.",
+        "howWeAdopt": "The pipeline generates the executive summary LAST, from the final validated action titles (never first from scratch, so it can't drift from the body), in strict SCR form with 3-5 complete-claim bullets and a Resolution-heavy layout. A lint rule bans process language ('we researched/analyzed/looked at') and enforces that each bullet contains a claim + a number or named source. The standalone test: strip everything but the summary and check it still answers the user's question."
+      },
+      {
+        "principle": "Horizontal logic — titles alone tell the story (dot-dash storyline)",
+        "what": "Two axes of logic: horizontal (reading only the action titles start-to-finish yields the full argument — the 'dots') and vertical (each title is fully proven by the evidence on its own page — the 'dashes'). Consultants draft the dot-dash storyline in a text document before touching slides, because faulty logic is easiest to spot when the whole argument sits on one page. The test: can you grasp the entire story without reading any slide body?",
+        "howWeAdopt": "Because sections are already keyed by action-title claims, the QA gate extracts titles-only and runs the silent-read test: do they form a coherent, gap-free argument ending in the recommendation? Non-sequiturs between adjacent titles, or titles that don't ladder up to the governing thought, fail the gate and trigger reordering/rewriting BEFORE body regeneration. Vertical check runs per section: every clause in the title must be supported by evidence in that section's body, else the title is softened or evidence is fetched."
+      }
+    ],
+    "onePagerRules": [
+      "Lead with the answer: the headline is the recommendation in one complete sentence (an action title), not a topic label — the reader gets the conclusion in the first five seconds.",
+      "Structure as Situation → Complication → Resolution, and spend most of the page on the Resolution; executives want the answer, not a restatement of the problem.",
+      "One page = one decision. If the page serves two decisions, it is two one-pagers.",
+      "Use the bold-claim + bullet-evidence pattern: bolded full-sentence claims with supporting bullets beneath; the bold text alone must tell the complete story (the skim test).",
+      "Maximum 3-5 proof points, each carrying a decision-grade number with context (vs. benchmark, vs. last period) — a raw number without a comparator is noise.",
+      "Every number has a source line (source, date; estimates labeled as estimates, assumptions explicit). If it can't be footnoted, it doesn't go on the page.",
+      "No process language: bullets state findings and implications, never 'we analyzed/researched/reviewed'.",
+      "Every claim passes the so-what test — it states the implication for the reader, not just the observation.",
+      "End with an explicit ask: specific, time-bound next steps with an owner ('Approve X by Friday'), phrased as verb-first actions, never 'align on next steps'.",
+      "Ruthless cut discipline: anything not directly supporting the recommendation moves to a linked appendix — the one-pager shows exactly what's needed to make the case, no more.",
+      "Pass the elevator/standalone test: the page must work in 30 seconds with no author present and no supporting deck.",
+      "Visual hierarchy over density: wide margins, white space, one visual maximum, consistent formatting — readability signals credibility to executive readers."
+    ],
+    "researchRules": [
+      "Write the day-1 hypothesis before gathering anything: the likely answer, why, and what evidence would disprove it. Research exists to prove or kill it, not to 'explore the topic'.",
+      "Decompose the question into a MECE issue tree of open (what/how/why) questions before searching; every search maps to exactly one leaf, every leaf is individually testable — no orphan research, no unexamined branches.",
+      "Apply 80/20 to depth: score branches by impact-on-answer × evidence availability, go deep only where the recommendation is sensitive, and explicitly name what was de-scoped instead of silently skipping it (don't boil the ocean).",
+      "Before running any analysis, state what it will answer and how the result could change the recommendation; if no result would change anything, don't run it.",
+      "Synthesize continuously: maintain a running 'current best answer' updated after every evidence batch, so a defensible story exists at every point and the work can stop early without collapsing.",
+      "Every claim is typed and traceable: fact (named source + date + locator), estimate (method stated), or assumption (flagged). Unsourced model knowledge is either re-verified via search or explicitly labeled unverified.",
+      "Two-source rule for load-bearing numbers: any figure the recommendation depends on gets triangulated against an independent source; conflicts are surfaced, not averaged away.",
+      "Run an adversarial pass: actively search for evidence AGAINST the current hypothesis before finalizing — never make facts fit the answer; log hypothesis pivots so the reasoning trail is auditable.",
+      "Keep the closed loop: every conclusion in the deliverable must be traceable back through the chain (claim → section evidence → source URL/page) with zero hesitation under scrutiny.",
+      "Numbers need context to be insight: always pair a figure with a benchmark, trend, or peer comparison before drawing an implication from it.",
+      "Say 'we don't know': gaps, low-confidence findings, and unanswerable sub-questions are stated explicitly in the deliverable rather than padded over with plausible prose.",
+      "Separate point from proof: the main deliverable carries only decision-driving evidence; full datasets, methodology, and secondary analyses live in a disclaimed appendix/working-docs layer."
+    ],
+    "notes": "Method: 7 web searches (Exa) across ex-MBB practitioner sources — Slideworks (ex-McKinsey/ex-BCG founders), slidescience.co (BCG exec-summary teardown), strategycase.com, Umbrex (McKinsey problem-solving), Rasiel's 'The McKinsey Way' summaries, managementconsulted.com, deckary.com, poesius.com, a1slides.com. The sources converge on one meta-insight worth wiring into the plugin's architecture: MBB quality comes from SEQUENCING, not polish — hypothesis and storyline are engineered BEFORE analysis (day-1 hypothesis → MECE tree → ghost deck → targeted 80/20 research → continuous synthesis → exec summary written last from validated titles), and the deliverable is then just the storyline made legible. This maps cleanly onto a pipeline: plan stage = hypothesis + issue tree; research stage = branch-budgeted search with typed citations; outline stage = ghost skeleton of action titles (ideal human checkpoint); draft stage = one-claim-per-section bodies; QA gate = titles-only silent-read test + so-what test + source-line lint; render stage = SCR exec summary + one-pager. Notable corroborating detail: McKinsey's own internal AI (Lilli) reportedly runs a critique step asking exactly these questions ('Is the governing thought clear? Is every data point sourced? Does it address the so-what?'), i.e., the firm itself operationalized these standards as an LLM QA gate — strong validation that they are automatable. One caveat: several sources are secondary/marketing content from slide-consultancy blogs; the principles themselves (Minto, MECE, IH, 80/20) trace to primary texts (Minto 1985, Rasiel 1999) and are consistent across all sources, so confidence in the framework is high even where individual anecdotes are unverified. Key URLs: slideworks.io/resources/how-mckinsey-consultants-make-presentations, slideworks.io/resources/what-real-consulting-deliverables-look-like-bcg-example, slidescience.co/storytelling-in-powerpoint, slidescience.co/executive-summary, umbrex.com/resources/mckinsey-problem-solving, strategycase.com/the-pyramid-principle-case-interview, poesius.com/blog/how-mckinsey-bcg-bain-structure-final-presentations, deckary.com/blog/one-pager-template."
+  },
+  "frameworkCorpus": {
+    "frameworks": [
+      {
+        "name": "April Dunford 10-Step Positioning Process",
+        "discipline": "positioning",
+        "origin": "April Dunford, 'Obviously Awesome' (2019)",
+        "purpose": "Systematically derive positioning from what your best customers love, rather than asserting it; produces the 5 (+1) positioning components used downstream in all messaging.",
+        "sections": [
+          "1. Understand the customers who love your product",
+          "2. Form a cross-functional positioning team",
+          "3. Align positioning vocabulary and let go of positioning baggage",
+          "4. List your TRUE competitive alternatives (incl. spreadsheets/do-nothing)",
+          "5. Isolate your unique attributes/capabilities",
+          "6. Map attributes to value themes (so what?)",
+          "7. Determine who cares a lot (best-fit target segments)",
+          "8. Find a market frame of reference that makes your value obvious (styles: head-to-head, big fish/small pond, create a new game)",
+          "9. Layer on a trend (optional, carefully)",
+          "10. Capture positioning in a canvas/doc and share (components: competitive alternatives, unique attributes, value & proof, target segments, market category, trend)"
+        ]
+      },
+      {
+        "name": "Positioning Statement Formats (Moore template + Neumeier Onlyness)",
+        "discipline": "positioning",
+        "origin": "Geoffrey Moore, 'Crossing the Chasm' (1991); Marty Neumeier, 'Zag' (2006)",
+        "purpose": "Compress positioning into a single testable sentence that forces choices about target, category, benefit, and differentiation.",
+        "sections": [
+          "Moore: FOR (target customer)",
+          "WHO (statement of need/opportunity)",
+          "THE (product name) IS A (market category)",
+          "THAT (key benefit / compelling reason to buy)",
+          "UNLIKE (primary competitive alternative)",
+          "OUR PRODUCT (primary differentiation)",
+          "Neumeier Onlyness: 'Our offering is the ONLY (category) that (differentiator) for (customer) in (market) who (need) in an era of (trend)'"
+        ]
+      },
+      {
+        "name": "Ries & Trout Positioning Principles",
+        "discipline": "positioning",
+        "origin": "Al Ries & Jack Trout, 'Positioning: The Battle for Your Mind' (1981)",
+        "purpose": "The founding discipline: positioning happens in the prospect's mind, not in the product; own one idea/word against overcommunicated markets.",
+        "sections": [
+          "Own one word/idea in the prospect's mind",
+          "Be first in a category — or create a new category you can be first in (cherchez le creneau)",
+          "Leadership vs against-positioning (e.g., 'we're #2, we try harder')",
+          "Reposition the competition (hang a negative on their strength)",
+          "Avoid the line-extension trap",
+          "Consistency over time — do not reposition casually"
+        ]
+      },
+      {
+        "name": "Category Design (Play Bigger)",
+        "discipline": "positioning",
+        "origin": "Al Ramadan, Dave Peterson, Christopher Lochhead, Kevin Maney, 'Play Bigger' (2016)",
+        "purpose": "Instead of competing in an existing market, define and evangelize a new category so your company becomes the 'category king' that captures most of the economics.",
+        "sections": [
+          "Category discovery: identify the missing/unnamed problem",
+          "Category point of view (POV): frame the problem, the stakes, and the new way",
+          "Name the category",
+          "Company/product/category fit check",
+          "Category blueprint: ecosystem, roadmap, and how the category matures",
+          "Mobilization: lightning-strike launch events that condition the market",
+          "Sustain: category king economics (majority of category market cap accrues to the leader)"
+        ]
+      },
+      {
+        "name": "Message House",
+        "discipline": "messaging",
+        "origin": "Corporate PR/communications practice (no single originator); standard in tech PMM via PMA and comms teams",
+        "purpose": "One-page visual container for a launch or company narrative: a single umbrella message supported by exactly three pillars and their evidence.",
+        "sections": [
+          "Roof: umbrella/core message (one sentence)",
+          "Pillar 1-3: key messages (benefit-led, mutually distinct)",
+          "Foundation: proof points, data, customer evidence, and facts supporting each pillar",
+          "Optional: tagline/boilerplate layer and audience variants"
+        ]
+      },
+      {
+        "name": "Messaging Hierarchy / Messaging Framework",
+        "discipline": "messaging",
+        "origin": "Standard PMM practice; codified by Product Marketing Alliance and big-tech in-house templates",
+        "purpose": "The full cascade from positioning to usable copy: who we're talking to, the value we claim, the pillars that support it, and the proof — with channel-length variants.",
+        "sections": [
+          "Audience/persona and their pain/insight",
+          "Positioning statement (input from positioning exercise)",
+          "Value proposition one-liner",
+          "3-4 message pillars: each = benefit statement → supporting capabilities/features → proof points",
+          "Objection responses / counter-messaging",
+          "Voice & tone guidance",
+          "Channel variants: headline (~6 words), short (25 words), medium (50), long/boilerplate (100+)"
+        ]
+      },
+      {
+        "name": "Value Proposition Canvas",
+        "discipline": "messaging",
+        "origin": "Alex Osterwalder, Yves Pigneur, Greg Bernarda — Strategyzer, 'Value Proposition Design' (2014)",
+        "purpose": "Achieve explicit fit between what customers need and what the product offers before writing any messaging.",
+        "sections": [
+          "Customer profile: customer jobs (functional/social/emotional)",
+          "Customer profile: pains (obstacles, risks, frustrations)",
+          "Customer profile: gains (required, expected, desired, unexpected)",
+          "Value map: products & services",
+          "Value map: pain relievers",
+          "Value map: gain creators",
+          "Fit assessment: do relievers/creators address the highest-ranked pains/gains?"
+        ]
+      },
+      {
+        "name": "Benefit Ladder / FAB Laddering",
+        "discipline": "messaging",
+        "origin": "Means-end chain theory (Jonathan Gutman, 1982) via ad-agency account planning; FAB from classic sales training",
+        "purpose": "Climb from what the product IS to what it DOES to what it MEANS — ensuring messaging leads with benefits, not features.",
+        "sections": [
+          "Rung 1: attribute/feature (what it is)",
+          "Rung 2: functional benefit (what it does for the user — FAB: feature → advantage → benefit)",
+          "Rung 3: emotional benefit (how it makes them feel)",
+          "Rung 4: self-expressive/values benefit (what it says about them)",
+          "Rule: message at the highest rung you can prove; ladder down for skeptical/technical audiences"
+        ]
+      },
+      {
+        "name": "Voice & Tone Framework",
+        "discipline": "messaging",
+        "origin": "Popularized by Mailchimp's Voice & Tone guide (2011); tone dimensions codified by Nielsen Norman Group",
+        "purpose": "Make the brand sound consistent everywhere (voice) while flexing appropriately to context (tone).",
+        "sections": [
+          "3-4 voice attributes, each with 'we are / we are not' definition and do/don't example pairs",
+          "NN/g four tone dimensions: funny↔serious, formal↔casual, respectful↔irreverent, enthusiastic↔matter-of-fact",
+          "Tone map by context (error message vs celebration vs pricing page)",
+          "Vocabulary: words we use / never use; product naming and capitalization rules",
+          "Grammar & mechanics conventions"
+        ]
+      },
+      {
+        "name": "Strategic Narrative (Promised Land)",
+        "discipline": "messaging",
+        "origin": "Andy Raskin, 'The Greatest Sales Deck I've Ever Seen' (2016)",
+        "purpose": "Replace the 'problem→solution' pitch with a change-based story that makes the buyer the hero and your product the enabler.",
+        "sections": [
+          "1. Name the big, undeniable change in the world (not the problem)",
+          "2. Show there will be winners and losers of that change",
+          "3. Tease the Promised Land (the desired new state — hard to reach alone)",
+          "4. Introduce your capabilities as 'magic gifts' for reaching the Promised Land",
+          "5. Present evidence you can make the story come true (proof, customers, metrics)"
+        ]
+      },
+      {
+        "name": "StoryBrand SB7",
+        "discipline": "messaging",
+        "origin": "Donald Miller, 'Building a StoryBrand' (2017)",
+        "purpose": "Cast the customer as the hero and the brand as the guide; the 7-part BrandScript clarifies website and campaign copy.",
+        "sections": [
+          "1. A character (the customer as hero, with a want)",
+          "2. Has a problem (external, internal, philosophical + a villain)",
+          "3. Meets a guide (brand shows empathy + authority)",
+          "4. Who gives them a plan (process plan / agreement plan)",
+          "5. And calls them to action (direct CTA + transitional CTA)",
+          "6. That helps them avoid failure (stakes)",
+          "7. And ends in success (transformation)"
+        ]
+      },
+      {
+        "name": "Jobs-to-be-Done (JTBD)",
+        "discipline": "personas",
+        "origin": "Clayton Christensen (milkshake study) & Bob Moesta/Rewired Group; Outcome-Driven Innovation variant by Tony Ulwick (Strategyn)",
+        "purpose": "Understand demand as a 'job' customers hire products to do — situational causality rather than demographic correlation.",
+        "sections": [
+          "Job statement: 'When [situation], I want to [motivation], so I can [expected outcome]'",
+          "Job dimensions: functional, emotional, social",
+          "Four forces of progress: push of the current situation, pull of the new solution, anxiety of the new, habit of the present",
+          "Hiring/firing framing: what gets fired when you get hired",
+          "ODI variant: desired-outcome statements scored by importance + dissatisfaction (opportunity algorithm)"
+        ]
+      },
+      {
+        "name": "Five Rings of Buying Insight",
+        "discipline": "personas",
+        "origin": "Adele Revella, Buyer Persona Institute, 'Buyer Personas' (2015)",
+        "purpose": "The buyer-persona structure that matters for marketing: not demographics, but the five insights that explain a real buying decision.",
+        "sections": [
+          "1. Priority initiative: what made buying this NOW worth it (trigger)",
+          "2. Success factors: outcomes the buyer expects",
+          "3. Perceived barriers: why buyers think you/your category might fail them",
+          "4. Buyer's journey: process, resources consulted, who's involved at each step",
+          "5. Decision criteria: the specific capabilities/attributes they evaluate"
+        ]
+      },
+      {
+        "name": "B2B Buyer Persona Template",
+        "discipline": "personas",
+        "origin": "Alan Cooper (UX personas, 1999) adapted to B2B marketing; codified by HubSpot and Buyer Persona Institute",
+        "purpose": "A shared, evidence-based sketch of a buying-committee member that messaging, content, and campaigns can target.",
+        "sections": [
+          "Archetype name, role/title, firmographics",
+          "Goals & KPIs they're measured on",
+          "Pains/challenges and current workarounds",
+          "Day-in-the-life and buying role (economic buyer / champion / user / technical evaluator / blocker)",
+          "Watering holes: where they learn (communities, publications, influencers)",
+          "Common objections",
+          "Real verbatim quotes from research",
+          "Messaging implications: what to say / what to avoid"
+        ]
+      },
+      {
+        "name": "Ideal Customer Profile (ICP)",
+        "discipline": "personas",
+        "origin": "B2B ABM/sales practice; codified by TOPO and SiriusDecisions (now Gartner/Forrester)",
+        "purpose": "Define the ACCOUNTS (not people) most likely to buy, succeed, retain, and expand — so GTM effort concentrates where economics work.",
+        "sections": [
+          "Fit criteria: firmographics (industry, size, revenue, geography)",
+          "Technographics (stack, integrations present)",
+          "Business-model/motion fit (how they buy, budget capacity)",
+          "Trigger events & intent signals (funding, hiring, leadership change, tech adoption)",
+          "Anti-ICP: explicit disqualifiers",
+          "Account tiering (Tier 1/2/3) with scoring weights",
+          "Activation checklist: how sales/marketing act on each tier"
+        ]
+      },
+      {
+        "name": "GTM Motion Taxonomy (PLG / Sales-led / Marketing-led / Channel / Community)",
+        "discipline": "GTM",
+        "origin": "SaaS practice; 'product-led growth' coined by Blake Bartlett at OpenView (2016); community-led codified ~2021",
+        "purpose": "Choose and sequence the primary way the company acquires and converts customers; each motion implies different pricing, funnel, and team design.",
+        "sections": [
+          "Product-led (self-serve free/trial → PQL → convert/expand)",
+          "Sales-led (outbound/inbound → AE-driven; enterprise)",
+          "Marketing-led / demand-gen (content + paid → MQL → SDR)",
+          "Channel/partner-led (resellers, marketplaces, SIs)",
+          "Community-led / ecosystem-led (developer & practitioner communities)",
+          "Selection criteria: ACV vs CAC, product complexity, time-to-value, buyer type",
+          "Hybrid sequencing (e.g., PLG land + sales-assist expand)"
+        ]
+      },
+      {
+        "name": "Product-Led Growth (PLG) Framework",
+        "discipline": "GTM",
+        "origin": "OpenView Venture Partners (Blake Bartlett, Kyle Poyar), 2016-2022 PLG playbooks",
+        "purpose": "Make the product itself the primary vehicle for acquisition, conversion, and expansion; instrument the self-serve journey end to end.",
+        "sections": [
+          "Self-serve acquisition model (freemium vs free trial vs reverse trial)",
+          "Time-to-value & activation: define the 'aha moment' and shorten TTV",
+          "Product-qualified leads (PQL) / product-qualified accounts (PQA) definitions and routing",
+          "Self-serve monetization (pricing page, in-product upgrade paths)",
+          "Expansion loops (seats, usage, cross-team virality)",
+          "PLG metrics: activation rate, TTV, PQL→paid conversion, NRR (AARRR skeleton: Acquisition, Activation, Retention, Referral, Revenue — Dave McClure, 2007)"
+        ]
+      },
+      {
+        "name": "Land and Expand",
+        "discipline": "GTM",
+        "origin": "Enterprise SaaS practice (Salesforce/Slack era); tied to wedge strategy",
+        "purpose": "Enter an account small with a wedge use case, prove value fast, then grow revenue inside the account — measured by net revenue retention.",
+        "sections": [
+          "Land: wedge use case, small initial deal, minimal procurement friction",
+          "Prove: success plan, value realization milestones, champion development",
+          "Expand: more seats → more teams → more use cases → more geos/SKUs",
+          "Renew & upsell: QBRs, whitespace/account maps",
+          "Metrics: NRR, logo expansion rate, time-to-second-purchase"
+        ]
+      },
+      {
+        "name": "Crossing the Chasm / Technology Adoption Lifecycle",
+        "discipline": "GTM",
+        "origin": "Geoffrey Moore (1991), building on Rogers' diffusion of innovations",
+        "purpose": "Explain why products stall between visionaries and pragmatists, and prescribe the beachhead strategy to cross.",
+        "sections": [
+          "Adoption segments: innovators, early adopters, early majority, late majority, laggards",
+          "The chasm: early adopters buy change, early majority buys references + whole product",
+          "Beachhead: pick ONE niche segment and dominate it (D-Day strategy)",
+          "Whole product: fill every gap the pragmatist needs (services, integrations, support)",
+          "Bowling alley: expand niche-by-niche from the beachhead",
+          "Tornado & Main Street phases"
+        ]
+      },
+      {
+        "name": "Bowtie Model",
+        "discipline": "GTM",
+        "origin": "Winning by Design (Jacco van der Kooij)",
+        "purpose": "Extend the funnel past the sale — in recurring revenue, most value is created AFTER the deal — and assign metrics/handoffs per stage.",
+        "sections": [
+          "Left side: Awareness → Education → Selection (prospect journey)",
+          "Center knot: Commit (the sale)",
+          "Right side: Onboarding → Achieve first impact → Recurring impact (adoption → expansion → advocacy)",
+          "Conversion & velocity metrics per stage; SLAs at each handoff",
+          "Recurring-revenue math: CAC vs LTV, NRR, GRR as the right-side scoreboard"
+        ]
+      },
+      {
+        "name": "Growth Loops",
+        "discipline": "GTM",
+        "origin": "Reforge (Brian Balfour, Casey Winters, Kevin Kwok), ~2018",
+        "purpose": "Replace linear funnels with compounding, closed loops where output of one cycle becomes input to the next.",
+        "sections": [
+          "Loop anatomy: input (new user/content) → action/step → output → reinvested as new input",
+          "Viral loops (invitations, collaboration, word of mouth)",
+          "Content loops (UGC/SEO: users create content → search finds it → new users)",
+          "Paid loops (revenue → ad spend → users → revenue)",
+          "Sales loops (revenue → reps → pipeline)",
+          "Qualification: is the loop measurable, repeatable, and compounding? Which ONE loop powers the business?"
+        ]
+      },
+      {
+        "name": "Launch Tier Framework (T1/T2/T3)",
+        "discipline": "launch",
+        "origin": "Big-tech/SaaS PMM practice (Google/Meta-style tiering); codified publicly by PMA, Segment8, GTM playbooks (2024-25)",
+        "purpose": "Right-size launch investment to business impact so T1s get full GTM treatment and T3s don't burn the team.",
+        "sections": [
+          "Tier definitions: T1 = company-defining (new product, category shift, ~2-3/yr, 6-12 wks), T2 = significant feature launch (4-6/yr, 3-6 wks), T3 = minor updates/maintenance (weekly/bundled, 1-2 wks)",
+          "Scoring criteria: revenue impact, addressable audience/adoption reach, competitive urgency, customer demand, strategic alignment (weighted 0-3 or 0-10 scales)",
+          "Score thresholds → tier assignment (with human override for strategic context)",
+          "Activity matrix per tier: T1 = PR/analyst/event/full campaign/mandatory sales training; T2 = blog/webinar/email/enablement doc; T3 = changelog/in-app/docs only",
+          "Resource allocation and cadence caps per tier",
+          "Optional T0 for company-defining moments (acquisition, rebrand)"
+        ]
+      },
+      {
+        "name": "Product Launch Plan (Canonical Structure)",
+        "discipline": "launch",
+        "origin": "Standard PMM practice; codified by PMA launch certifications and in-house big-tech templates",
+        "purpose": "The single planning document that aligns every function on what's launching, to whom, when, and how success is measured.",
+        "sections": [
+          "Objectives & success metrics (leading + lagging)",
+          "Launch tier & rationale",
+          "Audience: personas, segments, ICP fit",
+          "Positioning & messaging (approved message house)",
+          "Competitive context & anticipated responses",
+          "Pricing/packaging impact",
+          "Channel & content plan: owned/earned/paid, embargo strategy, PR & analyst relations",
+          "Sales & CS enablement plan (training, battlecards, demo, FAQs)",
+          "Beta/early-access customer proof & references",
+          "Timeline, milestones, owners (RACI)",
+          "Budget",
+          "Risks & contingencies",
+          "Post-launch measurement & reporting cadence"
+        ]
+      },
+      {
+        "name": "Launch Runbook / T-minus Checklist",
+        "discipline": "launch",
+        "origin": "Operations/release-management practice adapted by PMM teams",
+        "purpose": "Turn the launch plan into an executable, owner-assigned, time-boxed checklist so launch day is boring.",
+        "sections": [
+          "T-minus schedule: T-30, T-14, T-7, T-3, T-1, T-0 (launch), T+1, T+7, T+30 task blocks",
+          "Go/no-go review with explicit entry/exit criteria",
+          "Day-of checklist: per-channel task, owner, exact time (site live, blog, email, social, in-app, PR wire)",
+          "War room: comms channel, roles, monitoring dashboards",
+          "Escalation path & rollback plan",
+          "Phased rollout gates: internal dogfood → alpha → closed beta → open beta/EA → GA, with criteria per gate"
+        ]
+      },
+      {
+        "name": "Amazon PR/FAQ (Working Backwards)",
+        "discipline": "launch",
+        "origin": "Amazon internal practice (Bezos era, ~2004); described in 'Working Backwards' (Colin Bryar & Bill Carr, 2021)",
+        "purpose": "Write the launch press release BEFORE building — if the PR isn't compelling, the product won't be.",
+        "sections": [
+          "Press release: heading (customer-language name)",
+          "Subheading: who it's for + benefit",
+          "Intro paragraph: summary of product and benefit",
+          "Problem paragraph",
+          "Solution paragraph (how it solves it)",
+          "Company leader quote",
+          "How it works / getting started",
+          "Customer quote (hypothetical)",
+          "Call to action",
+          "FAQ: external customer questions + internal hard questions (economics, risks, dependencies, 'why will this fail?')"
+        ]
+      },
+      {
+        "name": "Post-Launch Learning Loop",
+        "discipline": "launch",
+        "origin": "Standard PMM/product practice; retrospective format from agile",
+        "purpose": "Close the loop: measure the launch against its goals, harvest learnings, and feed the next iteration — launches are loops, not events.",
+        "sections": [
+          "Metrics vs goals review: adoption, activation, pipeline/revenue attribution, press/social reach",
+          "Funnel analysis: where did prospects drop?",
+          "VoC + field feedback synthesis (sales, CS, community, reviews)",
+          "Early win/loss reads on competitive deals",
+          "Retro: what worked / what didn't / what surprised us",
+          "Iteration backlog with owners (messaging fixes, enablement gaps, product asks)",
+          "30/60/90-day checkpoints and stakeholder report-out"
+        ]
+      },
+      {
+        "name": "Van Westendorp Price Sensitivity Meter",
+        "discipline": "pricing",
+        "origin": "Peter Van Westendorp (1976)",
+        "purpose": "Survey-based method to find the acceptable price range and optimal price point from customer psychology.",
+        "sections": [
+          "Q1: At what price is it so expensive you'd never consider it? (too expensive)",
+          "Q2: At what price is it getting expensive but you'd still consider it? (expensive)",
+          "Q3: At what price is it a bargain/great buy? (cheap)",
+          "Q4: At what price is it so cheap you'd doubt its quality? (too cheap)",
+          "Plot cumulative curves; intersections yield: Point of Marginal Cheapness (PMC), Point of Marginal Expensiveness (PME), Indifference Price Point (IPP), Optimal Price Point (OPP)",
+          "Acceptable range = PMC to PME; NMS extension adds purchase-intent calibration"
+        ]
+      },
+      {
+        "name": "Gabor-Granger Price Testing",
+        "discipline": "pricing",
+        "origin": "André Gabor & Clive Granger (economists, 1960s)",
+        "purpose": "Direct willingness-to-pay measurement: build a demand curve and find the revenue-maximizing price for a defined offer.",
+        "sections": [
+          "Present the product concept at a randomized starting price",
+          "Ask purchase likelihood (e.g., 5-point scale)",
+          "Iterate price up (if willing) or down (if not) through preset points",
+          "Build demand curve (% willing to buy at each price)",
+          "Compute revenue curve (price × demand) → revenue-maximizing price",
+          "Caveat: anchors on shown prices; best for validating a shortlist, not discovery"
+        ]
+      },
+      {
+        "name": "Choice-Based Conjoint Analysis",
+        "discipline": "pricing",
+        "origin": "Paul Green & V. Srinivasan (marketing science, 1970s); Sawtooth Software as industry standard",
+        "purpose": "The gold standard for packaging/pricing trade-offs: infer what buyers value by forcing realistic choices between bundles.",
+        "sections": [
+          "Define attributes & levels (features, service tiers, price points)",
+          "Generate choice sets (fractional factorial design)",
+          "Respondents repeatedly choose between full-profile bundles (or 'none')",
+          "Estimate part-worth utilities (hierarchical Bayes logit)",
+          "Simulate market share and willingness-to-pay for candidate packages",
+          "Feed results into tier design and feature fencing decisions"
+        ]
+      },
+      {
+        "name": "Value Metric Framework",
+        "discipline": "pricing",
+        "origin": "Patrick Campbell, Price Intelligently / ProfitWell (~2015)",
+        "purpose": "Choose WHAT you charge for — the single highest-leverage pricing decision; the right value metric aligns price with delivered value and grows revenue with customer success.",
+        "sections": [
+          "Candidate generation: list every unit you could meter (seats, contacts, events, GB, API calls, workflows)",
+          "Criterion 1: aligns with value the customer actually receives",
+          "Criterion 2: scales as the customer grows (natural expansion)",
+          "Criterion 3: easy to understand and predict (buyer can budget)",
+          "Validate with customer preference + willingness-to-pay research",
+          "Pick primary metric + secondary fences/limits; stress-test unit economics"
+        ]
+      },
+      {
+        "name": "Good-Better-Best Packaging",
+        "discipline": "pricing",
+        "origin": "Long-standing pricing practice; codified by Rafi Mohammed, 'The Good-Better-Best Approach to Pricing' (HBR, 2018)",
+        "purpose": "Three-tier architecture that captures low-WTP buyers defensively, serves the majority, and monetizes/anchors with a premium tier.",
+        "sections": [
+          "Good: defensive/fighter tier — enough value to win price-sensitive buyers without cannibalizing Better",
+          "Better: the target tier for the majority (design it as the default choice)",
+          "Best: premium/halo tier — anchors perception upward and monetizes power users",
+          "Feature fencing: gate by willingness-to-pay drivers (~a few high-signal fences per boundary, not dozens)",
+          "Price gaps/steps between tiers (decoy & anchoring effects)",
+          "Clear upgrade paths and naming"
+        ]
+      },
+      {
+        "name": "SaaS Pricing Model Taxonomy",
+        "discipline": "pricing",
+        "origin": "SaaS pricing practice; codified by Simon-Kucher, OpenView, and the 2023-25 usage/credits wave (Metronome, m3ter, AI credit pricing)",
+        "purpose": "Choose the pricing MODEL (structure) that fits the value metric, motion, and buyer predictability needs.",
+        "sections": [
+          "Flat rate",
+          "Per-seat (per user)",
+          "Tiered packages (good-better-best)",
+          "Usage/consumption-based (metered)",
+          "Credits/hybrid (prepaid usage; dominant in AI products 2024-25)",
+          "Freemium vs free trial (opt-in/opt-out) as acquisition layers",
+          "Add-ons, platform fees, enterprise custom",
+          "Trade-off axis: revenue predictability ↔ value alignment; match to PLG vs sales-led motion"
+        ]
+      },
+      {
+        "name": "Sales Battlecard Format",
+        "discipline": "competitive",
+        "origin": "Competitive-intelligence practice; format codified by Klue, Crayon, and Product Marketing Alliance",
+        "purpose": "A one-page, sales-consumable asset for winning against a specific competitor in live deals.",
+        "sections": [
+          "Competitor snapshot: who they are, funding/size, target market, motion",
+          "Why we win: top 3-5 differentiators with evidence",
+          "Why we lose / where they're genuinely strong (honesty = credibility)",
+          "Landmines: trap-setting discovery questions that expose their weaknesses",
+          "Objection handling: their claim → our response → proof",
+          "Feature & pricing comparison (only decision-relevant rows)",
+          "Competitive proof: win stories, head-to-head case studies, G2 data",
+          "Recent moves/news and what they mean",
+          "Do say / don't say guardrails",
+          "Freshness: owner + last-updated date"
+        ]
+      },
+      {
+        "name": "Win/Loss Program",
+        "discipline": "competitive",
+        "origin": "B2B CI practice; codified by Clozd, DoubleCheck Research, Anova Consulting, and PMA win/loss certification",
+        "purpose": "Systematically learn from real buying decisions to fix positioning, product, pricing, and sales execution.",
+        "sections": [
+          "Program design: goals, segment/sample mix (wins AND losses AND no-decisions), cadence, incentives",
+          "Data sources: third-party buyer interviews, seller debriefs, CRM data, surveys",
+          "Interview guide: decision context/trigger, evaluation journey, vendor perceptions, decision drivers, pricing feedback, 'what advice would you give us?'",
+          "Neutral third-party interviewing (buyers won't tell your reps the truth)",
+          "Coding & driver analysis: win/loss reasons by category (product, price, sales experience, trust, requirements fit)",
+          "Readouts: quarterly theme reports + deal-level briefs to the account team",
+          "Action loop: route findings into roadmap, enablement, positioning, pricing"
+        ]
+      },
+      {
+        "name": "Competitive Comparison Matrix & Us-vs-Them Pages",
+        "discipline": "competitive",
+        "origin": "Standard CI + SEO/CRO practice",
+        "purpose": "Structure head-to-head evaluation on criteria you can win, both internally (deal support) and publicly (comparison landing pages).",
+        "sections": [
+          "Weighted criteria matrix: decision-relevant capability rows × vendors, honest scoring",
+          "Criteria seeding: get your differentiators into the buyer's RFP/eval scorecard early",
+          "Public 'vs' page anatomy: fair acknowledgment of the competitor, differentiated value framing, proof (reviews, benchmarks), migration path + CTA",
+          "'Alternatives to X' page variant for competitor-brand search intent",
+          "Legal/accuracy review and refresh cadence"
+        ]
+      },
+      {
+        "name": "CI Program Structure & Competitor Tiering",
+        "discipline": "competitive",
+        "origin": "Klue/Crayon-era CI operations practice + SCIP (Strategic & Competitive Intelligence Professionals)",
+        "purpose": "Run competitive intelligence as an ongoing program with proportionate coverage, not ad-hoc panic research.",
+        "sections": [
+          "Competitor tiering: Tier 1 (deep: full battlecards, win/loss tracking, weekly monitoring), Tier 2 (light card, monthly review), Tier 3 (watchlist: alerts only)",
+          "Collection: website/pricing-page diffs, review sites, job postings, filings, ad libraries, field intel channel (Slack #competitive)",
+          "Analysis: so-what synthesis, threat assessment, predicted moves",
+          "Repository: single source of truth with freshness dates",
+          "Distribution: CI newsletter, enablement sessions, deal-support desk",
+          "Measurement: win rate vs tracked competitors, battlecard usage, rep confidence scores"
+        ]
+      },
+      {
+        "name": "ARR Competitive Objection Handling (Address, Reframe, Redirect)",
+        "discipline": "competitive",
+        "origin": "Klue / Product Marketing Alliance competitive-enablement practice",
+        "purpose": "A decision rule for competitive claims based on whether the claim is false, partially true, or true.",
+        "sections": [
+          "Address: if the competitor's claim is FALSE — correct it directly with evidence, without trashing them",
+          "Reframe: if PARTIALLY TRUE — shift the context/evaluation criteria so the comparison is framed on what actually matters",
+          "Redirect: if TRUE — concede gracefully and steer to adjacent ground where you win",
+          "Wrap in proof: every move ends with a specific proof point and a forward step"
+        ]
+      },
+      {
+        "name": "Pillar-Cluster / Topic Cluster Model",
+        "discipline": "content",
+        "origin": "HubSpot (2017; Anum Hussain & Matt Barby research)",
+        "purpose": "Organize content around topical authority: one comprehensive pillar page interlinked with specific cluster pages, matching how search engines (and now LLMs) evaluate expertise.",
+        "sections": [
+          "Topic selection: broad head topic mapped to business value",
+          "Pillar page: comprehensive coverage of the head topic",
+          "Cluster pages: each answers one specific subtopic/long-tail question",
+          "Internal linking mesh: every cluster links to the pillar and back",
+          "Intent/keyword map governing what gets created",
+          "Consolidation: prune/merge cannibalizing content"
+        ]
+      },
+      {
+        "name": "Funnel Content Mapping (TOFU/MOFU/BOFU)",
+        "discipline": "content",
+        "origin": "Classic demand-gen practice (AIDA lineage — E. St. Elmo Lewis, 1898); codified by inbound marketing (HubSpot)",
+        "purpose": "Map every content asset to a buyer-journey stage so there's coverage from first awareness to decision — and identify gaps.",
+        "sections": [
+          "TOFU (awareness): buyer questions about the problem; formats: blog, video, social, research reports",
+          "MOFU (consideration): evaluating approaches; formats: webinars, guides, comparison content, case studies",
+          "BOFU (decision): choosing a vendor; formats: demos, ROI calculators, pricing pages, trials, security docs",
+          "Post-sale (retention/expansion): onboarding content, academies, communities",
+          "Per stage: the question answered, format, CTA, and metric",
+          "Gap audit: coverage matrix of persona × stage"
+        ]
+      },
+      {
+        "name": "Editorial Calendar & Content Operations",
+        "discipline": "content",
+        "origin": "Publishing practice adapted to content marketing",
+        "purpose": "Run content as a predictable operation: themes, cadence, owners, workflow, and repurposing — not random acts of content.",
+        "sections": [
+          "Quarterly themes/campaign arcs tied to launches and seasonal moments",
+          "Cadence per channel (blog, newsletter, social, video, podcast)",
+          "Pipeline workflow: idea → brief → draft → review → publish → promote, with owners and SLAs",
+          "Content briefs: audience, intent/keyword, outline, differentiation angle, CTA",
+          "Distribution & atomization plan (one pillar → N derivative assets)",
+          "Performance review loop and refresh/pruning schedule"
+        ]
+      },
+      {
+        "name": "They Ask, You Answer / The Big 5",
+        "discipline": "content",
+        "origin": "Marcus Sheridan (River Pools case; book 2017)",
+        "purpose": "Radically answer the questions buyers actually type — especially the ones companies avoid — to become the trusted source and shorten sales cycles.",
+        "sections": [
+          "Big 5 topic 1: Pricing & costs (publish real numbers/ranges)",
+          "Big 5 topic 2: Problems (honestly cover your own product's drawbacks)",
+          "Big 5 topic 3: Comparisons (X vs Y, including against yourself)",
+          "Big 5 topic 4: Reviews & 'best of' lists",
+          "Big 5 topic 5: How it works / best-in-class explainers",
+          "Assignment selling: reps send specific content BEFORE sales calls to pre-handle questions"
+        ]
+      },
+      {
+        "name": "AEO/GEO (Answer & Generative Engine Optimization)",
+        "discipline": "content",
+        "origin": "Term 'GEO' from Aggarwal et al., 'GEO: Generative Engine Optimization' (Princeton/Georgia Tech, KDD 2024); practice codified 2024-25 by Profound, Ahrefs, Semrush, Microsoft's AEO playbook",
+        "purpose": "Get your brand cited and accurately represented inside AI-generated answers (ChatGPT, Perplexity, Claude, Google AI Overviews) — visibility measured in mentions/citations, not clicks.",
+        "sections": [
+          "Answer-first content architecture: lead with a declarative, complete 40-60-word answer per question",
+          "Entity building: consistent brand facts across site/profiles; Wikidata/Wikipedia presence (highest cross-surface signal)",
+          "Schema/structured data markup and clean heading hierarchy",
+          "Earn third-party mentions & co-citations: Reddit, YouTube, review sites, 'best/top/vs' listicles (formats AI answers cite most)",
+          "Technical access: allow AI crawlers (GPTBot, ClaudeBot, PerplexityBot), llms.txt",
+          "Classic-SEO floor for Google AI Overviews (they cite what already ranks)",
+          "Measurement: AI share of voice / citation share via Profound, Ahrefs Brand Radar, Semrush AIO; query-set tracking and gap analysis"
+        ]
+      },
+      {
+        "name": "VARS Objection Handling (Validate, Acknowledge, Reframe, Specify)",
+        "discipline": "sales-enablement",
+        "origin": "PMM sales-enablement practice — a house-codified variant of the LAER/LAARC/'Validate-Isolate-Reframe' family; no single public originator (define it explicitly in your enablement OS)",
+        "purpose": "A four-step conversational pattern for handling any objection: make the buyer feel heard, confirm the real issue, shift the frame to winnable ground, then answer with specifics.",
+        "sections": [
+          "Validate: affirm the concern is legitimate ('That's a fair question') — never follow with 'but'; satisfies the buyer's need to be heard",
+          "Acknowledge: restate/name the underlying issue in your own words to confirm you understand what's actually being asked (surfaces the real objection behind the stated one)",
+          "Reframe: shift the evaluation lens — change the criteria, the comparison set, or the time horizon (e.g., cost of inaction) to the ground where your differentiation wins",
+          "Specify: respond with ONE concrete proof point (number, named-customer story, benchmark) tied to the reframed issue, then propose a specific next step",
+          "Enablement asset: per common objection, document the validate phrase, the acknowledge probe, 2-3 reframes, and the specific proof"
+        ]
+      },
+      {
+        "name": "LAER / LAARC Objection Handling",
+        "discipline": "sales-enablement",
+        "origin": "LAER from Carew International; LAARC variant widespread in B2B sales training",
+        "purpose": "The documented public counterpart to VARS: a listen-first pattern that forces diagnosis before response.",
+        "sections": [
+          "Listen: let the prospect finish; don't rebut in your head",
+          "Acknowledge: confirm the concern so the buyer keeps talking",
+          "(Assess/)Explore: one diagnostic question to surface the root cause — the step most reps skip; isolation probes: 'Compared to what?', 'If budget weren't an issue, would this be a fit?'",
+          "Respond: reframe with one proof point tied to the root cause; bridge to next step",
+          "Confirm (LAARC): verify the objection is actually resolved before advancing"
+        ]
+      },
+      {
+        "name": "MEDDIC / MEDDPICC",
+        "discipline": "sales-enablement",
+        "origin": "Dick Dunkel & Jack Napoli at PTC (~1996); MEDDPICC extensions popularized by Darius Lahoutifard (MEDDIC Academy) and Andy Whyte ('MEDDICC', 2020)",
+        "purpose": "Deal-qualification checklist for complex B2B sales: know exactly what's known/unknown in every deal, and forecast accurately.",
+        "sections": [
+          "Metrics: quantified business impact the buyer expects",
+          "Economic buyer: the person with budget authority — have you met them?",
+          "Decision criteria: the formal/informal evaluation yardsticks",
+          "Decision process: steps, timeline, who signs",
+          "Paper process (MEDDPICC): legal, security, procurement steps",
+          "Identify pain: the compelling, quantified pain driving action",
+          "Champion: someone with power and personal motivation selling for you internally",
+          "Competition (MEDDPICC): who/what else is in the deal (incl. status quo)"
+        ]
+      },
+      {
+        "name": "The Challenger Sale & Commercial Teaching Choreography",
+        "discipline": "sales-enablement",
+        "origin": "Matthew Dixon & Brent Adamson, CEB (now Gartner), 2011",
+        "purpose": "Top performers win by teaching buyers something new about their own business, tailoring to stakeholders, and taking control of the sale.",
+        "sections": [
+          "Core skills: Teach (commercial insight), Tailor (to stakeholder/industry), Take Control (of pricing and process)",
+          "Choreography step 1 — The Warmer: credibility via their world's problems",
+          "Step 2 — The Reframe: the insight that challenges their assumption",
+          "Step 3 — Rational Drowning: data/ROI showing the cost of the current path",
+          "Step 4 — Emotional Impact: make it personal with story ('this is you')",
+          "Step 5 — A New Way: what solving it looks like (solution-agnostic)",
+          "Step 6 — Your Solution: only now map to your differentiated capabilities"
+        ]
+      },
+      {
+        "name": "Command of the Message (Value Messaging Framework)",
+        "discipline": "sales-enablement",
+        "origin": "Force Management (John Kaplan; roots in the PTC sales system)",
+        "purpose": "Make every rep 'audible-ready' to articulate value and differentiation in the customer's language — anchored on Why Change / Why Now / Why You.",
+        "sections": [
+          "Value Framework component 1: target buyer personas",
+          "2: Before scenarios (current pain in the buyer's own words)",
+          "3: Negative consequences (quantified cost of the status quo)",
+          "4: After scenarios & Positive Business Outcomes (PBOs — measurable, budget-moving)",
+          "5: Required capabilities (what any solution must do — co-defined with the buyer)",
+          "6: Trap-setting questions (fold your differentiators into their buying criteria)",
+          "7: Metrics (how success is measured)",
+          "8: Proof points (quantified customer evidence)",
+          "The Mantra: talk track/email that plays back PBOs → required capabilities → metrics → how we help → how we differ → proof"
+        ]
+      },
+      {
+        "name": "Sandler Selling System & Pain Funnel",
+        "discipline": "sales-enablement",
+        "origin": "David Sandler (1967); Sandler Training",
+        "purpose": "A buyer-psychology-based system where the rep qualifies hard and the prospect convinces themselves; the Pain Funnel drills from symptom to quantified, personal pain.",
+        "sections": [
+          "Submarine step 1: Bonding & rapport",
+          "2: Up-front contracts (agree agenda/outcomes for every meeting)",
+          "3: Pain (via the Pain Funnel)",
+          "4: Budget",
+          "5: Decision (process/who/how)",
+          "6: Fulfillment (present only to confirmed pain)",
+          "7: Post-sell (lock the sale; prevent buyer's remorse)",
+          "Pain Funnel sequence: 'Tell me more…' → 'Can you be more specific?' → 'How long has it been a problem?' → 'What have you tried?' → 'Did that work?' → 'How much has it cost you?' → 'How do you feel about that?' → 'Have you given up trying to fix it?'"
+        ]
+      },
+      {
+        "name": "SPIN Selling",
+        "discipline": "sales-enablement",
+        "origin": "Neil Rackham, Huthwaite research on 35,000 sales calls (1988)",
+        "purpose": "Evidence-based discovery questioning for large sales: build implied needs into explicit needs before ever presenting.",
+        "sections": [
+          "Situation questions: facts about the current state (minimize — buyers tolerate few)",
+          "Problem questions: uncover difficulties/dissatisfaction",
+          "Implication questions: expand the consequences/cost of each problem (the differentiating skill in large deals)",
+          "Need-payoff questions: get the BUYER to articulate the value of solving it",
+          "Call stages: preliminaries → investigating → demonstrating capability → obtaining commitment",
+          "Progress test: advances (specific commitment) vs continuations"
+        ]
+      },
+      {
+        "name": "BANT & Qualification Variants",
+        "discipline": "sales-enablement",
+        "origin": "IBM (1960s); GPCTBA/C&I variant by HubSpot; CHAMP, ANUM as later alternatives",
+        "purpose": "Fast lead-qualification screen: does this prospect merit sales time now?",
+        "sections": [
+          "Budget: can they pay?",
+          "Authority: are we talking to the decision-maker (or a path to them)?",
+          "Need: is there a real, priority problem?",
+          "Timeline: when will they act?",
+          "HubSpot GPCTBA/C&I variant: Goals, Plans, Challenges, Timeline, Budget, Authority, Consequences & Implications",
+          "Modern usage note: apply as a running checklist, not a first-call interrogation"
+        ]
+      },
+      {
+        "name": "Gap Selling",
+        "discipline": "sales-enablement",
+        "origin": "Keenan, 'Gap Selling' (2018)",
+        "purpose": "The sale lives in the gap between the buyer's current state and future state; the bigger and better-diagnosed the gap, the more value (and less price sensitivity).",
+        "sections": [
+          "Current state: facts, problems, business impact, root cause, emotional impact",
+          "Future state: desired outcomes, what 'fixed' looks like, the metrics that change",
+          "The gap: quantified delta between the two = the value of change",
+          "Problem-identification chart: map every problem your product solves to the buyer's world before selling",
+          "Rule: no problem, no sale — never pitch before the gap is established"
+        ]
+      },
+      {
+        "name": "Tell-Show-Tell Demo Narrative",
+        "discipline": "sales-enablement",
+        "origin": "Presentation pedagogy adapted to software demos; codified by Peter Cohan ('Great Demo!') and 2Win!/Demo2Win",
+        "purpose": "Structure every demo segment so the audience knows why they're watching, sees the shortest path, and retains the value — not the clicks.",
+        "sections": [
+          "Tell (setup): who this is for, the problem/situation, and what you're about to show and why it matters to THEM",
+          "Show: the workflow — fewest clicks, real-looking data; Great Demo! twist: 'do the last thing first' (show the compelling end result up front, then peel back how)",
+          "Tell (recap): restate what they saw tied to the business outcome; check-in question ('how does that map to your process?')",
+          "Bridge: transition to next segment or next step",
+          "Demo hygiene: segment per persona/pain, cut features that weren't asked for, handle 'harbor tour' requests with an agenda contract"
+        ]
+      },
+      {
+        "name": "Talk Track Template",
+        "discipline": "sales-enablement",
+        "origin": "Sales-enablement practice (PMM-authored, rep-delivered); 'audible-ready' standard from Force Management",
+        "purpose": "Give reps short, memorizable language for a specific moment (launch, competitor, persona) — a skeleton to sound natural with, not a script to read.",
+        "sections": [
+          "Trigger/when to use (situation, persona, deal stage)",
+          "Opener/hook (one sentence, buyer-language)",
+          "Core message: 2-3 points mapped to message pillars",
+          "One proof point per claim (number or named story)",
+          "Discovery/check question to hand the mic back",
+          "Objection pivots (top 2-3 likely pushbacks → responses)",
+          "Close/CTA: the specific next step to ask for"
+        ]
+      },
+      {
+        "name": "Miller Heiman Strategic Selling (Blue Sheet)",
+        "discipline": "sales-enablement",
+        "origin": "Robert Miller & Stephen Heiman, 'Strategic Selling' (1985); now Korn Ferry",
+        "purpose": "Map and manage the whole buying committee in complex deals so no influence is unmanaged and every buyer gets a personal win.",
+        "sections": [
+          "Buying influences: Economic buyer (releases funds), User buyers (live with it), Technical buyers (gatekeep on specs), Coach (guides you)",
+          "Coverage: rate each influence (rating, mode, coverage owner)",
+          "Response modes: Growth, Trouble (act now), Even Keel, Overconfident (hard to sell)",
+          "Win-results: business RESULT + personal WIN for each influence",
+          "Red flags & leverage-from-strength",
+          "Sales funnel stages and single sales objective per Blue Sheet"
+        ]
+      },
+      {
+        "name": "Sales Pitch Framework (Dunford)",
+        "discipline": "sales-enablement",
+        "origin": "April Dunford, 'Sales Pitch' (2023)",
+        "purpose": "Turn positioning into a first-call pitch that helps buyers make a confident decision — starting from your market insight, not your feature list.",
+        "sections": [
+          "1. The insight: your POV on what matters in the market",
+          "2. The alternatives: honest map of the ways to solve it (pros/cons of each approach)",
+          "3. The perfect world: what an ideal solution would look like (sets criteria you win)",
+          "4. The introduction: position your product as that solution",
+          "5. Differentiated value: walkthrough/demo mapped to the value themes",
+          "6. Proof: customers, metrics, third-party validation",
+          "7. Objections: proactively handle the predictable ones",
+          "8. The ask: clear next step"
+        ]
+      },
+      {
+        "name": "VoC Synthesis Framework",
+        "discipline": "research",
+        "origin": "Market-research practice ('Voice of the Customer' — Griffin & Hauser, Marketing Science 1993) merged with UX qualitative-coding methods",
+        "purpose": "Turn messy raw customer language (calls, tickets, reviews, surveys) into structured themes, verbatim libraries, and messaging-ready buyer language.",
+        "sections": [
+          "Gather: interviews, sales/CS call recordings, support tickets, G2/app reviews, NPS verbatims, win/loss, community threads",
+          "Normalize & tag: taxonomy of pain / desired outcome / objection / competitor mention / feature request / buying trigger",
+          "Code: deductive (predefined themes) + inductive (emergent) tagging",
+          "Quantify: frequency × severity × segment; note contradictions between segments",
+          "Verbatim library: the buyer's exact words, source-linked, for messaging reuse",
+          "Synthesize: insight → implication → recommended action chains",
+          "Distribute & refresh: readout cadence, owner, decay date on insights"
+        ]
+      },
+      {
+        "name": "JTBD Switch / Timeline Interview",
+        "discipline": "research",
+        "origin": "Bob Moesta & Chris Spiek, The Re-Wired Group",
+        "purpose": "Reconstruct a real purchase decision documentary-style to uncover the causal forces — the research method that powers JTBD insight.",
+        "sections": [
+          "Reconstruct the timeline backwards from purchase: first thought → passive looking → event/trigger 1 → active looking → event 2 → deciding → buying → consuming",
+          "Documentary questioning: 'Tell me about the day you first thought about this' (concrete moments, not opinions)",
+          "Probe the four forces at each transition: push, pull, anxiety, habit",
+          "Identify the hiring criteria and what got fired",
+          "Synthesis: cluster interviews into jobs and buying-decision patterns"
+        ]
+      },
+      {
+        "name": "Minto Pyramid Principle + SCQA",
+        "discipline": "research",
+        "origin": "Barbara Minto, McKinsey & Co., 'The Pyramid Principle' (1978)",
+        "purpose": "Structure research readouts and executive communication answer-first: the governing thought on top, MECE support below — with SCQA as the opening.",
+        "sections": [
+          "SCQA intro: Situation (agreed context) → Complication (what changed/what's wrong) → Question (the natural question raised) → Answer (your governing thought)",
+          "Answer first: lead with the recommendation/conclusion",
+          "Group supporting arguments: 3-ish MECE (mutually exclusive, collectively exhaustive) buckets",
+          "Order logic within groups: deductive or inductive, time, structure, or importance",
+          "Vertical Q&A test: each level answers the question the level above raises",
+          "Readout application: TL;DR → findings with evidence → implications → recommendations → appendix"
+        ]
+      },
+      {
+        "name": "Affinity Mapping (KJ Method)",
+        "discipline": "research",
+        "origin": "Jiro Kawakita, 1960s (KJ-Ho); standard in UX research synthesis",
+        "purpose": "Bottom-up thematic synthesis: let groupings emerge from the data instead of forcing observations into preconceived buckets.",
+        "sections": [
+          "Externalize: one observation/quote per card (from interviews, win/loss, VoC)",
+          "Silent grouping: cluster cards by felt similarity, no debate first",
+          "Name clusters bottom-up (the theme emerges from the cards, not vice versa)",
+          "Super-cluster and map relationships between themes",
+          "Prioritize: dot-vote or rank by frequency/severity",
+          "Translate themes → insights → actions"
+        ]
+      },
+      {
+        "name": "Kano Model",
+        "discipline": "research",
+        "origin": "Noriaki Kano (Tokyo University of Science, 1984)",
+        "purpose": "Classify features by how they drive satisfaction — essential input for packaging tiers, roadmap, and launch emphasis.",
+        "sections": [
+          "Categories: Must-be (absence dissatisfies, presence is table stakes), One-dimensional/Performance (more = better), Attractive/Delighters (unexpected joy), Indifferent, Reverse",
+          "Survey method: functional question ('how do you feel if it HAS x?') + dysfunctional question ('…if it does NOT?')",
+          "Classification matrix maps answer pairs → category",
+          "Decay note: delighters migrate to must-bes over time — re-run periodically",
+          "Application: must-bes in every tier, performance features as tier fences, delighters as launch/marketing headliners"
+        ]
+      }
+    ]
+  },
+  "ourAudit": {
+    "have": [
+      {
+        "framework": "April Dunford positioning (5 components + 10-step process)",
+        "where": "skills/pmm-positioning-exercise/SKILL.md -> library/positioning/references/core/01-05 + assets/positioning-canvas-template.md + examples/01-positioning.md",
+        "depth": "full template (complete core 01-06 + 5 fill-in canvases/worksheets + gold-standard worked example)"
+      },
+      {
+        "framework": "Positioning audit/scoring of existing positioning",
+        "where": "skills/pmm-positioning-audit/SKILL.md",
+        "depth": "outline only (58-line skill leaning on the positioning library)"
+      },
+      {
+        "framework": "Category design & strategic narrative (Raskin-style), repositioning, portfolio positioning, crowded markets, positioning metrics",
+        "where": "library/positioning/references/advanced/07-12",
+        "depth": "full reference chapters"
+      },
+      {
+        "framework": "Message house / message architecture (claim -> pillars -> proof, persona/channel variants)",
+        "where": "skills/pmm-messaging-positioning/SKILL.md + skills/pmm-messaging-hierarchy/SKILL.md -> library/messaging/references/core/04 + examples/02-messaging.md",
+        "depth": "full template (skill spells out every section + worked example)"
+      },
+      {
+        "framework": "Pain-Claim-Gain messaging + multi-audience (P1/P2/P3) adaptation",
+        "where": "library/messaging/references/core/02, 03",
+        "depth": "full reference chapters"
+      },
+      {
+        "framework": "Sales-stage competitive messaging mapped to MEDDIC/MEDDICC",
+        "where": "library/messaging/references/core/11-sales-stage-competitive-strategy.md",
+        "depth": "full reference chapter"
+      },
+      {
+        "framework": "Storytelling frameworks: Hero's Journey, StoryBrand, BAB, PAS, FAB, ABT + customer-story structure",
+        "where": "library/messaging/references/advanced/storytelling-frameworks.md (483 lines)",
+        "depth": "full template (incl. testimonial/story templates by channel)"
+      },
+      {
+        "framework": "Message testing / message-market fit (5-pillar 1-5 scorecard + variant test plan)",
+        "where": "skills/pmm-message-market-fit/SKILL.md + library/rollout-and-launch/references/core/01-message-testing.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "Buyer personas: research interviews, creation, validation, activation, negative personas, B2B buying committees",
+        "where": "skills/pmm-personas/SKILL.md -> library/personas/ (core 01-05, advanced 01-05, 7 templates incl. 30-min interview script, survey, one-pager, validation board)",
+        "depth": "full template (most complete domain alongside pricing)"
+      },
+      {
+        "framework": "ICP definition (fit criteria, anti-ICP, disqualifiers, tiers, signal map)",
+        "where": "skills/pmm-icp-definition/SKILL.md + library/positioning/assets/icp-analysis-worksheet.md",
+        "depth": "full template (skill outline + SPICED-based worksheet)"
+      },
+      {
+        "framework": "ICP scoring / account tiering for GTM ops",
+        "where": "skills/gtm-icp-scoring/SKILL.md (+ marketing-os MCP icp_scoring_matrix tool)",
+        "depth": "outline only"
+      },
+      {
+        "framework": "VoC synthesis (echo language bank, contradiction map, evidence chains)",
+        "where": "skills/pmm-voc-synthesis/SKILL.md",
+        "depth": "outline only (good output skeleton; no VoC library domain or templates of its own — borrows personas + win/loss refs)"
+      },
+      {
+        "framework": "Win/loss analysis + program design (NOT missing)",
+        "where": "library/competitive-intelligence/references/core/09-win-loss-analysis.md (706 lines) + assets/templates/win-loss-interview-guide.md (328 lines)",
+        "depth": "full template at library level; only a mention at skill level (referenced from pmm-competitive-intelligence and pmm-voc-synthesis — no dedicated skill)"
+      },
+      {
+        "framework": "Battlecards (threat level, talk tracks, traps, acknowledge->reframe->prove->close objection handling)",
+        "where": "skills/pmm-battlecard/SKILL.md -> library/competitive-intelligence/references/core/07 + 2 templates + product-marketing-os/assets/battlecard-full-template.md + examples/03-battlecard.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "CI program build, ethics/SCIP, OSINT collection, AI-automated monitoring",
+        "where": "skills/pmm-competitive-intelligence/SKILL.md -> library/competitive-intelligence/references/core/01,02,04 + advanced/ai-automation-ci.md",
+        "depth": "full reference chapters (skill itself is a 47-line router)"
+      },
+      {
+        "framework": "Rapid competitive response (Detect-Decide-Draft-Deploy)",
+        "where": "skills/pmm-adaptive-messaging/SKILL.md",
+        "depth": "outline only"
+      },
+      {
+        "framework": "Van Westendorp PSM (NOT missing)",
+        "where": "library/pricing-packaging/references/core/02-willingness-to-pay-research.md (4 questions, analysis, example results, best practices) + templates/willingness-to-pay-research-script.md (375-line ready script)",
+        "depth": "full template"
+      },
+      {
+        "framework": "Conjoint analysis (+ MaxDiff mention)",
+        "where": "library/pricing-packaging/references/core/02 (conjoint types, best practices)",
+        "depth": "full section for conjoint; MaxDiff is a one-line mention"
+      },
+      {
+        "framework": "Pricing strategy end-to-end: model choice, value metrics, tier/packaging design, psychology, page design, experimentation, internal alignment, launch, monitoring",
+        "where": "skills/pmm-pricing-packaging + pmm-pricing-analysis -> library/pricing-packaging/ (core 01-12 complete, 8 advanced chapters, 10 templates, 4 checklists, glossary) + examples/05-pricing-packaging.md",
+        "depth": "full template (deepest domain in the library)"
+      },
+      {
+        "framework": "Freemium/trial, usage-based, PLG monetization, price-increase comms, enterprise-vs-SMB, international pricing",
+        "where": "library/pricing-packaging/references/advanced/*",
+        "depth": "full reference chapters"
+      },
+      {
+        "framework": "Launch tier framework (Small/Medium/Large aka T1-3) + activity matrix",
+        "where": "product-marketing-os/references/marketing-launch-tiers.md + library/product-launch/references/core/01 + assets/templates/launch-tier-assessment.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "GTM/launch planning: 90-day roadmap, cross-functional RACI, multi-channel tactics, launch-day playbook, retrospective, Product Hunt, beta programs",
+        "where": "skills/pmm-go-to-market + pmm-launch-brief -> library/product-launch/ (core 01-08, 5 advanced, checklists, RACI + roadmap templates) + examples/04-launch-brief.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "Campaign brief (14-section, SMART objective, single-minded proposition, RACI, quality gate)",
+        "where": "skills/pmm-campaign-brief/SKILL.md + product-marketing-os/assets/campaign-brief-template.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "MEDDIC / MEDDICC / MEDDPICC, SPICED, BANT, Challenger, Solution Selling (NOT missing)",
+        "where": "library/sales-enablement/references/core/09-sales-methodologies.md (1,010 lines: detailed breakdowns, when-to-use, implementation timelines)",
+        "depth": "full template"
+      },
+      {
+        "framework": "Sales enablement program: foundations, business case/ROI, charter, team structure, playbooks, onboarding/ramp, metrics/KPIs",
+        "where": "library/sales-enablement/references/core/01-04,06,07,11,18",
+        "depth": "full reference chapters — but NO skill wrapper (see thin) and no templates dir"
+      },
+      {
+        "framework": "Sales narrative (7-beat story arc, slide-by-slide, 60-second version)",
+        "where": "skills/pmm-sales-narrative/SKILL.md",
+        "depth": "outline only (structure named, no deck template or worked example)"
+      },
+      {
+        "framework": "Feature announcement with per-channel depth budgets (blog 700-1200w, email 120-220w, in-product, sales note)",
+        "where": "skills/pmm-feature-announcement/SKILL.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "Long-form content depth standard (word/section/evidence floors + claim->why->evidence->implication pattern + rubric)",
+        "where": "skills/pmm-content-writer/SKILL.md (166 lines, incl. shallow-vs-deep worked example)",
+        "depth": "full template"
+      },
+      {
+        "framework": "AEO/GEO audit (query set, exposure audit, gap->root-cause->fix backlog, share-of-voice measurement)",
+        "where": "skills/pmm-aeo-geo/SKILL.md",
+        "depth": "outline only"
+      },
+      {
+        "framework": "PLG: AHA/TTV activation, PQL/PQA, growth-loop design, AARRR, North Star metric tree, readiness assessment, framework selector",
+        "where": "skills/plg-gtm-strategy/SKILL.md (183 lines with 3 embedded fill-in templates) + product-marketing-os/assets/plg-readiness-template.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "PMM coaching: review scorecard, pressure test, stakeholder roleplay (6 personas), 30-60-90 plan",
+        "where": "skills/pmm-coach/SKILL.md",
+        "depth": "outline only (modes + output skeleton; no scoring rubric asset)"
+      },
+      {
+        "framework": "Strategic thinking: analysis frameworks, strategy process, decision-making, scenario planning, common mistakes",
+        "where": "library/strategic-thinking/ (core 01-07 + advanced 01-05)",
+        "depth": "full reference chapters"
+      },
+      {
+        "framework": "Research presentation: BLUF, Minto/answer-first, SCQA, chain-of-evidence (claim->quote->clickable URL), two-altitude desk views",
+        "where": "product-marketing-os/references/research-presentation-standard.md + research-desks/ (9 desk recipes) + skills/pmm-research-desk + pmm-research-brief",
+        "depth": "full template (wired into launch-kit build pipeline with a hard gate)"
+      },
+      {
+        "framework": "Naming (guide + weighted scorecard)",
+        "where": "product-marketing-os/references/naming-guide.md + assets/naming-scorecard-template.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "OSP value map (tagline, positioning, personas, value cases, feature hierarchy) + OSP editing codes",
+        "where": "skills/osp-value-map + osp-content-optimizer + osp-technical-marketing + assets/osp-value-map-template.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "Post-launch readout / learning loop",
+        "where": "skills/post-launch-learning-loop/SKILL.md + product-marketing-os/assets/post-launch-readout-template.md",
+        "depth": "full template"
+      },
+      {
+        "framework": "Signal-based GTM, account research briefs, outreach sequences",
+        "where": "skills/gtm-signal-campaign, gtm-account-research, pmm-outreach + assets/account-research-template.md",
+        "depth": "outline only"
+      },
+      {
+        "framework": "Worked-example universe (Plotline: context -> positioning -> messaging -> battlecard -> launch brief -> pricing)",
+        "where": "product-marketing-os/references/examples/00-05",
+        "depth": "full template (gold-standard bar the skills point at)"
+      }
+    ],
+    "thin": [
+      "Messaging library ships ZERO actual templates: library/messaging/assets/templates/README.md and assets/checklists/README.md are 'planned templates' placeholders — messaging-canvas, persona-matrix, value-prop, message-testing-script, sales-feedback, messaging-audit-checklist are all named but absent. Consulting-grade needs the fill-in canvases the positioning/pricing/personas domains already have.",
+      "Library chapter gaps from source trimming (numbering skips): messaging core has only 02,03,04,11 (no 01, 05-10); competitive-intelligence core only 01,02,04,07,09 (missing competitor selection/tracking, social listening, sales enablement chapters); sales-enablement core only 01-04,06,07,09,11,18 of an ~18-chapter framework its own README describes (missing content lifecycle, coaching programs, tech stack, change management).",
+      "No sales-enablement SKILL: pmm-coach and product-marketing-os route to a `sales-enablement` skill that does not ship in this plugin (dangling route) — the 9 deep library chapters are only reachable via pmm-battlecard/pmm-sales-narrative reference lists.",
+      "Win/loss has consulting-grade library depth (706-line program chapter + 328-line interview guide) but no skill wrapper, no win/loss readout/report template, and no program-charter template — a user asking 'set up a win/loss program' has no direct entry point.",
+      "pmm-voc-synthesis: no theme-coding/clustering worksheet, no worked example, no VoC library domain — the output skeleton is good but the methodology behind clustering (frequency/intensity weighting) is asserted, not taught.",
+      "pmm-sales-narrative: 7-beat arc is named but there is no slide-by-slide deck template, demo-narrative template, or worked example deck; the sales-enablement library has no assets/ directory to back it.",
+      "pmm-aeo-geo: workflow outline with no query-set template, no audit scorecard, no measurement-dashboard spec asset, and only two tangential library refs — the newest-discipline skill is the least evidenced.",
+      "pmm-coach: review 'Scorecard' section has no scoring rubric/scale asset; roleplay personas have no behavior cards; 30-60-90 has no template file.",
+      "gtm-icp-scoring / gtm-account-research / pmm-outreach / pmm-adaptive-messaging / pmm-competitive-landing-page: outline-only skills with no library refs, templates, or worked examples (contrast with the positioning/pricing chain).",
+      "marketing-launch-tiers.md is unadapted source: still says 'subset of Sourcegraph users' and links to non-existent relative paths (../../product/process/gtm/rollout_process.md, ../../engineering/sdlc.md).",
+      "Customer story / case study: only a word-budget row in pmm-content-writer plus a testimonial template inside storytelling-frameworks.md — no interview-to-story guide or dedicated case-study skill despite being a core PMM proof artifact.",
+      "JTBD is used everywhere (personas, ICP, PLG) but has no dedicated framework file (forces/timeline interview, job statements, outcome statements) — it is always a bullet, never a method."
+    ],
+    "missing": [
+      "VARS objection-handling framework — absent by name anywhere in the plugin (pmm-battlecard's acknowledge->reframe->prove->close is a functional cousin, but there is no standalone objection-library/objection-handling template or skill)",
+      "Gabor-Granger pricing method — zero hits; WTP chapter covers Van Westendorp + conjoint + qualitative interviews only (not even in the pricing glossary)",
+      "Content pillars / topic-cluster content strategy — zero hits; content strategy is routed to an external `content-strategy` skill that does not ship; pmm-content-writer writes single pieces, nothing plans the pillar/cluster architecture",
+      "PESO channel model and any PR/comms framework — no press-release template, press/media kit, or analyst/press briefing doc; 'press coverage' exists only as a checkbox in the launch-tier table",
+      "Analyst relations program (Gartner MQ / Forrester Wave strategy, briefing decks, inquiry cadence) — only a 2.5KB analyst-influencer research-desk recipe and scattered 'analyst briefing' mentions",
+      "ABM framework (1:1 / 1:few / 1:many tiers, account-based play design) — incidental mentions only; gtm-signal-campaign covers signal-based outbound, not an ABM program",
+      "Customer marketing & advocacy program (customer advisory boards, reference programs, review-site/G2 strategy, champion development) — scattered mentions, no framework or skill",
+      "Partner/channel marketing framework — zero coverage",
+      "Community-led growth playbook — mentions only (a launch-tier activity and PLG loop references), no framework",
+      "Kano model (and any feature-prioritization framework beyond RICE mentions) — zero hits",
+      "Segmentation frameworks (STP appears once as a row in plg-gtm-strategy's selector table; no actual STP/segmentation method or worksheet)",
+      "NOTE for the parent agent: MEDDPICC, Van Westendorp, and win/loss analysis were hypothesized as missing but are PRESENT at full library depth (see have[]) — do not re-add them; their gap is skill-level packaging, not content"
+    ]
+  },
+  "onePagerFormats": {
+    "formats": [
+      {
+        "artifact": "positioning one-pager (Dunford-style canvas)",
+        "sections": [
+          "Product description (1-2 sentences) + last-reviewed date",
+          "Competitive alternatives (what buyers would do without you, 3-5)",
+          "Unique attributes / capabilities alternatives lack",
+          "Value themes (2-3), each with a proof point",
+          "Best-fit customers: role at company type + trigger",
+          "Market category + why-now trends",
+          "Positioning statement (For X, [product] is the [category] that Y, unlike Z)",
+          "Wedge use case / sales narrative arc (problem → old way → why now → new way → proof)",
+          "Common misuses / what we do NOT solve",
+          "Competitive frame: 1 sentence vs each of top 2-3 alternatives",
+          "Pricing posture (model + rough range)"
+        ],
+        "lengthRule": "One page, usually a two-column canvas table — one row per component, value themes limited to 2-3 with one proof each; a new hire must be able to understand the positioning from this single doc with no walkthrough",
+        "usedWhere": "Source-of-truth page in Notion/Confluence/Coda; the parent of everything downstream (messaging, battlecards, campaigns, sales narrative); walked through in new-hire onboarding; linked from every launch brief",
+        "makesItGood": "Traceability and freshness: every value theme traces to a unique attribute that maps to an alternative's weakness; a visible review date (markets change — stale positioning kills trust); the positioning statement is immediately usable by sales verbatim; includes the anti-scope ('common misuses') so late-stage deals don't blow up. Ignored when it's aspirational adjectives with no competitive alternatives named."
+      },
+      {
+        "artifact": "messaging house (one page)",
+        "sections": [
+          "Roof: single core message / value prop, 8-15 words max",
+          "3 pillars (max 3-5): pillar name + 1-2 sentence benefit + tied to a buyer pain",
+          "3-4 proof points under each pillar (metric, customer quote, feature)",
+          "Foundation: evidence layer — data, case studies, third-party validation",
+          "Optional walls: voice/tone, dos and don'ts",
+          "Persona/channel variants noted as pointers, not duplicated on the page"
+        ],
+        "lengthRule": "Literally one page drawn as a house — one roof line, exactly 3 (max 5) pillars, 3-4 proofs per pillar evenly distributed; if a message doesn't hold up the roof or a pillar, it's cut",
+        "usedWhere": "Confluence has a native template for it; lives in the wiki as the reference every copywriter, spokesperson, SDR, and agency briefs from; pillars become campaign themes and content pillars downstream",
+        "makesItGood": "Proof under every pillar (pillars without evidence are claims, not arguments); pillars written in customer pain language, not feature language; consistency test — multiple spokespeople can use it the same way. Fails when built as a one-off workshop artifact and never activated: needs quarterly review with a protected core."
+      },
+      {
+        "artifact": "persona card",
+        "sections": [
+          "Header: name, title, buying-committee role (champion/economic buyer/blocker/user) + authority level (can sign / recommend / veto)",
+          "One compiled verbatim quote capturing their voice",
+          "Priority initiative: what triggered them to evaluate now",
+          "Success factors: what winning looks like to them (their outcomes, not your features)",
+          "Perceived barriers + top 3 objections (from real call recordings)",
+          "Decision criteria / evaluation scorecard",
+          "Info sources and channels",
+          "JTBD + alternatives they rejected",
+          "Exclusion: who this persona is NOT / disqualification signals"
+        ],
+        "lengthRule": "One page per persona, 2-4 personas max (more means you're not segmenting); 80% of the space on buying insight, 20% on bio — zero space on hobbies/age 'demographic fanfiction'; reps should reference it before every first call",
+        "usedWhere": "Wiki page plus a one-page cheat-sheet version pushed into sales onboarding and enablement tools — 'a one-page cheat sheet beats a 20-slide deck every time'; each persona maps to specific sequences, content, and talk tracks",
+        "makesItGood": "Behavioral fields that change copy (trigger, objections, decision levers) instead of demographics that change nothing; objections sourced from calls not assumptions (Revella's 5 Rings: initiatives, success factors, barriers, criteria, journey); real interview quotes; quarterly refresh. Ignored when it's a Canva poster of an imaginary person."
+      },
+      {
+        "artifact": "ICP one-pager",
+        "sections": [
+          "One-line ICP sentence: 'We sell to [company type] in [vertical] at [size] when [trigger], who want [outcome] without [pain]'",
+          "Firmographics: industry, headcount band, revenue/ARR band, geography, funding stage",
+          "Technographics: required stack + deal-killer tools",
+          "Buying committee: champion, economic buyer, blockers (roles + titles)",
+          "Trigger events that create urgency",
+          "Primary pains in the customer's own words",
+          "Success criteria / time-to-value expectation",
+          "Anti-ICP / hard disqualifiers ('do not pursue' list)",
+          "Scoring signals (5-8) with points and data source",
+          "3 named example customers"
+        ],
+        "lengthRule": "One page, 8-15 specific criteria with defined values/ranges (not aspirations); the test is operational — any two people can qualify the same live account identically in under 2 minutes; should describe 10-20% of TAM, not 40%",
+        "usedWhere": "Wiki page signed off by sales, marketing, product, and CS; operationalized into CRM filters, lead scoring, and routing rules; revisited quarterly against closed-won/churned data",
+        "makesItGood": "The disqualifier section is the differentiator — anti-ICP gives reps explicit permission to walk away; hard values built from closed-won evidence, not logo wishes; each trigger maps to an outbound angle. Ignored when it's 'mid-market companies that value innovation' — a two-year-old slide nobody can apply on a Tuesday morning."
+      },
+      {
+        "artifact": "competitive battlecard (sales-ready)",
+        "sections": [
+          "Two sentences at top: 'We win when… / We lose when…'",
+          "3-line competitor overview (what they do, who they sell to, latest move)",
+          "Trigger scenarios: when they show up in deals",
+          "3-5 differentiators — outcomes, not feature checkboxes",
+          "Their weaknesses, each with proof",
+          "4-6 objections written in the prospect's voice + one-sentence sayable rebuttals (detail as backup below)",
+          "Landmine discovery questions to plant early",
+          "One proof point: a customer who evaluated both / switched, with the reason",
+          "'Last verified' date + source per section"
+        ],
+        "lengthRule": "One screen per competitor, no scrolling; readable end-to-end in under 90 seconds; a rep must find the right line in under 10 seconds mid-call; rebuttals are one sentence (the rep has ~40 seconds); everything else — feature matrices, funding history, market context — belongs in a separate PMM reference doc",
+        "usedWhere": "NOT a shared drive or Notion folder — embedded where reps work: Salesforce deal record (auto-surfaced when a competitor is tagged), Slack, Gong, Highspot/Klue; tied into rep onboarding role-plays; measured by win-rate delta on deals where the card was opened",
+        "makesItGood": "Crayon's number frames the whole problem: 79% of teams make battlecards, only 26% say reps use them. What flips it: sayable language a rep can read straight off the card, objections sourced/validated by frontline sales not marketing, per-section freshness dates (<90 days or refresh), zero-click accessibility, and the win-rate feedback loop. A rough card that's four days old beats a beautiful one that's four months old."
+      },
+      {
+        "artifact": "launch-at-a-glance / launch brief",
+        "sections": [
+          "TL;DR (3-4 lines)",
+          "What's launching + launch tier (P0/P1/P2) + date + launch owner",
+          "Who it's for (personas, eligible plans, opportunity size)",
+          "Why we're launching it (internal motivation, in evidence-based plain sentences)",
+          "One-line pitch / core message ('[Product] now [does X] so [who] can [outcome] without [pain]')",
+          "Channel plan: channel, timing, owner, goal — one line each",
+          "Sales/CS enablement notes: talking points, objections addressed, pipeline deals to re-engage",
+          "FAQs (pre-answered inbound questions)",
+          "Risks & mitigation",
+          "Success metrics + 30-day post-launch review date",
+          "'Not changing' section + readiness checklist"
+        ],
+        "lengthRule": "One page for cross-functional alignment; P1/P2 launches need only this brief, P0 gets this page plus a separate full GTM plan; written 4+ weeks out for P0, 2-3 for P1, 1 for P2; reviewed in a 15-minute walkthrough with every named owner",
+        "usedWhere": "Notion/Coda/Confluence launch hub (Coda and Pendo ship this as a standard template); kicked off in a 45-minute cross-functional review; the page is updated immediately when dates slip — stale dates are how briefs die",
+        "makesItGood": "Owners and dates on every line; reasons written as evidence not vibes ('we lost three mid-market deals in 60 days for lack of this capability' beats 'improve conversion'); the 'not changing' section prevents re-litigating settled debates; treated as a decision document, not a filing exercise."
+      },
+      {
+        "artifact": "GTM strategy one-pager (strategy-on-a-page)",
+        "sections": [
+          "ICP block in ~6 lines: segment, roles (signs/uses/blocks), trigger, cost of doing nothing, alternatives, non-fit",
+          "One-sentence offer / value proposition + 3 proof points",
+          "Positioning & market category (one line)",
+          "GTM motion: sales-led / PLG / channel / hybrid + sales model",
+          "Channels: ONE primary + one support (five channels = none)",
+          "Pricing & packaging posture (one line)",
+          "3 numbers: demand metric, conversion metric, margin/pipeline metric",
+          "Phased timeline / next 90 days with owners"
+        ],
+        "lengthRule": "One printable page — 'if you can't print it, it's too vague'; it is the executive summary sitting on top of the full 15-30 page GTM doc, readable by a board member in under 5 minutes; the test: it changes what the team does on Monday",
+        "usedWhere": "Exec reviews and board pre-reads; page one of the full GTM strategy in the wiki (Info-Tech sells exactly this as 'GTM Strategy on a Page'); referenced in weekly pipeline reviews to check incoming deals against ICP and channel assumptions; walked through in sales/marketing onboarding",
+        "makesItGood": "Decisions, not descriptions: one named channel, one-sentence offer, pre-committed numeric targets. Execs use it when every line is a falsifiable commitment; they ignore it when it's a mission-statement collage. Dependencies locked in order (ICP before messaging before channels) is what makes the summary trustworthy."
+      },
+      {
+        "artifact": "pricing one-pager (internal / sales-facing)",
+        "sections": [
+          "Packaging matrix: tier × who it's for × price metric × key feature gates × price",
+          "One-line value story + ROI proof point per tier (why this tier exists)",
+          "Discount guardrails table: term and volume caps by segment, stacked-discount ceiling, named approver per threshold",
+          "Floors / walk-away rules",
+          "Add-on, bundle, and exception rules",
+          "Competitive price posture (how to talk TCO vs the 40%-cheaper competitor)",
+          "What changed + effective date + version"
+        ],
+        "lengthRule": "One page: a tier grid plus rubric tables — a rep must know within seconds what they can offer and at what point they need approval; the strategy rationale and pricing-council analysis live in a separate deck, never on this page",
+        "usedWhere": "Deal-desk wiki page and enablement tool (Highspot/Seismic), mirrored in CPQ; list price and cost cells locked; version-controlled with a revision log; refreshed quarterly or on any packaging change and re-shared with sales",
+        "makesItGood": "Explicit numbers with named approvers ('≤15% without VP sign-off') instead of 'use judgment'; give-get equivalencies (12-month term = X%); a visible effective date so reps never quote the old tier. Ignored when it's packaging philosophy prose — reps only use it if it answers a live quoting question faster than Slacking their manager."
+      },
+      {
+        "artifact": "campaign brief",
+        "sections": [
+          "Campaign name + single owner (a person, not a committee)",
+          "Objective: one measurable sentence tied to a business metric",
+          "Target audience — specific enough to almost call by name",
+          "Single key message (≤15 words) + tone / copy direction",
+          "Channel table: channel, funnel role, tactic, budget share, owner",
+          "Assets & deliverables",
+          "Timeline & milestones",
+          "Budget (with contingency and unlock rule)",
+          "Success metrics as pre-agreed numbers ('500 trials, 50 upgrades, 3% CTR')",
+          "Mandatories / approval flow / risks"
+        ],
+        "lengthRule": "One page for most campaigns, two pages absolute max ('one-page briefs get read, ten-page briefs get skimmed'); big multi-channel launches stretch to 3-5 pages; research decks and brand guidelines go in an appendix link, never inline",
+        "usedWhere": "Wiki or work-management tool (Notion/Asana/Confluence); signed off by stakeholders BEFORE any asset is produced — sign-off on the brief is cheaper than rewriting finished creative; the kickoff meeting doc and the mid-campaign scope-creep referee",
+        "makesItGood": "Problem-first, not deliverable-first ('lift homepage conversion from 1.2% to 2.5%' vs 'we need a new homepage'); commits to ONE message — campaigns that say three things say nothing; honest budget; numeric success criteria agreed up front so the campaign can be evaluated honestly afterward."
+      },
+      {
+        "artifact": "sales play / talk track card",
+        "sections": [
+          "Objective — one sentence: what this play accomplishes",
+          "When to run it — trigger conditions: deal stage, persona, signal",
+          "Script — word-for-word language with 2-3 variants (what to know/say/show/do)",
+          "Examples — 2 winning call clips (Gong) + 1 closed-won email thread",
+          "Red flags — what to watch for, when to escalate or kill the play",
+          "Follow-up content to send after the call"
+        ],
+        "lengthRule": "One page per play (the Force Management / Highspot Plays standard five-field format); findable in under 10 seconds; a rep should never leave the deal record to reach it",
+        "usedWhere": "Highspot/Seismic/Showpad/HubSpot Playbooks, embedded in the Salesforce/HubSpot opportunity view and auto-surfaced by stage + persona; governance is 'enablement owns, sales updates': every play has a named owner and the library kills one stale play every 90 days",
+        "makesItGood": "Word-for-word sayable scripts (not talking-point abstractions), proof by real call recordings rather than hypotheticals, trigger-based surfacing at the moment of need, and win-rate attribution per play. A library without the 90-day pruning rule becomes a graveyard."
+      },
+      {
+        "artifact": "content strategy one-pager",
+        "sections": [
+          "North Star KPI + content's job this quarter ('drive paid signups', not 'awareness')",
+          "Audience: ICP + top 3-5 pains in their own words (from sales calls / win-loss)",
+          "Positioning promise: for who / we help achieve what / proved by which evidence",
+          "3-4 content pillars max, each mapped to an ICP + funnel stage + 1 main metric + 1-2 early signals",
+          "Channel priority: 1-2 power channels, scored on audience fit and capacity",
+          "Cadence table: channel × frequency × format × owner (set at ~70% of full capacity)",
+          "Distribution/repurposing loop",
+          "90-day targets + first 30-day calendar"
+        ],
+        "lengthRule": "One page — the 'minimum viable strategy'; 3-4 pillars maximum (more breaks consistency), a cadence you can sustain 6 months, and per-pillar metrics; anything longer becomes a doc nobody re-reads",
+        "usedWhere": "Wiki page the content lead defends in planning: when new requests arrive, they're triaged against the one-pager ('show the plan with impact forecasts'); quarterly pillar review; feeds the editorial calendar which lives separately",
+        "makesItGood": "Every content type has exactly one job and one KPI tied to pipeline, not vanity metrics; pillars sourced from real buyer language (sales calls, win-loss) rather than brainstorms; a realistic cadence beats an ambitious one; the page's main power is what it lets the team say NO to."
+      },
+      {
+        "artifact": "win/loss readout",
+        "sections": [
+          "Executive summary: 3-5 recommendations up front",
+          "Win rate by segment and deal size vs last quarter",
+          "Top 3 win drivers + top 3 loss drivers, each with frequency data ('gap X in 32% of losses, up from 18%') and 3-5 verbatim buyer quotes",
+          "Competitor table: who appeared in losses, how often, what buyers cited",
+          "Status of LAST quarter's action items (did they ship, did win rate move)",
+          "New action items: max 1-2 per owner, with 30-day deadlines",
+          "Downstream updates triggered: battlecard refreshes, positioning shifts, new talk tracks, ranked product-gap list"
+        ],
+        "lengthRule": "Quarterly deck of 10-15 slides max, backed by one-page-per-theme summaries (pattern + quotes + recommendation + owner); delivered as a live 60-90 minute readout, never just circulated as a file",
+        "usedWhere": "Presented live in the quarterly business review to sales, product, and marketing leadership — 'the CEO who hears the findings live ships fixes faster than the CEO who scans the deck on a flight'; themes flow directly into battlecards, roadmap, and messaging; PMM typically owns the program",
+        "makesItGood": "Quantified frequency, not anecdotes — 'buyers mentioned integrations' is not decision-ready, '32% of losses, up from 18%' is; verbatim quotes carry the credibility; the accountability loop (reviewing last quarter's commitments and whether win rate moved) is what stops it becoming a recurring data dump execs learn to skip."
+      }
+    ]
+  }
+}

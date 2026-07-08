@@ -1,0 +1,12 @@
+interface:
+  display_name: "Pmm Product Context"
+  short_description: "Create and maintain shared product marketing context for PMM, GTM, launch, pricing, messaging, and growth work."
+  brand_color: "#111827"
+policy:
+  allow_implicit_invocation: true
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "marketing-os"
+      description: "Bundled read-only MCP server for PMM resources and workflow routing."
+      transport: "stdio"

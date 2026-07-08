@@ -1,0 +1,217 @@
+{
+  "meta": { "title": "Plotline — Launch Kit", "wordmark": "Plotline", "tagline": "launch kit" },
+  "sidebar": [
+    { "group": "Overview",     "items": [["00","Overview","v-overview"]] },
+    { "group": "Foundation",   "items": [["01","Product context","v-product"]] },
+    { "group": "Audience",     "items": [["02","ICP & personas","v-personas"]] },
+    { "group": "Strategy",     "items": [["03","Positioning","v-positioning"],["04","Messaging","v-messaging"],["05","Competitive","v-competitive"],["5b","Market desk","v-market"],["06","Pricing","v-pricing"]] },
+    { "group": "Go-to-market", "items": [["07","Launch plan","v-launch"],["08","PLG & loops","v-plg"],["8b","Events desk","v-events"],["8c","Channels desk","v-channels"],["8d","KOL desk","v-analysts"],["8e","GTM desk","v-gtm"]] },
+    { "group": "Story",        "items": [["09","Narrative","v-narrative"],["10","Campaign","v-campaign"]] },
+    { "group": "Review",       "items": [["11","Coach review","v-coach"]] },
+    { "group": "Appendix",     "items": [["+","Exports","v-exports"]] }
+  ],
+  "data": {
+    "stats": [["4 min","median time to first answer",4],["~2 days","the data-queue it replaces",2],["71%","of active users write no SQL",71],["$0","to start · 10k MTU free",0]],
+    "kit": [["01","Product context","v-product"],["02","ICP & personas","v-personas"],["03","Positioning","v-positioning"],["04","Messaging","v-messaging"],["05","Competitive","v-competitive"],["06","Pricing","v-pricing"],["07","Launch plan","v-launch"],["08","PLG & loops","v-plg"],["09","Narrative","v-narrative"],["10","Campaign","v-campaign"],["11","Coach review","v-coach"]],
+    "taglines": ["Ask your product a question.","Answers, not a ticket queue.","Product analytics without the SQL.","Four minutes, not four days.","The analytics your whole team actually opens.","Stop arguing about whose number is right."],
+    "msgVariants": [["Priya (PM)","Stop filing tickets to ask why trial users churn. Ask Plotline, get the funnel, ship the fix this week."],["Marcus (PMM)","Measure every campaign against the same definition of 'activated' — no SQL, no data-team queue."],["Dana (Head of Product)","More decisions per week, on numbers everyone trusts, without adding a data hire."],["Sam (Head of Data)","Plotline takes the self-serve 'why' questions off your queue so your team does the modeling only they can."]],
+    "pricing": { "tiers": [["Free","$0","10k MTU"],["Team","usage","to 100k MTU"],["Business","custom","SSO · gov"]], "features": [["Monthly tracked users","10k","to 100k","500k+"],["Seats","unlimited","unlimited","unlimited"],["Plain-English Ask","✓","✓","✓"],["Shared metric catalog","—","✓","✓"],["SSO · roles · audit","—","—","✓"]] },
+    "scorecard": [["Positioning clarity",5],["Differentiation",4],["ICP specificity",5],["Evidence / proof",3],["Pricing logic",5],["Launch readiness",4],["Competitive defense",4]],
+    "launchActs": ["Sales enablement: deck, battlecard vs Vista, talk track (T-7)","Demo video + interactive 'ask a question' demo (T-10)","Homepage hero + 'Ask' product page (T-7)","Lifecycle email + in-product first-run tooltip (T-3)","Launch blog + founder POV (T-0)","Product Hunt + r/ProductManagement (T-0)","Accuracy guardrail green in beta (go / no-go)","Paid search on 'Vista alternative' (phase 2)"],
+    "revisions": ["Close the proof gap: land one named customer + a quantified outcome for the case study.","Scope the 'Ask' accuracy claim to common question types; publish what it does and doesn't do.","Always show the generated query + metric definition so answers aren't a black box.","Model each beta account's seat→MTU bill; grandfather increases for 2 cycles.","Instrument the metric tree before launch (activation delta, free→Team)."],
+    "palette": [["Priya — the PM","v-personas","p-priya"],["Marcus — the PMM","v-personas","p-marcus"],["Dana — Head of Product","v-personas","p-dana"],["Sam — Head of Data","v-personas","p-sam"],["Pillar: Plain English","v-messaging","m-0"],["Pillar: No waiting","v-messaging","m-1"],["Pillar: One set of numbers","v-messaging","m-2"],["vs Vista","v-competitive","c-vista"],["vs Pulse","v-competitive","c-pulse"],["vs the data queue","v-competitive","c-queue"]],
+    "exportFiles": [["events.csv","CSV · ranked event targets"],["launch-tactics.csv","CSV · ranked launch tactics"],["campaign-brief.docx","Word · campaign brief"],["launch-deck.pptx","PowerPoint · deck"],["social-posts.csv","CSV · social posts"],["battlecard.docx","Word · battlecard"],["pricing-model.xlsx","Excel · pricing model"],["metrics.json","PLG metrics"]],
+    "exportDocs": ["01-product-context","02-icp-and-personas","03-positioning","04-messaging-house","05-competitive-intelligence","06-pricing-packaging","07-gtm-launch-plan","08-plg-growth-loops","09-sales-brand-narrative","10-campaign-brief","11-pmm-coach-review"],
+    "intro": [
+      { "kind":"title", "eyebrow":"Plotline · launch kit", "h":"Ask your product<br/>a question.", "s":"Self-serve product analytics — and the strategy to launch it." },
+      { "kind":"stats", "eyebrow":"The bottleneck, in numbers" },
+      { "kind":"line", "h":"The people with the questions<br/>can't get the answers.", "s":"So every question becomes a ticket in the data-team queue. Decisions wait days — or get made on gut." },
+      { "kind":"cta", "h":"Plotline answers in four minutes.", "s":"Ask in plain English · no SQL · no ticket · one set of numbers." }
+    ]
+  },
+  "views": {
+    "v-overview": { "eyebrow":"Product marketing · launch kit", "title":"Overview", "h1":"Ask your product a question.", "sub":"11 interlocking docs, grounded in the Plotline product context. The through-line: the people with the questions can't get the answers — Plotline makes it <b>ask · in plain English · in minutes.</b>",
+      "blocks": [ {"widget":"stats"}, {"h":"The kit"}, {"widget":"kitrows"} ] },
+    "v-product": { "eyebrow":"Product Desk · 01", "title":"Product context", "h1":"Product context", "sub":"The shared brief every other doc reads from.",
+      "blocks": [
+        {"kv":[["Product","Plotline — self-serve product analytics"],["What it does","Ask a plain-English question <code>→</code> get a funnel, cohort, or chart in seconds. No SQL."],["Surfaces","Web app · auto-instrumented SDK · shared metric catalog"],["Pricing","Usage-based on MTU · Free / Team / Business"],["Stage","Launching 'Ask' (plain-English questions) — the feature that <i>is</i> the positioning"]]},
+        {"callout":"<b>POV.</b> Everyone bought 'powerful' analytics. On a team without a data department it becomes shelfware — the people with the questions can't write the query, so they file a ticket and wait."},
+        {"h":"Audience"},
+        {"table":{"head":["Segment","Trigger","Pain","Alternative today"],"rows":[["PM / growth owner","needs to know why a metric moved","blocked on the data queue for days","file a ticket · guess · wait"],["Lifecycle / PMM","measuring a campaign or activation","no shared definition of 'activated'","argue over whose number is right"],["Head of Product","wants more decisions per week","bought Vista; nobody opens it","shelfware + a data-hire ask"]]}}
+      ] },
+    "v-personas": { "eyebrow":"Customer Desk · 02", "title":"ICP & personas", "h1":"ICP & personas", "sub":"Select a persona to inspect JTBD, pain, and the message that lands.",
+      "blocks": [
+        {"h":"Personas"},
+        {"rows":[
+          {"t":"Priya — the PM <span class=\"badge cy\">primary</span>","d":"Answer my own product questions and ship the fix this week.","meta":"20–200-person B2B SaaS","detail":"p-priya"},
+          {"t":"Marcus — lifecycle / PMM","d":"Measure campaigns against one shared definition.","meta":"growth team","detail":"p-marcus"},
+          {"t":"Dana — Head of Product <span class=\"badge\">economic buyer</span>","d":"More decisions per week, no data hire, no shelfware.","meta":"budget owner","detail":"p-dana"},
+          {"t":"Sam — Head of Data <span class=\"badge\">blocker</span>","d":"Stop being the bottleneck for everyone's 'why' question.","meta":"if present","detail":"p-sam"}
+        ]},
+        {"h":"Anti-ICP — design to repel"},
+        {"callout":"Data-mature orgs that want warehouse-native modeling (dbt + a BI tool), and pre-PMF teams with no usage yet. Selling to them creates churn and a 'this isn't a modeling layer' review — disqualify, don't chase.","variant":"warn"}
+      ] },
+    "v-positioning": { "eyebrow":"03 · April Dunford", "title":"Positioning", "h1":"Positioning", "sub":"Statement, category, value themes, and the tagline tester.",
+      "blocks": [
+        {"callout":"<span class=\"eyebrow\" style=\"color:var(--accent);font-size:10px;letter-spacing:.16em;text-transform:uppercase\">Positioning statement</span><br/><span class=\"stmt\">For product and growth teams at scaling B2B SaaS <b>without a data team to lean on</b>, <b>Plotline</b> is the <b>self-serve product analytics tool</b> that answers 'why' in plain English in minutes — unlike Vista or a SQL queue, which make the people with the questions wait on the few who can write the query.</span>"},
+        {"kv":[["Category","Self-serve product analytics — 'answers without SQL.' We deliberately don't frame as BI (invites a warehouse comparison we lose)."],["Value themes","<span class=\"chip\">Plain English</span><span class=\"chip\">No waiting</span><span class=\"chip\">One set of numbers</span>"],["Best-fit market","20–200-person B2B SaaS with real usage but no (or overloaded) data team"],["Where we don't win","Data-mature orgs wanting a modeling layer; not free like GA. We win on <i>who can use it</i>, not the deepest query."]]},
+        {"h":"Tagline tester — copy & star your pick"},
+        {"widget":"taglines"}
+      ] },
+    "v-messaging": { "eyebrow":"04 · Message architecture", "title":"Messaging", "h1":"Messaging house", "sub":"POV → value prop → three pillars. Select a pillar to inspect proof; switch persona variants with the tabs.",
+      "blocks": [
+        {"kv":[["Roof · POV","The people with the questions should be able to get the answers."],["Value proposition","Ask your product data anything, in plain English, and get the answer yourself — in minutes, not a ticket queue."]]},
+        {"h":"Pillars"},
+        {"rows":[
+          {"t":"1 · Ask in plain English","d":"Type the question, get the analysis. No SQL.","meta":"proof →","detail":"m-0"},
+          {"t":"2 · No tickets, no waiting","d":"Auto-instrumented + self-serve.","meta":"proof →","detail":"m-1"},
+          {"t":"3 · One set of numbers","d":"Shared metric definitions across teams.","meta":"proof →","detail":"m-2"}
+        ]},
+        {"h":"Persona message variant"},
+        {"widget":"msgvariants"}
+      ] },
+    "v-competitive": { "eyebrow":"Competitive Desk · 05", "title":"Competitive", "h1":"Competitive intelligence", "sub":"Artifact of the Competitive Desk: comparison matrix + battlecards. The real incumbent is the data-queue. Select an alternative to inspect when-we-win / when-they-win + guidance.",
+      "blocks": [
+        {"h":"Comparison matrix"},
+        {"table":{"head":["Dimension","Plotline","Vista","Pulse"],"rows":[["Core use case","Ask in plain English → answer","Enterprise analytics suite","Dashboards (the 'what')"],["Time to value","Minutes","Weeks (implementation)","Days"],["Who can use it","Anyone on the team","Analysts / data team","Dashboard builders"],["Pricing model","Usage (MTU) · seats free","Seat + platform fee","Per seat"],["Best fit","No / overloaded data team","Mature data org","Dashboard-first team"]]}},
+        {"h":"Alternatives"},
+        {"rows":[
+          {"t":"Vista Analytics","d":"Enterprise suite — powerful, needs a maintainer, becomes shelfware","meta":"<span class=\"badge bd\">primary</span>","detail":"c-vista"},
+          {"t":"Pulse","d":"Mid-market point tool — see what happened, then file a ticket for why","meta":"<span class=\"badge\">adjacent</span>","detail":"c-pulse"},
+          {"t":"SQL analyst + data queue","d":"Accurate but rationed — a quick question is a multi-day ticket","meta":"<span class=\"badge\">status quo</span>","detail":"c-queue"}
+        ]},
+        {"h":"Objection handling"},
+        {"rows":[
+          {"t":"\"We already have Vista.\"","d":"And how many of your team actually open it? Plotline is the one your PMs use without a data person."},
+          {"t":"\"Plain-English analytics can't be trusted.\"","d":"We show the generated query and the metric definition. It's transparent, not a black box."},
+          {"t":"\"We'll just ask our analyst.\"","d":"How long is that queue right now? Plotline frees the analyst for the modeling only they can do."}
+        ]}
+      ] },
+    "v-pricing": { "eyebrow":"Pricing Desk · 06", "title":"Pricing", "h1":"Pricing & packaging", "sub":"Value metric = monthly tracked users (MTU), not seats — because the value scales with usage analyzed, and per-seat would tax the cross-team adoption we want.",
+      "blocks": [
+        {"widget":"pricing"},
+        {"h":"The cost of the queue"},
+        {"table":{"head":["","Today (the queue)","With Plotline"],"rows":[["Time to an answer","~2 days","4 minutes"],["Who can ask","the analyst","anyone"],["Cost to scale","a data hire","MTU usage"]]}},
+        {"p":"<span class=\"small muted\">Anchor the pricing page to the <i>queue you remove</i>, not 'an analytics seat.' Seats are always unlimited — that's the strategy made visible.</span>"}
+      ] },
+    "v-launch": { "eyebrow":"07 · Tier-1 launch", "title":"Launch plan", "h1":"Go-to-market / launch plan", "sub":"Launching 'Ask' as Tier-1 — it's the differentiator and the reason a non-technical buyer chooses us. Pitch: 'Ask your product data anything, in plain English, in minutes.'",
+      "blocks": [
+        {"h":"Timeline"},
+        {"table":{"head":["Phase","Move"],"rows":[["<b>T-3 wk</b>","Enablement + demo built; beta accuracy guardrail watched"],["<b>Launch week</b>","Launch blog + founder POV + Product Hunt + homepage 'Ask' live + lifecycle email"],["<b>T+30</b>","Read activation delta · harvest first customer outcome → case study"]]}},
+        {"h":"Launch activities"},
+        {"widget":"checklist-launch"},
+        {"h":"Measurement"},
+        {"table":{"head":["Metric","Target","Decision rule"],"rows":[["Accounts running ≥1 Ask",">50% wk1","<30% → fix onboarding / TTV"],["Demo → trial CVR","beat baseline","tune the demo question"],["Activation w/ Ask vs without","+10pt","no lift → reposition the feature"],["Trial → paid","beat baseline","identify the paywall trigger (MTU)"]]}}
+      ] },
+    "v-plg": { "eyebrow":"08 · Growth", "title":"PLG & loops", "h1":"PLG & growth loops", "sub":"The product is the marketing — every shared chart is an ad. AHA = first real answer in under 5 minutes, no SQL.",
+      "blocks": [
+        {"h":"Primary loop"},
+        {"flow":[["01","Ask (free)"],["02","Answer in 4 min"],["03","Invite the team"],["04","Hit the MTU ceiling"],["05","Upgrade → 01"]]},
+        {"h":"Other loops"},
+        {"list":["<b>Shared-catalog loop</b> — one person's metric definition pulls the rest of the team in to use the same numbers.","<b>Answer-sharing loop</b> — a Plotline chart pasted in Slack drives 'how did you get that?' → new users.","<b>Auto-instrument loop</b> — events captured without eng means coverage grows on its own; more to analyze, more reasons to return."]},
+        {"h":"Metric tree"},
+        {"tree":"North star: weekly active question-askers\n├─ New users (from shared charts + invites)\n├─ Activation (first answer <5 min)\n├─ Questions / user / week\n├─ Team seats activated / account\n└─ Free→Team (MTU ceiling · shared catalog · SSO)"},
+        {"h":"PQL triggers"},
+        {"chips":["hit MTU ceiling","invited a teammate","saved a dashboard","asked 3+ questions","wants SSO"]}
+      ] },
+    "v-events": { "eyebrow":"08b · Events Desk", "title":"Events desk", "h1":"Events & conferences — ranked targets", "sub":"Artifact of the Events Desk: where Plotline's ICP (PMs/growth at 20–200-person B2B SaaS) gathers, ranked by relevance (ICP fit · pipeline track record · audience · timing · cost). Exports to <code>events.csv</code>.",
+      "blocks": [
+        {"callout":"<b>Illustrative Events Desk output.</b> Real events; a live desk run fills exact dates, sponsorship costs, deadlines, and pipeline estimates — each with its source URL in <code>.agents/research/evidence.md</code>. Cost/timing below are marked <i>verify</i> until then.","variant":"warn"},
+        {"table":{"head":["#","Event","Audience fit","Relevance","Motion","Cost band","Timing"],"rows":[
+          ["1","<a href=\"https://productled.com/summit\">Product-Led Summit</a>","Growth/PM leaders at PLG SaaS — bullseye ICP","92","Speak + booth","$$ (verify)","Annual · verify"],
+          ["2","<a href=\"https://www.mindtheproduct.com\">Mind the Product (MTP Con)</a>","Product managers, senior — high fit","88","Speak + side-event","$$ (verify)","Annual · verify"],
+          ["3","<a href=\"https://industryconference.com\">INDUSTRY: The Product Conference</a>","PMs across B2B SaaS — high fit","84","Booth + dinner","$$ (verify)","Annual · verify"],
+          ["4","<a href=\"https://www.saastrannual.com\">SaaStr Annual</a>","SaaS founders/GTM execs — economic buyers, big reach","79","Sponsor (brand) + side-event","$$$ (verify)","Annual · verify"],
+          ["5","<a href=\"https://www.joinpavilion.com\">Pavilion GTM2x</a>","GTM leaders — buyer-heavy, smaller","71","Speak + dinner","$$ (verify)","Annual · verify"],
+          ["6","<a href=\"https://amplitude.com/amplify\">Amplitude Amplify</a>","Analytics practitioners — competitor turf (offensive)","64","Side-event / hallway","$ (verify)","Annual · verify"]
+        ]}},
+        {"p":"<span class=\"small\"><b>Why the top picks rank highest:</b> Product-Led Summit and MTP put us in front of the exact PM/growth buyer who feels the data-queue pain, with a speaking slot to demo \"ask in plain English.\" SaaStr ranks on reach + economic buyers despite higher cost; Amplify is low-relevance but high-<i>offensive</i> value (their audience is mid-migration).</span>"},
+        {"p":"<span class=\"small muted\"><b>Verify before committing budget:</b> all cost bands + dates are placeholders until the live Events Desk run; confirm CFP/sponsorship deadlines against the launch window first.</span>"}
+      ] },
+    "v-market": { "eyebrow":"Market Desk", "title":"Market", "h1":"Market & category brief", "sub":"Artifact of the Market Desk: SWOT + Porter's Five Forces + why-now for the self-serve product-analytics category, from the strategic-analysis frameworks.",
+      "blocks": [
+        {"callout":"<b>Illustrative Market Desk output.</b> A live run sources each force/trend from analyst posts, reviews, and last-30-days sentiment.","variant":"warn"},
+        {"kv":[["Category","Self-serve product analytics (\"answers without SQL\") — an emerging cut of product analytics"],["Why now","Data teams are the bottleneck; the 'be data-driven' mandate hit non-technical teams; LLM-era UX made plain-English querying an expectation, not a moonshot"],["Whitespace","The non-technical self-server — incumbents optimize for the analyst, not the PM who has the question"]]},
+        {"h":"SWOT"},
+        {"table":{"head":["Strengths","Weaknesses"],"rows":[["Plain-English Ask · 4-min time-to-answer · doesn't become shelfware","Not warehouse-native; thinner deep-modeling; low brand vs incumbents"]]}},
+        {"table":{"head":["Opportunities","Threats"],"rows":[["Non-technical buyers underserved · the AI-analytics wave · a clean PLG self-serve motion","Incumbents bolt on AI query · analytics commoditized to free tiers · DIY (SQL+BI) is entrenched"]]}},
+        {"h":"Porter's Five Forces"},
+        {"table":{"head":["Force","Read"],"rows":[["Rivalry","High — Amplitude, Mixpanel, PostHog, Heap"],["Buyer power","Medium — many cheap options, but switching cost rises with instrumentation"],["Substitutes","High — SQL + BI, spreadsheets, 'ask the analyst'"],["New entrants","High — LLM-analytics startups entering constantly"],["Supplier power","Low — commodity infra"]]}},
+        {"p":"<span class=\"small muted\"><b>Verify on live run:</b> force ratings + the 'incumbents add AI query' threat are directional until sourced.</span>"}
+      ] },
+    "v-channels": { "eyebrow":"Channels Desk", "title":"Channels", "h1":"Channel & community map", "sub":"Artifact of the Channels Desk: where Plotline's ICP (PMs/growth at 20–200-person B2B SaaS) gathers, ranked by reach × fit × effort. Exports <code>channels.csv</code>.",
+      "blocks": [
+        {"callout":"<b>Illustrative Channels Desk output.</b> A live run fills member counts + engagement per community from agent-reach + last30days.","variant":"warn"},
+        {"table":{"head":["#","Channel","Type","ICP fit","Effort","Play"],"rows":[
+          ["1","<a href=\"https://www.lennysnewsletter.com\">Lenny's Newsletter / Podcast</a>","Newsletter + pod","PMs/growth — bullseye, huge reach","Med ($$)","Sponsor + guest post"],
+          ["2","<a href=\"https://reddit.com/r/ProductManagement\">r/ProductManagement</a>","Reddit","PMs — high fit, large","Low","Organic value + AMA"],
+          ["3","<a href=\"https://www.mindtheproduct.com\">Mind the Product</a>","Community + events","PMs — high fit","Med","Speak + community"],
+          ["4","<a href=\"https://www.reforge.com\">Reforge</a>","Community + courses","Growth/PM leaders — high fit","Med","Collab / guest"],
+          ["5","<a href=\"https://www.producthunt.com\">Product Hunt</a>","Launch","Builders — med fit, big spike","Low","Launch 'Ask'"],
+          ["6","<a href=\"https://news.ycombinator.com\">Hacker News</a>","Forum","Technical founders — med fit","Low","Show HN"]
+        ]}},
+        {"p":"<span class=\"small\"><b>Why these rank:</b> Lenny + r/ProductManagement put us in front of the exact PM who feels the data-queue pain; Reforge/MTP reach the growth-leader buyer; PH/HN are spike plays for launch week.</span>"}
+      ] },
+    "v-analysts": { "eyebrow":"Analyst & Influencer Desk", "title":"Analysts & KOLs", "h1":"Analyst & influence map", "sub":"Artifact of the KOL Desk: the people who shape the product-analytics / PM narrative, ranked by relevance × reach. Exports <code>kol-list.csv</code>.",
+      "blocks": [
+        {"callout":"<b>Illustrative KOL Desk output.</b> A live run fills reach figures, recent activity, and leanings per person.","variant":"warn"},
+        {"table":{"head":["#","Name","Type","Reach","Relevance","Play"],"rows":[
+          ["1","Lenny Rachitsky","Newsletter / podcast","Very large","PM/growth audience — bullseye","Guest + seed"],
+          ["2","April Dunford","Positioning author / speaker","Large","Shapes how we position","Brief / endorse"],
+          ["3","Elena Verna","Growth advisor / writer","Large","Growth-PM buyer","Collab / guest"],
+          ["4","Reforge (Brian Balfour)","Community / education","Large","Growth-leader audience","Partner content"],
+          ["5","G2 · analyst grids","Analyst","Medium","Category placement","Monitor + submit"]
+        ]}},
+        {"p":"<span class=\"small muted\"><b>Verify on live run:</b> leanings + recent activity per person; confirm each is actively posting on this space before outreach.</span>"}
+      ] },
+    "v-gtm": { "eyebrow":"GTM & Launch Desk", "title":"GTM desk", "h1":"Launch-motion brief + tactics map", "sub":"Artifact of the GTM/Launch Desk: how comparable products launched + which tactics fit Plotline, ranked by evidence-of-ROI × fit × effort. Exports <code>launch-tactics.csv</code>.",
+      "blocks": [
+        {"callout":"<b>Illustrative GTM Desk output.</b> A live run sources each tactic from comparable-launch retros (PostHog, Amplitude, June) + last-30-days launch sentiment.","variant":"warn"},
+        {"kv":[["Recommended motion","Product-led (self-serve free tier) + sales-assist for Business/SSO — the category is PLG-first"],["Activation / aha","First real answer in under 5 min, no SQL — onboarding optimizes to it"],["Launch tier","Tier-1 marquee for 'Ask' (the differentiator)"]]},
+        {"h":"Launch-tactics map"},
+        {"table":{"head":["#","Tactic","Fit","Evidence (comparable)","Effort"],"rows":[
+          ["1","Product Hunt launch","High — PLG, builder audience","June / PostHog launched on PH","Low"],
+          ["2","Founder POV blog + Show HN","High — technical credibility","PostHog grew on HN + content","Low"],
+          ["3","Interactive 'ask a question' demo","High — the product is the marketing","Amplitude/Heap lead with demo","Med"],
+          ["4","Lenny's + r/ProductManagement","High — exact ICP","(see Channels desk)","Med"],
+          ["5","Paid search 'Vista alternative'","Med — capture intent","competitor-alternative SEM","Med (phase 2)"]
+        ]}},
+        {"p":"<span class=\"small\"><b>Why this order:</b> PLG products win launch week on Product Hunt + community + a self-serve demo, not paid. Paid 'alternative' search is a phase-2 capture play once the funnel converts.</span>"}
+      ] },
+    "v-narrative": { "eyebrow":"09 · Story", "title":"Narrative", "h1":"Brand / sales narrative", "sub":"The change → stakes → villain → promised land → proof → flag.",
+      "blocks": [
+        {"rows":[
+          {"t":"1 · The change","d":"Every team is told to be 'data-driven' — but the people who need answers aren't the ones who can write SQL."},
+          {"t":"2 · The stakes","d":"So every question becomes a ticket. Decisions wait days, or get made on gut and relitigated next week."},
+          {"t":"3 · The villain","d":"Not the tools — the bottleneck: the gap between who has the question and who can get the answer."},
+          {"t":"4 · The promised land","d":"Ask in plain English, get the answer yourself, in minutes — on numbers the whole team shares."},
+          {"t":"5 · The proof","d":"Median first answer: 4 minutes. 71% of active users write no SQL. The tool that doesn't become shelfware."},
+          {"t":"6 · The flag","d":"Product analytics the people with the questions can finally run themselves."}
+        ]},
+        {"h":"Lines to copy"},
+        {"copy":["\"Four minutes, not a ticket.\"","Four minutes, not a ticket."]},
+        {"copy":["Press: \"The analytics tool built for the people who actually have the questions.\"","The analytics tool built for the people who actually have the questions — no SQL, no data-team queue."]}
+      ] },
+    "v-campaign": { "eyebrow":"10 · \"Ask, Don't Wait\"", "title":"Campaign", "h1":"Launch campaign", "sub":"Flagship campaign. Big idea: contrast the multi-day ticket queue with a four-minute answer.",
+      "blocks": [
+        {"statline":[["wk1","Ask adoption"],["+10pt","Activation lift"],["beat","Trial→paid"],["4 min","Time to answer"]]},
+        {"kv":[["Big idea","Contrast the multi-day ticket queue with a four-minute answer. 'Ask, don't wait.'"],["Channels","Founder POV + blog (credibility) · Product Hunt (spike) · r/ProductManagement · lifecycle (activation) · paid search 'Vista alternative' (phase 2)"],["Deliverables","Launch blog · founder POV · interactive demo · 5 social posts · homepage hero · 'Ask' product page · battlecard · lifecycle email · FAQ"],["Guardrails","Show the generated query (no black box) · scope the accuracy claim · never imply we replace a data warehouse"]]}
+      ] },
+    "v-coach": { "eyebrow":"11 · Pressure-test", "title":"Coach review", "h1":"PMM coach review", "sub":"Senior-PMM scorecard (bars animate when this view opens) + required revisions.",
+      "blocks": [ {"h":"Scorecard"}, {"widget":"scorecard"}, {"h":"Required revisions before launch"}, {"widget":"checklist-rev"}, {"callout":"<b>Verdict:</b> greenlight — the positioning is specific and honest about where it loses. <b>Close the proof gap</b> (a named customer + a quantified outcome) before the Tier-1 marquee claims go live.","variant":"warn"} ] },
+    "v-exports": { "eyebrow":"Appendix", "title":"Exports", "h1":"Exports & source docs", "sub":"Generated by the artifact factory. Links resolve when this file sits in the launch folder next to generated-docs/.",
+      "blocks": [ {"h":"Export files"}, {"widget":"exportFiles"}, {"h":"Source markdown"}, {"widget":"exportDocs"} ] }
+  },
+  "details": {
+    "p-priya": { "eye":"Persona · primary", "title":"Priya — the PM", "blocks":[ {"kv":[["JTBD","Answer my own product questions and ship the fix this week."],["Pain","Blocked on the data queue; decisions wait days."],["Channel","Lives in the product + Slack"]]}, {"copy":["\"Stop filing tickets to ask why trial users churn.\"","Stop filing tickets to ask why trial users churn. Ask Plotline, get the funnel, ship the fix this week."]} ] },
+    "p-marcus": { "eye":"Persona", "title":"Marcus — lifecycle / PMM", "blocks":[ {"kv":[["JTBD","Measure campaigns and activation against one shared definition."],["Pain","Nobody agrees what 'activated' means; numbers don't reconcile."]]}, {"copy":["\"Measure every campaign against the same definition of 'activated.'\"","Measure every campaign against the same definition of 'activated' — no SQL, no data-team queue."]} ] },
+    "p-dana": { "eye":"Persona · economic buyer", "title":"Dana — Head of Product", "blocks":[ {"kv":[["JTBD","Get more decisions per week without adding a data hire."],["Pain","Bought Vista; it's shelfware. The data team is a bottleneck."]]}, {"copy":["\"More decisions per week, on numbers everyone trusts.\"","More decisions per week, on numbers everyone trusts, without adding a data hire."]} ] },
+    "p-sam": { "eye":"Persona · blocker", "title":"Sam — Head of Data", "blocks":[ {"kv":[["JTBD","Stop being the bottleneck for everyone's 'why' question."],["Reframe","Not a threat — Plotline frees the queue for the modeling only the data team can do."]]}, {"copy":["\"Plotline takes the self-serve questions off your queue.\"","Plotline takes the self-serve 'why' questions off your queue so your team does the modeling only they can."]} ] },
+    "m-0": { "eye":"Pillar 1", "title":"Ask in plain English", "blocks":[ {"p":"Type the question — 'where do trial users drop off before inviting a teammate?' — and get a funnel back. No query language, no report to hunt for."}, {"h":"Proof"}, {"list":["4-min median time to first answer","71% of weekly active users write no SQL","The generated query is shown, not hidden"]}, {"h":"Features"}, {"chips":["plain-English Ask","auto-funnels","cohorts","saved dashboards"]} ] },
+    "m-1": { "eye":"Pillar 2", "title":"No tickets, no waiting", "blocks":[ {"p":"Auto-instrumentation captures events without an engineering ticket; self-serve means no analyst in the loop for the common question."}, {"h":"Proof"}, {"list":["No eng ticket to add an event","No analyst queue for the common 'why'","~2-day queue → minutes"]} ] },
+    "m-2": { "eye":"Pillar 3", "title":"One set of numbers", "blocks":[ {"p":"Shared metric definitions — 'active', 'activated', 'MTU' — used across product and marketing, so numbers reconcile across teams."}, {"h":"Proof"}, {"list":["Shared metric catalog","One definition, every team","(proof gap: quantify 'fewer reconciliation arguments' — needs a customer quote)"]} ] },
+    "c-vista": { "eye":"Battlecard", "title":"vs Vista Analytics", "blocks":[ {"h":"When we win"}, {"p":"No/overloaded data team · Vista is already shelfware there · the user is non-technical · the speed of one answer matters."}, {"h":"When they win"}, {"p":"A mature data org wanting warehouse-native modeling + governance at enterprise scale. Disqualify, don't oversell."}, {"h":"Guidance"}, {"p":"Don't fight on feature depth (their home field). Reframe to adoption + time-to-value: 'how many seats actually log in weekly?'"} ] },
+    "c-pulse": { "eye":"Battlecard", "title":"vs Pulse", "blocks":[ {"h":"When we win"}, {"p":"Pulse shows what happened, then you file a ticket to ask why. Plotline answers the follow-up yourself."}, {"h":"When they win"}, {"p":"Buyer only wants dashboards and already has someone to build and maintain them."}, {"h":"Guidance"}, {"p":"'Pulse tells you what. Plotline tells you why — without the next ticket.'"} ] },
+    "c-queue": { "eye":"Battlecard", "title":"vs SQL analyst + data queue", "blocks":[ {"h":"When we win"}, {"p":"Speed + self-serve: the common 'why' question in minutes, not a multi-day ticket."}, {"h":"When they win"}, {"p":"Deep, novel modeling that genuinely needs SQL and the warehouse."}, {"h":"Guidance"}, {"p":"'Keep the analyst for the hard modeling. Plotline clears the queue of the 80% they shouldn't be doing.'"} ] }
+  }
+}

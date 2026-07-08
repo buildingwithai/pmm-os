@@ -1,0 +1,9 @@
+display_name: Osp Content Optimizer
+category: product-marketing
+invocation_policy: automatic when the user request matches the skill description
+allowed_tools:
+  - Read
+  - Write
+  - mcp__marketing-os__osp_meta_information_builder
+  - mcp__marketing-os__osp_editing_code_review
+  - mcp__marketing-os__osp_onpage_seo_checklist

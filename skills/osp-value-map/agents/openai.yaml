@@ -1,0 +1,7 @@
+display_name: Osp Value Map
+category: product-marketing
+invocation_policy: automatic when the user request matches the skill description
+allowed_tools:
+  - Read
+  - Write
+  - mcp__marketing-os__osp_value_map_skeleton

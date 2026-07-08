@@ -1,0 +1,9 @@
+name: Campaign Brief Builder
+description: Build export-ready campaign briefs using a 14-section framework.
+invocation:
+  mode: auto
+  confidence: medium
+tools:
+  required: []
+  suggested:
+    - marketing-os

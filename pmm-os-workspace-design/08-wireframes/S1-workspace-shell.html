@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe · S1 Workspace shell</title>
+<style>
+  /* LOW-FI GRAYSCALE WIREFRAME — structure only, no brand color. 8pt grid. Real labels. */
+  :root{--bg:#e9eaec;--ink:#2b2b2b;--mut:#6d6d6d;--dim:#9a9a9a;--line:#d8d7d2;--box:#fff;--fill:#d9d9d9;--prim:#3a3a3a;
+    --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);padding:var(--s8)}
+  .head{max-width:1200px;margin:0 auto var(--s4)}
+  .head h1{font-size:18px;margin:0 0 var(--s1)} .head p{margin:0;color:var(--mut);font-size:13px}
+  .stage{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 300px;gap:var(--s6);align-items:start}
+  /* browser frame */
+  .browser{background:var(--box);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .bbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);background:#dedede;border-bottom:1px solid var(--line)}
+  .dot{width:10px;height:10px;border-radius:50%;background:#c2c2c2}
+  .url{flex:1;margin-left:var(--s2);height:18px;background:#efefef;border:1px solid var(--line);border-radius:4px}
+  /* app: 3 panes */
+  .app{display:grid;grid-template-columns:232px 1fr 12px;height:560px}
+  .side{border-right:1px solid var(--line);padding:var(--s3);overflow:auto;background:#f4f4f4}
+  .search{height:30px;border:1px solid var(--line);border-radius:6px;background:var(--box);display:flex;align-items:center;padding:0 var(--s2);color:var(--dim);font-size:12px;margin-bottom:var(--s4)}
+  .navitem{padding:var(--s1) var(--s2);border-radius:5px;font-size:13px;color:var(--ink);margin-bottom:2px;display:flex;justify-content:space-between}
+  .navitem.top{font-weight:600}
+  .navitem.active{background:var(--fill);font-weight:600}
+  .zone{font-size:10px;letter-spacing:.1em;color:var(--dim);font-weight:700;margin:var(--s4) 0 var(--s2);padding-left:var(--s2)}
+  .child{padding-left:var(--s4);color:var(--mut)}
+  .foot{margin-top:var(--s6);padding-top:var(--s3);border-top:1px solid var(--line);font-size:11px;color:var(--dim)}
+  .main{padding:0;overflow:auto;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s6);border-bottom:1px solid var(--line);background:#fafafa}
+  .crumb{font-size:12px;color:var(--mut)} .crumb b{color:var(--ink)}
+  .prim{background:var(--prim);color:#fff;font-size:12px;font-weight:600;padding:var(--s2) var(--s3);border-radius:6px}
+  .canvas{padding:var(--s6);overflow:auto}
+  .h2{font-size:22px;font-weight:700;margin:0 0 var(--s2)}
+  .bar{height:10px;background:#e4e4e4;border-radius:3px;margin:var(--s2) 0}
+  .bar.w70{width:70%}.bar.w50{width:50%}.bar.w90{width:90%}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--mut);background:#f6f6f6;border-radius:6px;padding:var(--s3);font-size:13px;color:var(--ink);margin:var(--s3) 0}
+  .lbl{font-size:12px;color:var(--mut);margin:var(--s4) 0 var(--s2);font-weight:600}
+  .peekrail{background:#f0f0f0;border-left:1px solid var(--line)}
+  /* annotations */
+  .notes{font-size:13px;color:var(--ink)}
+  .notes h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:0 0 var(--s3)}
+  .note{display:flex;gap:var(--s2);margin-bottom:var(--s3)}
+  .num{flex:0 0 22px;height:22px;border-radius:50%;background:var(--prim);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .note p{margin:0;font-size:12.5px;line-height:1.45;color:var(--mut)} .note b{color:var(--ink)}
+  .ref{display:inline-block;font-size:10px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--mut);margin-left:4px}
+  .statebox{max-width:1200px;margin:var(--s6) auto 0;background:var(--box);border:1px dashed var(--line);border-radius:8px;padding:var(--s4)}
+  .statebox h3{margin:0 0 var(--s2);font-size:13px;color:var(--mut)}
+</style></head>
+<body>
+  <div class="head">
+    <h1>S1 · Workspace shell <span class="ref">grayscale wireframe</span></h1>
+    <p>Primary job: hold the three panes (tree · content · peek) and let the PMM move between pages. Web · ~1200px.</p>
+  </div>
+
+  <div class="stage">
+    <!-- the screen -->
+    <div class="browser">
+      <div class="bbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url"></span></div>
+      <div class="app">
+        <!-- 1 sidebar -->
+        <nav class="side">
+          <div class="search">⌕ Search ·  ⌘K</div>
+          <div class="navitem top">Overview</div>
+          <div class="navitem top">GTM readout</div>
+          <div class="zone">RESEARCH</div>
+          <div class="navitem active">Desks</div>
+          <div class="navitem child">Customer</div>
+          <div class="navitem child">Competitive</div>
+          <div class="navitem child">Market</div>
+          <div class="navitem child">Pricing · Channels · KOL</div>
+          <div class="navitem child">Events · GTM · Product</div>
+          <div class="navitem">Databases</div>
+          <div class="zone">STRATEGY</div>
+          <div class="navitem">Positioning</div>
+          <div class="navitem">Messaging</div>
+          <div class="navitem">Narrative</div>
+          <div class="navitem">Campaign</div>
+          <div class="navitem">Coach review</div>
+          <div class="foot">◐ Theme&nbsp;&nbsp;·&nbsp;&nbsp;● Editor connected</div>
+        </nav>
+        <!-- 3 main -->
+        <section class="main">
+          <div class="topbar">
+            <div class="crumb">Research › Desks › <b>Customer</b></div>
+            <div class="prim">Present ▸</div>
+          </div>
+          <div class="canvas">
+            <div class="h2">Customer desk</div>
+            <div class="callout"><b>Bottom line.</b> Job seekers describe applying as “depressing / wasting my time”; AI mass-apply is erasing memory of where they applied.</div>
+            <div class="lbl">FULL RESEARCH REPORT</div>
+            <div class="bar w90"></div><div class="bar w70"></div>
+            <div class="bar w50"></div>
+            <div class="bar w90"></div><div class="bar w70"></div>
+          </div>
+        </section>
+        <!-- 4 peek rail (collapsed) -->
+        <div class="peekrail"></div>
+      </div>
+    </div>
+
+    <!-- annotations -->
+    <aside class="notes">
+      <h2>Hierarchy notes</h2>
+      <div class="note"><span class="num">1</span><p><b>Sidebar = the only navigation.</b> Two zone headers (RESEARCH / STRATEGY) keep a long list scannable; chrome defers so content leads.</p></div>
+      <div class="note"><span class="num">2</span><p><b>Answer-first items on top.</b> Overview + GTM readout sit above the zones — the conclusion before the evidence (your card sort).</p></div>
+      <div class="note"><span class="num">3</span><p><b>Main pane is the focus.</b> Widest region, the active page; the active tree item is the only filled item, so “where am I” reads at a glance.</p></div>
+      <div class="note"><span class="num">4</span><p><b>Side-peek collapsed by default.</b> A thin rail; content keeps full width until a citation/record opens it (S6).</p></div>
+      <div class="note"><span class="num">5</span><p><b>One primary action.</b> <b>Present</b> (filled) is the single dominant control for the presenter; breadcrumb answers “where am I / how back.”</p></div>
+      <div class="note"><span class="num">6</span><p><b>Settings is a quiet footer.</b> Theme + editor-server status only — no account/billing (local single-file app).</p></div>
+    </aside>
+  </div>
+
+  <!-- states -->
+  <div class="statebox">
+    <h3>STATE · Empty (no research yet)</h3>
+    <p style="font-size:13px;color:#6d6d6d;margin:0 0 8px">Tree collapses to a single prompt; one primary action.</p>
+    <div style="display:inline-block;border:1px solid #d8d7d2;border-radius:6px;padding:12px 16px;background:#f4f4f4">
+      <div style="font-size:13px;color:#2b2b2b;margin-bottom:8px">No research yet.</div>
+      <span class="prim">Run the first desk</span>
+    </div>
+  </div>
+  <div class="statebox">
+    <h3>STATE · Sidebar collapsed (focused reading width)</h3>
+    <p style="font-size:13px;color:#6d6d6d;margin:0">A 12px rail with an expand affordance; the main pane gains the sidebar's width for distraction-free reading/presenting.</p>
+  </div>
+</body></html>

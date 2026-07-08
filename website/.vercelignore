@@ -1,0 +1,30 @@
+# Keep Vercel CLI uploads focused on the deployable marketing app.
+.git
+.idkwidk
+.um
+.external-repos
+
+# Local installs and build output should be rebuilt by Vercel.
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+build
+**/build
+out
+**/out
+*.tsbuildinfo
+
+# The dashboard is intentionally local/provider-backed until Clerk and Convex are configured.
+apps/dashboard
+apps/website
+
+# Local-only files.
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.log
+*.backup-*

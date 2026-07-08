@@ -1,0 +1,24 @@
+.DS_Store
+node_modules/
+*.bak
+*.log
+# generated launch-kit instances (the generator/templates are tracked; built outputs aren't)
+**/*-launch-kit.html
+**/generated-docs/
+**/deck.md
+
+**/node_modules/
+**/.next/
+**/.turbo/
+.next/
+tsconfig.tsbuildinfo
+.vercel
+__pycache__/
+*.pyc
+*.pyo
+config/mcporter.json
+
+# demo working copies (generated: editor scripts copied in + built kit output)
+
+# session handoff notes (never commit — may reference private strategy)
+HANDOFF.md

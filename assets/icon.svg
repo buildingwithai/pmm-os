@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="PMM OS icon">
+  <rect width="128" height="128" rx="28" fill="#111827"/>
+  <path d="M28 85V43h13l23 26 23-26h13v42H87V61L68 83h-8L41 61v24H28z" fill="#FFFFFF"/>
+  <circle cx="99" cy="29" r="10" fill="#10A37F"/>
+</svg>

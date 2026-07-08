@@ -1,0 +1,25 @@
+name: PLG GTM Strategy
+description: Product-led growth and GTM strategy skill for activation, growth loops, PQL/PQA, trial strategy, metrics, churn, expansion, and measurable GTM planning.
+invocation:
+  mode: auto
+  keywords:
+    - PLG
+    - product-led growth
+    - activation
+    - AHA moment
+    - time to value
+    - growth loops
+    - PQL
+    - PQA
+    - trial strategy
+    - churn
+    - expansion
+    - AARRR
+    - North Star metric
+tools:
+  required: []
+  optional:
+    - marketing-os.plg_readiness_assessment
+    - marketing-os.plg_metrics_map
+    - marketing-os.growth_loop_designer
+    - marketing-os.recommend_mcp_servers

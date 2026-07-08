@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" role="img" aria-label="PMM OS logo">
+  <rect width="720" height="160" rx="32" fill="#111827"/>
+  <rect x="32" y="32" width="96" height="96" rx="22" fill="#FFFFFF"/>
+  <path d="M48 100V60h11l21 23 21-23h11v40h-12V77L83 98h-6L60 77v23H48z" fill="#111827"/>
+  <text x="160" y="92" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" fill="#FFFFFF">PMM OS</text>
+  <text x="162" y="122" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#D1D5DB">Growth, product marketing, GTM, and MCP workflows</text>
+</svg>

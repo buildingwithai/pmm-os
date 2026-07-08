@@ -1,0 +1,650 @@
+{
+  "title": "Open-Source User Onboarding Platform | Usertour",
+  "description": "the free, open-source user onboarding software you’ve been looking for. Improve your user engagement with personalized in-app experiences, drive feature adoption, and boost user retention. Discover how Usertour can transform your user engagement strategy and accelerate your product&#039;s growth today!",
+  "sections": [
+    {
+      "index": 0,
+      "tag": "header",
+      "className": "fixed inset-x-0 top-0 z-50 transition-colors duration-300 bg-transparent",
+      "text": "Start free",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(250, 250, 250)",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "0px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "fixed",
+        "zIndex": "50"
+      },
+      "headings": [],
+      "links": [
+        {
+          "text": "",
+          "href": "https://www.usertour.io/"
+        },
+        {
+          "text": "Docs",
+          "href": "https://docs.usertour.io/"
+        },
+        {
+          "text": "Blog",
+          "href": "https://www.usertour.io/blog"
+        },
+        {
+          "text": "Pricing",
+          "href": "https://www.usertour.io/pricing"
+        },
+        {
+          "text": "",
+          "href": "https://github.com/usertour/usertour"
+        },
+        {
+          "text": "Start free",
+          "href": "https://app.usertour.io/"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.usertour.io/images/logo-dark.svg",
+          "alt": "Usertour logo",
+          "width": 117,
+          "height": 30
+        },
+        {
+          "src": "https://www.usertour.io/images/logo-light.svg",
+          "alt": "Usertour logo",
+          "width": 117,
+          "height": 30
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "tag": "section",
+      "className": "py-24 overflow-hidden",
+      "text": "Builder The Easiest Content Builder Previously, building product tours required significant development effort. With Usertour, developers can quickly design, customize, and deploy product tours in minutes. Intuitive and Fully Visual Simply code, configure, and deploy—no unnecessary complexity involved. WYSIWYG editor Our rich content editor supports links, images, videos and user attributes. you can embed any content you want.",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(250, 250, 250)",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "96px 0px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "static",
+        "zIndex": "auto"
+      },
+      "headings": [
+        "The Easiest Content Builder"
+      ],
+      "links": [],
+      "images": [
+        {
+          "src": "https://www.usertour.io/images/builder-02.png",
+          "alt": "Hero",
+          "width": 1040,
+          "height": 772
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "tag": "section",
+      "className": "py-24 overflow-hidden",
+      "text": "Theme Fully Customizable Themes With Usertour, you can tailor every detail to ensure your product tours integrate flawlessly with your application's look and feel. Personalized Colors and Fonts Adjust text, button colors, and more to match your branding. Select your preferred font family and size to maintain consistency. Support for Multiple Themes Design and manage multiple themes, applying them to different flows as needed for a cohesive user experience.",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(250, 250, 250)",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "96px 0px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "static",
+        "zIndex": "auto"
+      },
+      "headings": [
+        "Fully Customizable Themes"
+      ],
+      "links": [],
+      "images": [
+        {
+          "src": "https://www.usertour.io/images/theme.png",
+          "alt": "Hero",
+          "width": 1191,
+          "height": 694
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "tag": "section",
+      "className": "py-24 overflow-hidden",
+      "text": "Analytics Powerful Analytics Gain a comprehensive understanding of your product tour performance with Usertour's robust analytics tools. Performance Metrics Track key statistics like views and completion rates to evaluate the effectiveness of your flows. User-Level Tracking Explore individual user journeys to uncover detailed insights and optimize the experience for each user.",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(250, 250, 250)",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "96px 0px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "static",
+        "zIndex": "auto"
+      },
+      "headings": [
+        "Powerful Analytics"
+      ],
+      "links": [],
+      "images": [
+        {
+          "src": "https://www.usertour.io/images/analytics.png",
+          "alt": "Hero",
+          "width": 1367,
+          "height": 765
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "tag": "section",
+      "className": "py-24 overflow-hidden",
+      "text": "Personalize Personalize onboarding Leverage custom user attributes to tailor onboarding experiences to each user's unique needs and roles Multi-Language Compatibility Create a single flow and easily localize only the elements that differ across languages, streamlining global implementation. Automated Flow Triggers Set criteria to automatically initiate flows—such as when a user signs up, visits a specific page, or activates a feature—ensuring timely and relevant engagement.",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(250, 250, 250)",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "96px 0px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "static",
+        "zIndex": "auto"
+      },
+      "headings": [
+        "Personalize onboarding"
+      ],
+      "links": [],
+      "images": [
+        {
+          "src": "https://www.usertour.io/images/rules.png",
+          "alt": "Hero",
+          "width": 1265,
+          "height": 777
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "tag": "section",
+      "className": "py-24 px-4",
+      "text": "Built with Modern Tech Stack Powered by the latest technologies to ensure scalability, security, and developer experience. React A library for web and native user interfaces TypeScript A typed superset of JavaScript that enhances code maintainability and scalability. Tailwind CSS A utility-first CSS framework for building custom designs with ease. Shadcn UI Beautifully designed components that enhance your application's user interface. Postgres A powerful, open source object-relational database system. Prisma A next-generation ORM for Node.js and TypeScript .",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(250, 250, 250)",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "96px 16px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "static",
+        "zIndex": "auto"
+      },
+      "headings": [
+        "Built with Modern Tech Stack",
+        "React",
+        "TypeScript",
+        "Tailwind CSS",
+        "Shadcn UI",
+        "Postgres",
+        "Prisma"
+      ],
+      "links": [
+        {
+          "text": "",
+          "href": "https://react.dev/"
+        },
+        {
+          "text": "ReactA library for web and native user interfaces",
+          "href": "https://react.dev/"
+        },
+        {
+          "text": "",
+          "href": "https://www.typescriptlang.org/"
+        },
+        {
+          "text": "TypeScriptA typed superset of JavaScript that enhances code maintainability and scalability.",
+          "href": "https://www.typescriptlang.org/"
+        },
+        {
+          "text": "",
+          "href": "https://tailwindui.com/"
+        },
+        {
+          "text": "Tailwind CSSA utility-first CSS framework for building custom designs with ease.",
+          "href": "https://tailwindui.com/"
+        },
+        {
+          "text": "",
+          "href": "https://ui.shadcn.com/"
+        },
+        {
+          "text": "Shadcn UIBeautifully designed components that enhance your application's user interface.",
+          "href": "https://ui.shadcn.com/"
+        },
+        {
+          "text": "",
+          "href": "https://www.postgresql.org/"
+        },
+        {
+          "text": "PostgresA powerful, open source object-relational database system.",
+          "href": "https://www.postgresql.org/"
+        },
+        {
+          "text": "",
+          "href": "https://www.prisma.io/"
+        },
+        {
+          "text": "PrismaA next-generation ORM for Node.js and TypeScript .",
+          "href": "https://www.prisma.io/"
+        }
+      ],
+      "images": []
+    },
+    {
+      "index": 6,
+      "tag": "section",
+      "className": "w-full py-24 px-4",
+      "text": "FAQ Frequently Asked Questions Everything you need to know about the Usertour. Can't find the answer you're looking for? Reach out to our team. Is Usertour really free? What is an end user? What counts as a session? Can I remove the \"Made with Usertour\" branding? What if I run out of sessions? Why should I choose a Commercial license when an Open Source license is available?",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(250, 250, 250)",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "96px 16px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "static",
+        "zIndex": "auto"
+      },
+      "headings": [
+        "Frequently Asked Questions",
+        "Is Usertour really free?",
+        "What is an end user?",
+        "What counts as a session?",
+        "Can I remove the \"Made with Usertour\" branding?",
+        "What if I run out of sessions?",
+        "Why should I choose a Commercial license when an Open Source license is available?"
+      ],
+      "links": [],
+      "images": []
+    },
+    {
+      "index": 7,
+      "tag": "section",
+      "className": "py-24 overflow-hidden w-full",
+      "text": "Activate users, boost feature adoption Join thousands of developers building better products with UserTour. Get started - free Star on GitHub No credit card required Open-source & self-hostable",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(250, 250, 250)",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "96px 0px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "static",
+        "zIndex": "auto"
+      },
+      "headings": [
+        "Activate users, boost feature adoption"
+      ],
+      "links": [
+        {
+          "text": "Get started - free",
+          "href": "https://app.usertour.io/"
+        },
+        {
+          "text": "Star on GitHub",
+          "href": "https://github.com/usertour/usertour"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.usertour.io/images/bottom-bg.jpg",
+          "alt": "Background",
+          "width": 2048,
+          "height": 1112
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "tag": "footer",
+      "className": "border-t border-white/10 bg-black text-white",
+      "text": "Open-source user onboarding for product tours, checklists, launchers, surveys, and feature adoption. Product Product tours Checklists Launchers Surveys Pricing Platform Visual builder Targeting rules Analytics Self-hosting Resources Documentation Blog Alternatives GitHub Company About Contact Privacy Terms SAAP License © 2026 Usertour, Inc. All rights reserved. Privacy Policy Terms of Service DPA",
+      "styles": {
+        "fontFamily": "GeistSans, \"GeistSans Fallback\"",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgb(0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "padding": "0px",
+        "margin": "0px",
+        "display": "block",
+        "gap": "normal",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "position": "static",
+        "zIndex": "auto"
+      },
+      "headings": [
+        "Product",
+        "Platform",
+        "Resources",
+        "Company"
+      ],
+      "links": [
+        {
+          "text": "",
+          "href": "https://www.usertour.io/"
+        },
+        {
+          "text": "",
+          "href": "https://github.com/usertour/usertour"
+        },
+        {
+          "text": "",
+          "href": "https://x.com/usertourio"
+        },
+        {
+          "text": "",
+          "href": "https://discord.gg/WPVJPX8fJh"
+        },
+        {
+          "text": "",
+          "href": "https://www.linkedin.com/company/usertour/"
+        },
+        {
+          "text": "Product tours",
+          "href": "https://www.usertour.io/#feature-gallery"
+        },
+        {
+          "text": "Checklists",
+          "href": "https://www.usertour.io/#feature-gallery"
+        },
+        {
+          "text": "Launchers",
+          "href": "https://www.usertour.io/#feature-gallery"
+        },
+        {
+          "text": "Surveys",
+          "href": "https://www.usertour.io/#feature-gallery"
+        },
+        {
+          "text": "Pricing",
+          "href": "https://www.usertour.io/pricing"
+        },
+        {
+          "text": "Visual builder",
+          "href": "https://www.usertour.io/#feature-gallery"
+        },
+        {
+          "text": "Targeting rules",
+          "href": "https://www.usertour.io/#feature-gallery"
+        },
+        {
+          "text": "Analytics",
+          "href": "https://www.usertour.io/#feature-gallery"
+        },
+        {
+          "text": "Self-hosting",
+          "href": "https://docs.usertour.io/"
+        },
+        {
+          "text": "Documentation",
+          "href": "https://docs.usertour.io/"
+        },
+        {
+          "text": "Blog",
+          "href": "https://www.usertour.io/blog"
+        },
+        {
+          "text": "Alternatives",
+          "href": "https://www.usertour.io/alternatives"
+        },
+        {
+          "text": "GitHub",
+          "href": "https://github.com/usertour/usertour"
+        },
+        {
+          "text": "About",
+          "href": "https://www.usertour.io/about"
+        },
+        {
+          "text": "Contact",
+          "href": "mailto:support@usertour.io"
+        },
+        {
+          "text": "Privacy",
+          "href": "https://www.usertour.io/privacy"
+        },
+        {
+          "text": "Terms",
+          "href": "https://www.usertour.io/terms"
+        },
+        {
+          "text": "SAAP License",
+          "href": "https://www.usertour.io/legal/Usertour-SAAP-License-Agreement.pdf"
+        },
+        {
+          "text": "Privacy Policy",
+          "href": "https://www.usertour.io/privacy"
+        },
+        {
+          "text": "Terms of Service",
+          "href": "https://www.usertour.io/terms"
+        },
+        {
+          "text": "DPA",
+          "href": "https://www.usertour.io/legal/dpa-self-hosted.pdf"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://www.usertour.io/images/logo-light.svg",
+          "alt": "Usertour logo",
+          "width": 0,
+          "height": 0
+        }
+      ]
+    }
+  ],
+  "assets": {
+    "images": [
+      {
+        "src": "https://www.usertour.io/images/logo-dark.svg",
+        "alt": "Usertour logo",
+        "width": 117,
+        "height": 30
+      },
+      {
+        "src": "https://www.usertour.io/images/logo-light.svg",
+        "alt": "Usertour logo",
+        "width": 117,
+        "height": 30
+      },
+      {
+        "src": "https://www.usertour.io/images/tour-05.jpg",
+        "alt": "Product tour Flow",
+        "width": 2496,
+        "height": 1560
+      },
+      {
+        "src": "https://www.usertour.io/_next/image?url=%2Fimages%2Favastar-05.png&w=640&q=75",
+        "alt": "Portrait of James Carter",
+        "width": 0,
+        "height": 0
+      },
+      {
+        "src": "https://www.usertour.io/images/builder-02.png",
+        "alt": "Hero",
+        "width": 1040,
+        "height": 772
+      },
+      {
+        "src": "https://www.usertour.io/images/theme.png",
+        "alt": "Hero",
+        "width": 1191,
+        "height": 694
+      },
+      {
+        "src": "https://www.usertour.io/images/analytics.png",
+        "alt": "Hero",
+        "width": 1367,
+        "height": 765
+      },
+      {
+        "src": "https://www.usertour.io/images/rules.png",
+        "alt": "Hero",
+        "width": 1265,
+        "height": 777
+      },
+      {
+        "src": "https://www.usertour.io/images/bottom-bg.jpg",
+        "alt": "Background",
+        "width": 2048,
+        "height": 1112
+      },
+      {
+        "src": "https://www.usertour.io/images/logo-light.svg",
+        "alt": "Usertour logo",
+        "width": 0,
+        "height": 0
+      }
+    ],
+    "backgroundImages": [
+      "url(\"https://www.usertour.io/images/hero-bg-aurora.png\")",
+      "linear-gradient(to right, rgb(255, 255, 255), rgb(147, 197, 253), rgb(255, 255, 255))",
+      "linear-gradient(to right, rgb(255, 255, 255), rgb(147, 197, 253), rgb(255, 255, 255))",
+      "linear-gradient(to right, rgb(255, 255, 255), rgb(147, 197, 253), rgb(255, 255, 255))",
+      "linear-gradient(to right, rgb(255, 255, 255), rgb(147, 197, 253), rgb(255, 255, 255))",
+      "linear-gradient(to right, rgb(255, 255, 255), rgb(147, 197, 253), rgb(255, 255, 255))",
+      "linear-gradient(to right, rgb(255, 255, 255), rgb(147, 197, 253), rgb(255, 255, 255))",
+      "linear-gradient(to right bottom, rgb(0, 0, 0), rgb(59, 59, 59))",
+      "linear-gradient(to right bottom, rgb(0, 122, 204), rgb(47, 116, 192))",
+      "linear-gradient(to right bottom, rgb(56, 189, 248), rgb(129, 140, 248))",
+      "linear-gradient(to right bottom, rgb(0, 0, 0), rgb(59, 59, 59))",
+      "linear-gradient(to right bottom, rgb(108, 71, 255), rgb(79, 55, 200))",
+      "linear-gradient(to right bottom, rgb(255, 79, 0), rgb(255, 138, 0))",
+      "linear-gradient(to right, rgb(255, 255, 255), rgb(147, 197, 253), rgb(255, 255, 255))",
+      "linear-gradient(to right, rgb(19, 22, 31), rgb(99, 102, 241), rgb(19, 22, 31))",
+      "linear-gradient(rgb(19, 22, 31), rgb(99, 102, 241), rgb(19, 22, 31))",
+      "linear-gradient(rgb(19, 22, 31), rgb(99, 102, 241), rgb(19, 22, 31))",
+      "linear-gradient(to right, rgb(19, 22, 31), rgb(99, 102, 241), rgb(19, 22, 31))"
+    ],
+    "favicons": [
+      {
+        "href": "https://www.usertour.io/manifest.json",
+        "rel": "manifest",
+        "sizes": ""
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon.png",
+        "rel": "icon",
+        "sizes": ""
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon.png",
+        "rel": "apple-touch-icon",
+        "sizes": ""
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon-48x48.png",
+        "rel": "apple-touch-icon",
+        "sizes": "48x48"
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon-72x72.png",
+        "rel": "apple-touch-icon",
+        "sizes": "72x72"
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon-96x96.png",
+        "rel": "apple-touch-icon",
+        "sizes": "96x96"
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon-144x144.png",
+        "rel": "apple-touch-icon",
+        "sizes": "144x144"
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon-180x180.png",
+        "rel": "apple-touch-icon",
+        "sizes": "180x180"
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon-256x256.png",
+        "rel": "apple-touch-icon",
+        "sizes": "256x256"
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon-384x384.png",
+        "rel": "apple-touch-icon",
+        "sizes": "384x384"
+      },
+      {
+        "href": "https://www.usertour.io/favicon/favicon-512x512.png",
+        "rel": "apple-touch-icon",
+        "sizes": "512x512"
+      }
+    ],
+    "fonts": [
+      "GeistSans, \"GeistSans Fallback\""
+    ],
+    "svgCount": 58
+  }
+}
