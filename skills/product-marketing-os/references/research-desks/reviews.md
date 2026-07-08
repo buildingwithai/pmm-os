@@ -36,6 +36,7 @@ decides which stores apply).
 | **Trustpilot** | B2C + billing/support reputation | support & billing complaints |
 | **Chrome Web Store** | browser extensions | breakage reports · permission distrust |
 | **App Store / Play Store** | mobile apps | onboarding + paywall complaints, version regressions |
+| **Product Hunt** | anything that launched there | launch-day comments · maker replies · "how does this compare to X" threads |
 | **Glassdoor** | competitor employers (CI) | org churn · strategy/roadmap signals |
 
 Walk every applicable cell for every competitor in scope, or **log the skip + reason in
