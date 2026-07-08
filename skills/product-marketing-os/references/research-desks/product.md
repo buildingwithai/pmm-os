@@ -17,6 +17,8 @@ capability. This is the **foundation desk**: it seeds the context spine the rest
 6. **How the market describes this capability** — the words buyers use for it?
 7. **Surfaces** — where the product lives (app, API, integrations, share points)?
 
+**Platform matrix (walk every cell or log the skip):** first-party surfaces — site · docs · repo · changelog · store listing(s) · demo video; plus GitHub issues + the product's own reviews (via the Reviews Desk) for intent-vs-implementation gaps.
+
 ## Engine fan-out (decompose — mostly first-party)
 
 **When a codebase or live app exists, the code IS the primary engine.** This desk starts from

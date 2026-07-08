@@ -16,7 +16,7 @@ RESEARCH_GATE = [
     # A launch/GTM is the high bar: it requires the COMPREHENSIVE research sweep, not a slice.
     (r"\b(go-to-market|go to market|gtm plan|launch plan|rollout plan|launch brief)\b",
      ["## pains", "## competitive", "## market", "## channels", "## events", "## gtm"],
-     "the full sweep — run pmm-research-brief (all 9 desks)"),
+     "the full sweep — run pmm-research-brief (all 10 desks)"),
     (r"\b(positioning statement|message house|messaging house)\b", ["## pains", "## competitive", "## market"], "customer + competitive + market"),
     (r"\b(pricing tier|packaging tier|price tier|pricing recommendation|tier strategy)\b", ["## proof", "## competitive"], "pricing + competitive"),
     (r"\b(conference|sponsorship|field marketing|events desk|event target|booth)\b", ["## events"], "events"),

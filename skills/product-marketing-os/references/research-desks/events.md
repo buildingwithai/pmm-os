@@ -32,6 +32,8 @@ side-event) for each — with sources, not vibes.
 7. **Competitive presence:** which competitors already sponsor/speak (defensive or offensive angle)?
 8. **Momentum:** is the event growing or declining, and what do attendees actually say about it?
 
+**Platform matrix (walk every cell or log the skip):** web/SERP (event sites, listicles, round-ups) · X · LinkedIn (via web reads) · Reddit (attendee threads) · YouTube (past-edition talks) · Instagram/TikTok hashtag probes for scene events. Query archetypes: "<category> conferences <geo> <year>" · per-quarter sweeps · CFP pages.
+
 ## Engine fan-out (how each question becomes calls — run in parallel)
 
 | Question | `agent-reach` calls | `last30days` runs |

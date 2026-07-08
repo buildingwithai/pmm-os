@@ -17,6 +17,8 @@ dependency for any pricing/packaging deliverable.
 6. **Price perception** — where do buyers feel ripped off or under-charged (sentiment)?
 7. **Monetization friction** — where does pricing block adoption (per-seat taxing collaboration, etc.)?
 
+**Platform matrix (walk every cell or log the skip):** competitor pricing pages (web) · Reddit · X · HN · review sites (value complaints — via the Reviews Desk records). Query archetypes: "is X worth it" · pricing-change backlash · value-metric gripes.
+
 ## Engine fan-out (decompose, run in parallel)
 
 | Question | `agent-reach` | `last30days` |

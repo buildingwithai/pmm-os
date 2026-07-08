@@ -1,6 +1,6 @@
 ---
 name: pmm-research-brief
-description: The research front door. Turn a messy product brain-dump or ramble ("I have a product called X, it does A/B/C, I want to launch it and take it to market") into a structured Product Brief plus a COMPLETE, MANDATORY Research Plan across every PMM discipline — all nine desks: product, customer, competitive, market, pricing, channels, analyst/KOL, events, and GTM/launch motion. Use FIRST whenever a user describes a product/feature and a goal (launch, GTM, positioning, "take it to market") before any research or strategy. It distills the ramble and scopes each desk with named entities, then runs them all. Nothing is optional — a thorough PMM researches all of it. Hands off to pmm-research-desk.
+description: The research front door. Turn a messy product brain-dump or ramble ("I have a product called X, it does A/B/C, I want to launch it and take it to market") into a structured Product Brief plus a COMPLETE, MANDATORY Research Plan across every PMM discipline — all ten desks: product, customer, competitive, market, pricing, channels, analyst/KOL, events, reviews, and GTM/launch motion. Use FIRST whenever a user describes a product/feature and a goal (launch, GTM, positioning, "take it to market") before any research or strategy. It distills the ramble and scopes each desk with named entities, then runs them all. Nothing is optional — a thorough PMM researches all of it. Hands off to pmm-research-desk.
 ---
 
 # PMM Research Brief — the research front door
@@ -44,10 +44,10 @@ produce positioning or a launch — that comes after the desks return evidence.
    and mark inferences. Write a `## Scope` block into `.agents/research/brief.md` — every
    desk reads it.
 4. **Build the Research Plan — distill, then scope ALL of it.** The plan is a **complete,
-   mandatory sweep across all nine desks**
+   mandatory sweep across all ten desks**
    ([`../product-marketing-os/references/research-desks/README.md`](../product-marketing-os/references/research-desks/README.md)):
-   product, customer, competitive, market, pricing, channels, analyst/KOL, **events**, and
-   **GTM/launch motion**. For each desk you **scope it with named entities** (candidate
+   product, customer, competitive, market, pricing, channels, analyst/KOL, **events**,
+   **reviews**, and **GTM/launch motion**. For each desk you **scope it with named entities** (candidate
    competitors, the segment, the market, the events, the specific questions) and set a **run
    order** by dependency — but you **do not skip any**. This is where a ramble becomes engine
    parameters: you name "research Amplitude, Mixpanel, PostHog" so the Competitive Desk has targets,
@@ -84,6 +84,10 @@ produce positioning or a launch — that comes after the desks return evidence.
 7. **Confirm, then run.** Research can be long and (for some sources) metered, so show the
    brief + scope + plan and the desks you'll run, in priority order. On "go" (or if the user
    already said run it), hand each planned desk to `pmm-research-desk` highest-priority first.
+   **Desks run as a sequence of sprints, not one batch**: each desk opens its own
+   mini-hypothesis, and closes by appending re-scoping findings to
+   `.agents/research/carry-forward.md`, which the next desk reads at scope time (see the
+   README's *Desk sprints* rule) — so the run order you set is also the learning order.
    As evidence accrues in the ledger, the hard gate on downstream strategy is satisfied.
 
 ## Output
@@ -122,7 +126,7 @@ window + the conference calendar (Q3 SaaS conferences, Q1 planning cycles). *Exh
 events ≥ 15 in-geo, the **full** competitor set (not top-3), channels/KOLs ≥ 10.
 *Segments* — PMs/PMMs at self-serve SaaS (primary) + heads of data (secondary).
 
-**Plan (all nine, scoped — nothing skipped):**
+**Plan (all ten, scoped — nothing skipped):**
 - **Product** 🟢 — confirm Plotline's capabilities/differentiators from its docs.
 - **Customer** 🔴 — PM/PMM pains around data-team queues (r/ProductManagement, r/analytics, PM Slack communities); + head-of-data pains for the deflection angle.
 - **Competitive** 🔴 — Amplitude, Mixpanel, PostHog, Heap, June, Pendo, dashboards-in-BI (Looker, Metabase) (incl. their self-serve/AI-query features).
@@ -131,9 +135,10 @@ events ≥ 15 in-geo, the **full** competitor set (not top-3), channels/KOLs ≥
 - **Channels** 🔴 — r/ProductManagement, Product Hunt, LinkedIn, PM newsletters (Lenny's), data-tool communities.
 - **Analyst/KOL** 🟡 — PM/analytics creators (Lenny Rachitsky, product-analytics voices on LinkedIn/YouTube).
 - **Events** 🔴 — product-management meetups (city), **SaaStr**, ProductCon, analytics/data conferences, launch-week showcases; B2B if selling to data leads: **dbt Coalesce, Data Council** — *where you can table, sponsor, or speak.*
+- **Reviews** 🔴 — G2/Capterra/TrustRadius pages for Amplitude, Mixpanel, PostHog, Heap, Pendo (dislike fields + switching reviews); Glassdoor for org-health CI on the top 2.
 - **GTM/Launch** 🔴 — how Amplitude/Mixpanel/PostHog launched (Product Hunt, open-source communities, free tiers), PLG-vs-sales motion, activation moment, launch-day plan.
 
-Run order: Product → Customer → Competitive → Channels/Events/GTM → Market/Pricing/KOL.
+Run order: Product → Customer → Competitive → Reviews → Channels/Events/GTM → Market/Pricing/KOL.
 The full sweep — every discipline a PMM owns plus the GTM/launch motion. None skipped.
 
 ## Hand off to

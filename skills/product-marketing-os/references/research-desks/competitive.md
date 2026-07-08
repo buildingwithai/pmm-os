@@ -18,6 +18,8 @@ dependency** for positioning/GTM.
 7. **Recent moves** — launches, repositioning, funding, M&A in the last ~90 days?
 8. **Trap-setting** — claims of theirs we can turn into discovery questions against them?
 
+**Platform matrix (walk every cell or log the skip):** each competitor's site + pricing + changelog · Reddit · X · HN · GitHub · web/SERP · review/comparison pages (G2 compare — deep-mine via the Reviews Desk). Query archetypes: "X vs Y" · migration threads · feature complaints.
+
 ## Engine fan-out (decompose, run in parallel)
 
 | Question | `agent-reach` | `last30days` |

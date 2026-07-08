@@ -16,6 +16,8 @@ real market dynamics, not vibes.
 6. **Whitespace** — gaps the incumbents leave open?
 7. **TAM/segment signals** — how big/growing is the best-fit segment (directional)?
 
+**Platform matrix (walk every cell or log the skip):** web/SERP (analyst + category pages) · Reddit · X · HN · GitHub (category repos/awesome-lists) · YouTube search-titles. Query archetypes: why-now · category naming · trend/backlash threads.
+
 ## Engine fan-out (decompose, run in parallel)
 
 | Question | `agent-reach` | `last30days` |
