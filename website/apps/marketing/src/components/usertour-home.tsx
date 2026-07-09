@@ -308,7 +308,9 @@ function signUpUrl(): string {
   if (!pk) return "/app";
   try {
     const domain = atob(pk.split("_")[2]).replace(/\$$/, ""); // e.g. pleasing-akita-1.clerk.accounts.dev
-    return `https://${domain.replace(".clerk.accounts.dev", ".accounts.dev")}/sign-up`;
+    const portal = domain.replace(".clerk.accounts.dev", ".accounts.dev");
+    const back = encodeURIComponent((process.env.NEXT_PUBLIC_SITE_URL || "https://pmm-os-green.vercel.app") + "/app");
+    return `https://${portal}/sign-up?redirect_url=${back}`;
   } catch {
     return "/app";
   }
