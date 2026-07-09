@@ -2849,3 +2849,35 @@ a.cw-item:focus-visible { outline: 2px solid #8cb4ff; outline-offset: -2px; }
   .cw-shell { grid-template-columns: 1fr; }
   .cw-rail { border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.09); }
 }
+
+/* ── cloud kit view pane ── */
+.cwk-view {
+  padding: 40px clamp(24px, 5vw, 64px) 96px;
+  overflow-x: hidden;
+  max-width: 960px;
+}
+.cwk-head .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8cb4ff;
+  font-weight: 700;
+}
+.cwk-head h1 { margin: 10px 0 8px; font-size: clamp(24px, 3vw, 34px); letter-spacing: -0.02em; color: #f4f6fb; }
+.cwk-head .sub { margin: 0 0 24px; color: #aab2c2; font-size: 15.5px; line-height: 1.65; max-width: 68ch; }
+.cwk-blocks { display: grid; gap: 20px; }
+.cwk-widget {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  color: #8cb4ff;
+  font: 12.5px ui-monospace, Menlo, monospace;
+}
+.cwk-widget span { color: #7d8494; }
+.cw-item.is-on { background: rgba(140, 180, 255, 0.1); }
+.cw-item.is-on strong { color: #8cb4ff; }
+.cw-num { display: inline-block; min-width: 20px; color: #7d8494; font-size: 11px; font-variant-numeric: tabular-nums; }
+.cw-rail { overflow-y: auto; max-height: 100vh; position: sticky; top: 0; }

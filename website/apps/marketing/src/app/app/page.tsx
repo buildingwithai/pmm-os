@@ -17,11 +17,25 @@ export const dynamic = "force-dynamic";
  *  - signed in, no products-> first-run: the sync command IS the content
  *  - products              -> rail + kit workspace (next build phase)
  */
-export default async function WorkspacePage() {
-  const clerkReady = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-  const sql = db();
+async function resolveWorkspaceUser(): Promise<{ userId: string; email: string } | null> {
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    const { auth, currentUser } = await import("@clerk/nextjs/server");
+    const { userId } = await auth();
+    if (!userId) return null;
+    const user = await currentUser();
+    return { userId, email: user?.emailAddresses?.[0]?.emailAddress || "" };
+  }
+  if (process.env.NODE_ENV !== "production" && process.env.PMM_OS_DEV_USER) {
+    return { userId: process.env.PMM_OS_DEV_USER, email: "dev@local" };
+  }
+  return null;
+}
 
-  if (!clerkReady || !sql) {
+export default async function WorkspacePage() {
+  const sql = db();
+  const resolved = await resolveWorkspaceUser();
+
+  if (!resolved || !sql) {
     return (
       <main className="cw-empty">
         <Terminal aria-hidden="true" size={28} />
@@ -35,18 +49,10 @@ export default async function WorkspacePage() {
     );
   }
 
-  // Clerk is configured: enforce auth (middleware already ran) and load the user's products.
-  const { auth, currentUser } = await import("@clerk/nextjs/server");
-  const { userId } = await auth();
-  if (!userId) {
-    const { redirectToSignIn } = await auth();
-    return redirectToSignIn();
-  }
-  const user = await currentUser();
-  const email = user?.emailAddresses?.[0]?.emailAddress || "";
+  const { userId, email } = resolved;
   await sql`
     INSERT INTO users (id, email) VALUES (${userId}, ${email})
-    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email
+    ON CONFLICT (id) DO UPDATE SET email = COALESCE(NULLIF(EXCLUDED.email, 'dev@local'), users.email)
   `;
   const engagements = (await sql`
     SELECT id, product_name, last_synced_at,
