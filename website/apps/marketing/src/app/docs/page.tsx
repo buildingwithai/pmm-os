@@ -36,6 +36,30 @@ export default function DocsPage() {
               </ol>
               <pre>{`# one command (npm)\nnpx pmm-os install\n\n# — or straight from GitHub, in Claude Code —\n/plugin marketplace add buildingwithai/pmm-os\n\n# run the orchestrator, or jump straight to the kit\n/product-marketing-os\n/pmm-launch-kit`}</pre>
             </section>
+            <section className="ut-doc-panel" id="research-setup">
+              <div>
+                <span className="ut-eyebrow">Research setup</span>
+                <h2 className="ut-gradient-text">Wire the platforms once, research everywhere.</h2>
+                <p>
+                  Social research uses the sessions you&apos;re already logged into in your browser —
+                  you never type a password into the plugin. One command per platform, and a doctor
+                  that names the exact fix when a session expires.
+                </p>
+              </div>
+              <pre>{`# X · Instagram · TikTok — reads your browser sessions, no passwords
+bash skills/agent-reach/scripts/reach.sh social-setup
+
+# LinkedIn — imports your session, runs a persistent local service
+bash scripts/linkedin-setup.sh          # setup
+bash scripts/linkedin-setup.sh status   # never-configured / down / expired + the fix
+bash scripts/linkedin-setup.sh reauth   # after a session expires
+
+# health check: environment + live keyless engine calls
+npx pmm-os doctor --deep
+
+# optional Pro: hosted relevance reranking (the AI key stays server-side)
+npx pmm-os research-connect <gateway-url> <your-token>`}</pre>
+            </section>
             <div className="ut-resource-grid is-docs">
               {docsCards.slice(1).map((card) => {
                 const Icon = card.icon;

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Camera, Clapperboard, Database, FlaskConical, Share2, Sparkles, Terminal, Wand2 } from "lucide-react";
+import { CloudAppMock } from "@/components/cloud-app-mock";
 import { CloudWaitlistForm } from "@/components/cloud-waitlist-form";
 import { Badge } from "@/components/usertour-home";
 import { UsertourPageShell } from "@/components/usertour-page-shell";
@@ -115,14 +115,7 @@ export default function CloudPage() {
               social proof pack, and the fifteen-second launch film. One source, now with media.
             </p>
           </div>
-          <div className="ut-feature-visual">
-            <Image
-              alt="A PMM OS launch kit campaign view — the source the asset studio executes"
-              height={620}
-              src="/images/launch-kit/market-desk.png"
-              width={900}
-            />
-          </div>
+          <CloudAppMock />
         </div>
       </section>
 

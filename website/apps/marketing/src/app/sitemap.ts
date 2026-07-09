@@ -6,6 +6,7 @@ import { absoluteUrl } from "@/lib/site";
 const staticRoutes = [
   "/",
   "/features",
+  "/cloud",
   "/blog",
   "/pricing",
   "/docs",
