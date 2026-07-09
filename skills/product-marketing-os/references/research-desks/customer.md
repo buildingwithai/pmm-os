@@ -37,9 +37,10 @@ Run = **2–4 `last30days` topics (scoped to the segment) + ~10–20 `agent-reac
 
 **last30days targeting is mandatory** — always pass `--subreddits={the segment's real
 communities}` and a tight, entity-anchored topic. A bare generic topic returns entity-miss
-NOISE (verified: an untargeted "applying to jobs" run returned horror-movie + Kubernetes
-junk; the same topic with `--subreddits=jobs,cscareerquestions,recruitinghell,jobsearchhacks`
-returned a 335-upvote r/jobsearchhacks thread). Resolve the segment's subreddits first.
+NOISE (measured on a live run: an untargeted consumer-domain topic came back as horror-movie
+reviews + Kubernetes docs; the same topic with the segment's four real subreddits returned a
+335-upvote on-topic thread). Resolve the segment's subreddits FROM THE BRIEF's scope —
+they are an input derived from `{segment}`, never a fixed list.
 
 ## Evidence target
 
