@@ -559,6 +559,13 @@ def get_config(policy: ConfigLoadPolicy | None = None) -> dict[str, Any]:
                 config[key] = value
                 config[f"_{key}_SOURCE"] = "browser"
 
+    # PMM-OS-GATEWAY-EXPORT (re-applied by scripts/patch-gateway-base-url.py after upstream sync)
+    import os as _os
+    for _k in ("XAI_BASE_URL", "OPENAI_BASE_URL"):
+        _v = config.get(_k)
+        if _v and not _os.environ.get(_k):
+            _os.environ[_k] = str(_v)
+
     return config
 
 
