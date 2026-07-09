@@ -90,17 +90,32 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
        — **exclude `youtube`**. YouTube *transcript* fetching is the slowest + most
        rate-limited source (yt-dlp hits HTTP 429 / "confirm you're not a bot" and burns the
        retry budget); it adds little to pain/competitor text research and is what stalls runs.
-     - **Creator/discovery desks** (channels, analyst/KOL): include `youtube` deliberately,
-       pass `--deep`, and set the **transcript-saturation env** so every RELEVANT video in
-       the 30-day window gets transcribed — not an arbitrary top-N:
-       `LAST30DAYS_TRANSCRIPT_LIMIT=100 LAST30DAYS_RESULTS_PER_PAGE=60 python3 … --deep`
-       (PMM-OS env overrides, re-applied by the sync script). Relevance stays the gate,
-       not the count: the engine transcribes in rank order and demotes entity-miss items —
-       so **fix a noisy query first (self-healing rule) before deep-transcribing it**;
-       saturating a bad query transcribes junk. Prefer `reach.sh yt`/`tiktok-search`/
-       `ig-search` for the raw hashtag/creator sweep (full result list with engagement
-       counts), and record videos-scanned vs transcripts-pulled per platform in the run
+     - **Saturation is the DEFAULT for every desk's engine calls** — prefix each
+       `last30days` run with the PMM-OS env overrides and pass `--deep`:
+       `LAST30DAYS_TRANSCRIPT_LIMIT=1000 LAST30DAYS_RESULTS_PER_PAGE=100 python3 … --deep`
+       These are **ceilings (runtime guards), never targets or quotas**: the engine
+       fetches whatever the 30-day window actually holds; 1000 just means "the cap is
+       never the limiter." (Re-applied to the vendored engine by the sync script.)
+     - **Creator/discovery desks** (channels, analyst/KOL): include `youtube`
+       deliberately; prefer `reach.sh yt`/`tiktok-search`/`ig-search` for the raw
+       hashtag/creator sweep (full result list with engagement counts). Record
+       videos-scanned vs judged-relevant vs transcripts-pulled per platform in the run
        file — video coverage is a matrix cell: count it or log why not.
+     - **Judged transcription — YOU are the relevance judge, not a keyword heuristic.**
+       The engine's local ranking only checks entity-in-title/snippet + engagement (its
+       LLM rerank runs only when a GEMINI/OPENAI key is configured, and even then it
+       knows just the topic string — never the desk's hypothesis). So between scan and
+       transcribe, judge every ranked candidate yourself against the desk rubric:
+       (a) **on-entity** — actually about the product/category/segment, not a word
+       collision; (b) **in-scope** — right geo/segment/window per the brief's `## Scope`;
+       (c) **tests a leaf** — bears on an issue-tree leaf, a kill-condition, or the desk
+       mini-hypothesis; (d) **novel** — adds something the ledger doesn't already hold.
+       Accept ⇒ transcript/full-fetch. Reject ⇒ one-line reason in the run file
+       ("word-collision", "out-of-geo", "duplicate of E12"). A candidate you can't judge
+       from title+caption gets a cheap peek (snippet read) before the expensive fetch.
+       **Fix a noisy query first (self-healing rule) before deep-transcribing it** —
+       saturating a bad query transcribes junk; judging is not a substitute for
+       reformulation.
      - **Always**: `timeout 420 python3 .../last30days.py …` (hard ceiling), and run **one
        topic per command into its own `runs/<date>-<desk>-<engine>.md` file** — never blob
        two heavy topics into one fire-and-forget background job (a stalled topic then hides
