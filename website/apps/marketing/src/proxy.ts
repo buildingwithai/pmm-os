@@ -7,7 +7,10 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
  * (e.g. before the owner creates the Clerk app), everything passes through —
  * the live site can never break on a missing key.
  */
-const clerk = clerkMiddleware();
+// signed-out visitors to /app are sent to Clerk's hosted sign-in and come back
+const clerk = clerkMiddleware(async (auth) => {
+  await auth.protect();
+});
 
 export default function middleware(request: NextRequest, event: never) {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) return NextResponse.next();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { ClerkProvider } from "@clerk/nextjs";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import "./globals.css";
@@ -48,7 +49,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
+  const page = (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         {children}
@@ -58,4 +59,6 @@ export default function RootLayout({
       </body>
     </html>
   );
+  // Clerk only when keys exist — the site never breaks on a missing key
+  return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? <ClerkProvider>{page}</ClerkProvider> : page;
 }
