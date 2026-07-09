@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Search,
   Blocks,
   Code2,
   FileText,
@@ -104,7 +105,7 @@ export const blogPosts: BlogPost[] = [
     title: "Run your whole GTM motion from the terminal",
     date: "June 5, 2026",
     summary:
-      "Product marketing is mostly structured thinking plus a lot of artifact production. That's exactly what a plugin of 39 skills, grounded in your product context and routed by an orchestrator, is good at. A tour of the workflow.",
+      "Product marketing is mostly structured thinking plus a lot of artifact production. That's exactly what a plugin of 45 skills, grounded in your product context and routed by an orchestrator, is good at. A tour of the workflow.",
     author: "PMM OS",
     readTime: "7 min read",
     image: "/images/launch-kit/competitive.png",
@@ -279,7 +280,8 @@ export const articleContents: Record<string, ArticleContent> = {
 export const articleTemplate: ArticleContent = articleContents["one-source-of-truth-for-launches"];
 
 export const featureCards: CardItem[] = [
-  { title: "39 skills", copy: "Positioning, messaging, personas, pricing, competitive, GTM, PLG, and sales enablement — the whole motion.", icon: Sparkles },
+  { title: "45 skills", copy: "Positioning, messaging, personas, pricing, competitive, GTM, PLG, and sales enablement — the whole motion.", icon: Sparkles },
+  { title: "10 research desks", copy: "Customer, competitive, market, pricing, channels, KOL, events, reviews, GTM, product — cited evidence before strategy.", icon: Search },
   { title: "Orchestrator", copy: "The agentic-marketing-orchestrator sequences skills into a real workflow and packages the result.", icon: GitBranch },
   { title: "Interactive launch kit", copy: "Your PMM work becomes a self-contained HTML app — sidebar, inspector, command palette, present mode.", icon: Layers3 },
   { title: "Modeless editor", copy: "Edit any block inline — no edit button. Slash to insert, select to format, turn-into to convert.", icon: Wand2 },
@@ -326,57 +328,42 @@ export const featureDetails: FeatureDetail[] = [
 
 export const pricingPlans = [
   {
-    name: "Open source",
-    cloudMonthly: "$0",
-    cloudYearly: "$0",
-    selfManagedMonthly: "$0",
-    selfManagedYearly: "$0",
-    copy: "Everything, forever",
-    items: ["All 39 skills", "Interactive launch kit", "HTML · Markdown · pptx exports", "Runs locally in Claude Code", "Community support", "MIT-style license"],
+    name: "Plugin",
+    price: "$0",
+    cadence: "free forever",
+    copy: "The full OS — open source, runs locally in Claude Code / Codex.",
+    items: [
+      "All 45 skills",
+      "10 research desks · every platform",
+      "Video transcripts + judged relevance",
+      "Interactive launch kit + exports",
+      "Social research with your own sessions",
+      "MIT license · community support",
+    ],
+    cta: "Install the plugin",
+    href: "https://github.com/buildingwithai/pmm-os",
+    available: true,
   },
   {
-    name: "Supporter",
-    cloudMonthly: "$9",
-    cloudYearly: "$7",
-    selfManagedMonthly: "$9",
-    selfManagedYearly: "$7",
-    copy: "Back the project",
-    items: ["Everything in Open source, plus", "Sponsor badge in the repo", "Early access to new skills", "Private Discord channel", "Priority issue triage"],
-  },
-  {
-    name: "Pro",
-    cloudMonthly: "$29",
-    cloudYearly: "$24",
-    selfManagedMonthly: "$29",
-    selfManagedYearly: "$24",
-    popular: true,
-    copy: "For working PMM teams",
-    items: ["Everything in Supporter, plus", "Premium skill packs + frameworks", "Extra launch-kit themes", "Deep long-form content skill", "Email support"],
-  },
-  {
-    name: "Team",
-    cloudMonthly: "Custom",
-    cloudYearly: "Custom",
-    selfManagedMonthly: "Custom",
-    selfManagedYearly: "Custom",
-    copy: "For orgs standardizing GTM",
-    items: ["Everything in Pro, plus", "Private/custom skills", "Shared product context", "Onboarding + workshops", "SLA + dedicated support"],
+    name: "Cloud",
+    price: "Coming soon",
+    cadence: "join the waitlist",
+    copy: "The companion web app — memory and media for every engagement.",
+    items: [
+      "Research library: every engagement, synced + shareable",
+      "Asset studio: images + launch videos from your kit",
+      "Research Intelligence: hosted LLM rerank (in beta)",
+      "Evidence packs with captioned screenshots",
+      "Usage across products and launches",
+      "One account, one credit meter",
+    ],
+    cta: "Join the waitlist",
+    href: "/cloud",
+    available: false,
   },
 ];
 
-export const comparisonRows = [
-  ["Price (monthly)", "$0", "$9", "$29", "Custom"],
-  ["The 39 skills", "All", "All", "All", "All"],
-  ["Interactive launch kit", "Yes", "Yes", "Yes", "Yes"],
-  ["Exports (HTML · MD · pptx)", "Yes", "Yes", "Yes", "Yes"],
-  ["Runs locally, your data", "Yes", "Yes", "Yes", "Yes"],
-  ["Early access to new skills", "—", "Yes", "Yes", "Yes"],
-  ["Premium skill packs", "—", "—", "Yes", "Yes"],
-  ["Long-form content skill", "—", "—", "Yes", "Yes"],
-  ["Private / custom skills", "—", "—", "—", "Yes"],
-  ["Support", "Community", "Priority triage", "Email", "SLA"],
-  ["Workshops + onboarding", "—", "—", "—", "Yes"],
-];
+
 
 export const docsCards: CardItem[] = [
   { title: "Quickstart", copy: "Add the plugin, open Claude Code, and call your first skill.", icon: Rocket },

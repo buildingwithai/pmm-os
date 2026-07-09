@@ -40,6 +40,7 @@ const menuGroups = [
       { title: "Pricing & packaging", copy: "Tiers, value metrics, willingness to pay.", href: "/features#pricing", icon: DollarSign },
       { title: "Competitive intel", copy: "Battlecards and win/loss narratives.", href: "/features#competitive", icon: Swords },
       { title: "GTM & launch", copy: "Tiered launch plans and rollout.", href: "/features#gtm", icon: Rocket },
+      { title: "Research desks", copy: "Ten desks, every platform, cited evidence.", href: "/features#research", icon: Search },
     ],
   },
   {
@@ -56,7 +57,8 @@ const menuGroups = [
     items: [
       { title: "Documentation", copy: "Install, skills, and the launch kit.", href: "/docs", icon: ScrollText },
       { title: "Blog", copy: "Playbooks and release notes.", href: "/blog", icon: Send },
-      { title: "Pricing", copy: "Open-source. Free forever.", href: "/pricing", icon: LayoutDashboard },
+      { title: "PMM OS Cloud", copy: "The web app: research library + asset studio.", href: "/cloud", icon: Sparkles },
+      { title: "Pricing", copy: "Plugin free forever · Cloud coming.", href: "/pricing", icon: LayoutDashboard },
       { title: "Support", copy: "Setup help and issues.", href: "/support", icon: LifeBuoy },
       { title: "GitHub", copy: "Source, releases, marketplace.", href: GITHUB_URL, icon: Search },
     ],
@@ -65,6 +67,7 @@ const menuGroups = [
 
 const headerLinks = [
   { label: "Skills", href: "/features" },
+  { label: "Cloud", href: "/cloud" },
   { label: "Docs", href: "/docs" },
   { label: "Pricing", href: "/pricing" },
 ];
@@ -138,6 +141,29 @@ const featureSections: FeatureSection[] = [
     imageAlt: "PMM OS launch kit — pricing section",
   },
   {
+    eyebrow: "10 research desks",
+    title: "Research that would survive a consulting review",
+    description:
+      "Ten specialist desks — customer, competitive, market, pricing, channels, KOL, events, reviews, GTM, product — each opens its own hypothesis, sweeps its platform matrix, and writes typed, dated, cited evidence into one ledger before any strategy is written.",
+    points: [
+      {
+        title: "Every platform, judged for relevance",
+        description:
+          "Reddit, X, TikTok, Instagram, YouTube (full transcripts), LinkedIn, Hacker News, GitHub, review sites, and the web — every candidate is judged against the desk\u2019s hypothesis before it becomes evidence. Noise never counts as coverage.",
+        icon: Search,
+      },
+      {
+        title: "Sign in with your sessions, never passwords",
+        description:
+          "Social research uses the browser sessions you already have. If one expires, the desk names the fix, degrades to public reads, and keeps going \u2014 a dead session never kills a run.",
+        icon: Check,
+      },
+    ],
+    image: "/images/launch-kit/events-desk.png",
+    imageAlt: "PMM OS research desk \u2014 ranked events table with sourced evidence",
+    reverse: true,
+  },
+  {
     eyebrow: "Local & yours",
     title: "Runs in your terminal",
     description:
@@ -198,6 +224,16 @@ const faqs = [
       "A single self-contained HTML app — sidebar, main workspace, inspector, command palette, present mode, and a modeless Notion-style editor — generated from one kit-content.json. The same source also emits markdown mirrors and a Marp slide deck you can export to .pptx.",
   },
   {
+    question: "How does the research actually work?",
+    answer:
+      "A research brief plans ten specialist desks scoped to your product. Each desk opens a mini-hypothesis, fans out 15\u201330 engine calls across its platform matrix \u2014 Reddit, X, TikTok, Instagram, YouTube (with full video transcripts), LinkedIn, Hacker News, GitHub, review sites, and the web \u2014 judges every candidate for relevance, and writes typed, dated, cited evidence into one ledger. Strategy skills are gated on that evidence: no research, no deliverable.",
+  },
+  {
+    question: "How do social sign-ins work?",
+    answer:
+      "You never type a password into the plugin. It reads the sessions you\u2019re already logged into in your browser (X, Instagram, TikTok, LinkedIn) via one setup command per platform. If a session expires mid-run, the desk tells you exactly which state you\u2019re in and the one-line fix, then degrades to public reads and keeps going.",
+  },
+  {
     question: "Can I edit the output, or is it static?",
     answer:
       "It’s fully editable. Inline modeless editing, slash-insert blocks, “turn into”, drag-reorder, move-to-section, and anchored comments all write back to the single source, so every output regenerates in sync.",
@@ -205,9 +241,9 @@ const faqs = [
 ];
 
 const footerGroups = [
-  ["Plugin", "Skills", "Launch kit", "Install", "Changelog"],
+  ["Plugin", "Skills", "Research desks", "Launch kit", "Install"],
   ["Workflows", "Positioning", "Messaging", "Pricing", "Competitive", "GTM"],
-  ["Resources", "Documentation", "Blog", "Support", "GitHub"],
+  ["Resources", "Documentation", "Cloud", "Blog", "Support", "GitHub"],
   ["Company", "About", "Privacy", "Terms", "License"],
 ];
 
@@ -348,10 +384,11 @@ function Hero() {
         <Badge>Claude Code · Codex plugin</Badge>
         <h1 className="ut-gradient-text">The Product Marketing OS for your terminal</h1>
         <p className="ut-hero-copy">
-          45 PMM, GTM, and PLG skills that turn a product brief into cited research, positioning,
-          messaging, personas, pricing, and competitive intel — then package it into a shippable,
-          interactive launch-kit workspace. Consulting-grade gates on every deliverable.
-          Open-source, local, no SaaS.
+          45 PMM, GTM, and PLG skills with a built-in research pipeline: ten specialist desks
+          sweep Reddit, X, TikTok, Instagram, YouTube, LinkedIn, review sites, and the web —
+          with full video transcripts — then turn the evidence into positioning, messaging,
+          pricing, and competitive intel, packaged as an interactive launch-kit workspace.
+          Every claim cited. Open-source, local, no SaaS.
         </p>
         <div className="ut-hero-install" aria-label="Install command">
           <span className="ut-install-prompt">$</span>
@@ -452,7 +489,7 @@ function TechStack() {
       <div className="ut-shell">
         <div className="ut-section-heading">
           <h2 className="ut-gradient-text">What&apos;s inside</h2>
-          <p>39 skills across the full go-to-market motion — each one grounded in your product and routed by the orchestrator.</p>
+          <p>45 skills across the full go-to-market motion — each one grounded in your product and routed by the orchestrator.</p>
         </div>
         <div className="ut-tech-grid">
           {techItems.map((item) => (

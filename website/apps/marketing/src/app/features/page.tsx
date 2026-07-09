@@ -4,7 +4,8 @@ import { PageHero, PrimaryAction, UsertourPageShell } from "@/components/usertou
 import { featureCards, featureDetails } from "@/data/usertour-pages";
 
 const anchorMap: Record<string, string> = {
-  "39 skills": "skills-card",
+  "45 skills": "skills-card",
+  "10 research desks": "research",
   Orchestrator: "orchestrator",
   "Interactive launch kit": "kit-card",
   "Modeless editor": "editor-card",
@@ -20,7 +21,7 @@ export default function FeaturesPage() {
       <PageHero
         eyebrow="Features"
         title="Everything you need to turn a product brief into a shippable launch."
-        copy="44 PMM, GTM, and PLG skills across positioning, messaging, pricing, competitive, and launch — packaged into an interactive launch kit you can edit and export."
+        copy="45 PMM, GTM, and PLG skills, a ten-desk research pipeline across every platform your buyers are on, and an interactive launch kit you can edit and export."
       />
       <section className="ut-page-section">
         <div className="ut-shell ut-resource-grid">
