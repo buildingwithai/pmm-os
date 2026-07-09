@@ -20,6 +20,12 @@ dependency** for positioning/GTM.
 
 **Platform matrix (walk every cell or log the skip):** each competitor's site + pricing + changelog + **public roadmap board (Canny/Trello/GitHub issues/"roadmap" pages — kill-conditions fire on roadmaps MONTHS before marketing pages)** · Reddit · X · HN · GitHub · web/SERP · review/comparison pages (G2 compare — deep-mine via the Reviews Desk) · **LinkedIn company pages (follower count = GTM-channel investment signal; a rival's follower delta can reweight the set — verified: a "2M+ users / #1 PH" rival read as merely adjacent on its marketing pages but was front-rank by LinkedIn presence)**. Query archetypes: "X vs Y" · migration threads · feature complaints.
 
+**LinkedIn extraction routes (verified):** `get_company_posts` / `get_company_employees`
+return page shells — dead ends. The working routes: `get_company_profile` (its
+`references` block carries the **company URN**), then
+`search_people(current_company: "<URN>")` for the real roster (org-intel: who runs
+marketing/product, follower reach of their voices).
+
 **LinkedIn slug self-healing (verified lesson):** a bare `get_company_profile("{name}")` often matches the WRONG entity (a same-named person/agency/auto-stub). ALWAYS `search_companies("{name} {category}")` first to resolve the real company, then fetch — a bare-slug miss is entity-miss noise, not a finding (the self-healing rule applies to structured tools too).
 
 ## Engine fan-out (decompose, run in parallel)
