@@ -42,6 +42,13 @@ export async function authenticateSync(authorization: string | null): Promise<Sy
   for (const pair of (process.env.PMM_OS_SYNC_TOKENS || "").split(",")) {
     const [t, email] = pair.trim().split(":");
     if (t && email && safeEqual(hash, sha256(t))) {
+      // the email may already belong to a signed-up (Clerk) user — the
+      // bootstrap token must resolve to THAT identity, not mint a boot_*
+      // twin (users.email is unique; syncs land where the owner signs in)
+      if (sql) {
+        const [existing] = (await sql`SELECT id FROM users WHERE email = ${email}`) as Array<{ id: string }>;
+        if (existing) return { userId: existing.id, email, deviceName: "bootstrap-token" };
+      }
       const userId = `boot_${sha256(email).slice(0, 20)}`;
       if (sql) {
         await sql`INSERT INTO users (id, email) VALUES (${userId}, ${email}) ON CONFLICT (id) DO NOTHING`;
