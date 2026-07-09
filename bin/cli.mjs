@@ -200,11 +200,89 @@ function researchDisconnect() {
   log('\nPMM OS — Research Intelligence disconnected (back to local heuristic ranking).');
 }
 
+
+// --- cloud sync: push the current engagement to PMM OS Cloud ---
+// Reads what the plugin already produces in CWD: kit-content.json (the kit),
+// report.json (typed evidence, if present), .agents/research/runs (run meta).
+// Nothing fuzzy is parsed; structured files only.
+async function cloudSync() {
+  const url = process.argv[3];
+  const token = process.argv[4];
+  if (!url || !token) {
+    log('\nUsage: npx pmm-os sync <cloud-url> <sync-token>   (run from the engagement folder)');
+    log('  e.g. npx pmm-os sync https://pmm-os-green.vercel.app your-token');
+    process.exitCode = 1;
+    return;
+  }
+  const cwd = process.cwd();
+  const read = (f) => { try { return readFileSync(join(cwd, f), 'utf8'); } catch { return null; } };
+
+  const kitRaw = read('kit-content.json');
+  const kit = kitRaw ? JSON.parse(kitRaw) : null;
+  const product = kit?.meta?.title?.split('—')[0]?.trim() || kit?.meta?.wordmark || null;
+  if (!product) { fail('no kit-content.json with meta.title found in ' + cwd); process.exitCode = 1; return; }
+
+  // evidence from report.json (the structured research contract), if present
+  let evidence = [];
+  const reportRaw = read('report.json') || read('.agents/research/report.json');
+  if (reportRaw) {
+    try {
+      const report = JSON.parse(reportRaw);
+      for (const desk of report.desks || []) {
+        for (const finding of desk.findings || []) {
+          for (const e of finding.evidence || []) {
+            if (e?.q) evidence.push({
+              quote: e.q, who: e.who, source: e.src, url: e.url,
+              capturedAt: e.date, claimType: e.claimType, desk: desk.id || desk.name,
+              screenshotUrl: e.shot,
+            });
+          }
+        }
+      }
+    } catch { warn('report.json unreadable — syncing without evidence'); }
+  }
+
+  // run meta from the runs dir
+  let engineCalls = null;
+  try {
+    const { readdirSync } = await import('node:fs');
+    engineCalls = readdirSync(join(cwd, '.agents/research/runs')).filter((f) => f.endsWith('.md')).length;
+  } catch { /* no runs dir — fine */ }
+
+  const body = {
+    product,
+    run: { label: 'sync ' + new Date().toISOString().slice(0, 10), ranAt: new Date().toISOString(), engineCalls },
+    evidence,
+    kitContent: kit,
+  };
+  log('\nPMM OS — syncing "' + product + '" (' + evidence.length + ' evidence records' + (kit ? ', kit' : '') + ')');
+  const endpoint = url.replace(/\/$/, '') + '/api/cloud/sync';
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      fail('sync failed (' + res.status + '): ' + (data.error || 'unknown') + (data.fix ? ' — ' + data.fix : ''));
+      process.exitCode = 1;
+      return;
+    }
+    ok('synced — kit v' + data.kitVersion + ', ' + data.evidenceStored + ' evidence records stored');
+    log('Open it in the cloud workspace once you sign in.');
+  } catch (err) {
+    fail('could not reach ' + endpoint + ' — ' + (err?.message || err));
+    process.exitCode = 1;
+  }
+}
+
 const cmd = process.argv[2] || 'help';
 if (cmd === 'install') install();
 else if (cmd === 'update') update();
 else if (cmd === 'uninstall') uninstall();
 else if (cmd === 'doctor') await doctor();
+else if (cmd === 'sync') await cloudSync();
 else if (cmd === 'research-connect') researchConnect();
 else if (cmd === 'research-disconnect') researchDisconnect();
 else {
@@ -214,6 +292,7 @@ else {
   log('  npx pmm-os update      update to this package’s version');
   log('  npx pmm-os uninstall   remove plugin + marketplace + payload');
   log('  npx pmm-os doctor      environment + research-engine health (--deep = live smoke test)');
+  log('  npx pmm-os sync <url> <token>               push this engagement to PMM OS Cloud');
   log('  npx pmm-os research-connect <url> <token>   connect Pro Research Intelligence (gateway rerank)');
   log('  npx pmm-os research-disconnect              revert to local heuristic ranking');
   log('\nDocs: https://github.com/buildingwithai/pmm-os');
