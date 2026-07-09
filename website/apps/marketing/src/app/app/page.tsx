@@ -90,7 +90,7 @@ export default async function WorkspacePage() {
           </Link>
         ))}
         <span className="cw-label">Spaces</span>
-        <span className="cw-item is-soon"><strong>Studio</strong><small>soon</small></span>
+        <Link className="cw-item" href="/app/studio"><strong>Studio</strong></Link>
         <span className="cw-item is-soon"><strong>Settings</strong><small>soon</small></span>
       </aside>
       <section className="cw-main">
