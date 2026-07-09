@@ -18,7 +18,9 @@ dependency** for positioning/GTM.
 7. **Recent moves** — launches, repositioning, funding, M&A in the last ~90 days?
 8. **Trap-setting** — claims of theirs we can turn into discovery questions against them?
 
-**Platform matrix (walk every cell or log the skip):** each competitor's site + pricing + changelog + **public roadmap board (Canny/Trello/GitHub issues/"roadmap" pages — kill-conditions fire on roadmaps MONTHS before marketing pages)** · Reddit · X · HN · GitHub · web/SERP · review/comparison pages (G2 compare — deep-mine via the Reviews Desk). Query archetypes: "X vs Y" · migration threads · feature complaints.
+**Platform matrix (walk every cell or log the skip):** each competitor's site + pricing + changelog + **public roadmap board (Canny/Trello/GitHub issues/"roadmap" pages — kill-conditions fire on roadmaps MONTHS before marketing pages)** · Reddit · X · HN · GitHub · web/SERP · review/comparison pages (G2 compare — deep-mine via the Reviews Desk) · **LinkedIn company pages (follower count = GTM-channel investment signal; a rival's follower delta can reweight the set — verified: a "2M+ users / #1 PH" rival read as merely adjacent on its marketing pages but was front-rank by LinkedIn presence)**. Query archetypes: "X vs Y" · migration threads · feature complaints.
+
+**LinkedIn slug self-healing (verified lesson):** a bare `get_company_profile("{name}")` often matches the WRONG entity (a same-named person/agency/auto-stub). ALWAYS `search_companies("{name} {category}")` first to resolve the real company, then fetch — a bare-slug miss is entity-miss noise, not a finding (the self-healing rule applies to structured tools too).
 
 ## Engine fan-out (decompose, run in parallel)
 
