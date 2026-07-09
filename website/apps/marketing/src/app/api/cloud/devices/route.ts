@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/cloud/db";
+import { ensureUser } from "@/lib/cloud/ensure-user";
 import { resolveUserId } from "@/lib/cloud/workspace-auth";
 
 /**
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
   const name = (body.name || "").trim().slice(0, 80) || "My machine";
   const token = "pmm_" + randomBytes(24).toString("base64url");
   const hash = createHash("sha256").update(token).digest("hex");
-  await sql`INSERT INTO users (id, email) VALUES (${uid}, '') ON CONFLICT (id) DO NOTHING`;
+  await ensureUser(sql, uid, "");
   const [device] = (await sql`
     INSERT INTO sync_devices (owner_id, token_hash, device_name) VALUES (${uid}, ${hash}, ${name})
     RETURNING id

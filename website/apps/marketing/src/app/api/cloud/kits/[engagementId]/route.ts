@@ -79,7 +79,7 @@ async function writeVersion(
   // id is generated here instead of via RETURNING.
   const kitId = crypto.randomUUID();
   await sql.transaction([
-    sql`INSERT INTO users (id, email) VALUES (${uid}, '') ON CONFLICT (id) DO NOTHING`,
+    sql`INSERT INTO users (id, email) VALUES (${uid}, ${uid + "@placeholder.invalid"}) ON CONFLICT (id) DO NOTHING`,
     sql`
       INSERT INTO kits (id, engagement_id, content, version, synced_from, content_hash)
       VALUES (${kitId}, ${engagementId}, ${JSON.stringify(content)}::jsonb, ${next}, ${origin}, ${hash})

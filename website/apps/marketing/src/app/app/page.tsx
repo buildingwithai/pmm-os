@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Terminal } from "lucide-react";
 import { db } from "@/lib/cloud/db";
+import { ensureUser } from "@/lib/cloud/ensure-user";
 
 export const metadata: Metadata = {
   title: "Workspace — PMM OS Cloud",
@@ -50,10 +51,7 @@ export default async function WorkspacePage() {
   }
 
   const { userId, email } = resolved;
-  await sql`
-    INSERT INTO users (id, email) VALUES (${userId}, ${email})
-    ON CONFLICT (id) DO UPDATE SET email = COALESCE(NULLIF(EXCLUDED.email, 'dev@local'), users.email)
-  `;
+  await ensureUser(sql, userId, email === "dev@local" ? "" : email);
   const engagements = (await sql`
     SELECT id, product_name, last_synced_at,
       (SELECT count(*) FROM assets a WHERE a.engagement_id = e.id) AS asset_count
