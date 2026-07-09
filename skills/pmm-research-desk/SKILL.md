@@ -91,9 +91,13 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
        rate-limited source (yt-dlp hits HTTP 429 / "confirm you're not a bot" and burns the
        retry budget); it adds little to pain/competitor text research and is what stalls runs.
      - **Creator/discovery desks** (channels, analyst/KOL): include `youtube` deliberately,
-       and **always pass `--deep`** — video depth scales with it (YouTube full transcripts:
-       2 default → **8 deep**, ~5,000 words each; TikTok/IG: 20 results + 5 transcripts
-       default → **40 results + 8 transcripts deep**). Prefer `reach.sh yt`/`tiktok-search`/
+       pass `--deep`, and set the **transcript-saturation env** so every RELEVANT video in
+       the 30-day window gets transcribed — not an arbitrary top-N:
+       `LAST30DAYS_TRANSCRIPT_LIMIT=100 LAST30DAYS_RESULTS_PER_PAGE=60 python3 … --deep`
+       (PMM-OS env overrides, re-applied by the sync script). Relevance stays the gate,
+       not the count: the engine transcribes in rank order and demotes entity-miss items —
+       so **fix a noisy query first (self-healing rule) before deep-transcribing it**;
+       saturating a bad query transcribes junk. Prefer `reach.sh yt`/`tiktok-search`/
        `ig-search` for the raw hashtag/creator sweep (full result list with engagement
        counts), and record videos-scanned vs transcripts-pulled per platform in the run
        file — video coverage is a matrix cell: count it or log why not.
