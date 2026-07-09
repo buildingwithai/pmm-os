@@ -64,7 +64,11 @@ export async function POST(request: NextRequest) {
   if (body.run?.label) {
     const label = String(body.run.label).slice(0, 200);
     const ranAt = body.run.ranAt ? new Date(body.run.ranAt) : new Date();
-    // replace-on-relabel: same run label re-synced = refreshed, not duplicated
+    // replace-on-relabel: same run label re-synced = refreshed, not duplicated.
+    // evidence FK is ON DELETE SET NULL, so the old run's ledger must go explicitly
+    // or every re-sync would duplicate it as orphaned rows.
+    await sql`DELETE FROM evidence_records WHERE run_id IN
+      (SELECT id FROM runs WHERE engagement_id = ${engagement.id} AND label = ${label})`;
     await sql`DELETE FROM runs WHERE engagement_id = ${engagement.id} AND label = ${label}`;
     const [run] = (await sql`
       INSERT INTO runs (engagement_id, label, ran_at, desks_completed, engine_calls, gaps)

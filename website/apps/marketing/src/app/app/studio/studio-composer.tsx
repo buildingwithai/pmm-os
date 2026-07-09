@@ -1,58 +1,94 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Clapperboard, Image as ImageIcon, LoaderCircle } from "lucide-react";
 
 type Asset = {
   id: string; kind: "image" | "video"; prompt: string | null;
-  status: string; parent_image_id: string | null; created_at: string;
+  status: string; storage_url?: string | null; parent_image_id: string | null; created_at: string;
 };
 type Engagement = { id: string; product_name: string };
+type KitPrompt = { name: string; prompt: string };
 
-export function StudioComposer({ engagements, initialAssets }: { engagements: Engagement[]; initialAssets: Asset[] }) {
+const realUrl = (u?: string | null) => (u && !u.startsWith("mock://") ? u : null);
+
+export function StudioComposer({
+  engagements, initialAssets, initialFor, kitPrompts,
+}: {
+  engagements: Engagement[];
+  initialAssets: Asset[];
+  initialFor?: string;
+  kitPrompts?: Record<string, KitPrompt[]>;
+}) {
   const [assets, setAssets] = useState<Asset[]>(initialAssets);
   const [mode, setMode] = useState<"image" | "video">("image");
   const [prompt, setPrompt] = useState("");
-  const [forId, setForId] = useState<string>(engagements[0]?.id || "");
+  const [forId, setForId] = useState<string>(initialFor ?? (engagements[0]?.id || ""));
   const [sourceId, setSourceId] = useState<string>("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [notice, setNotice] = useState<{ text: string; kind: "error" | "info" } | null>(null);
+  const pollTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const images = assets.filter((a) => a.kind === "image" && a.status === "ready");
+  const prompts = (kitPrompts && forId && kitPrompts[forId]) || [];
+
+  /* videos render async — poll until every generating asset settles */
+  useEffect(() => {
+    const generating = assets.filter((a) => a.status === "generating");
+    if (generating.length === 0) { clearInterval(pollTimer.current); return; }
+    pollTimer.current = setInterval(async () => {
+      for (const a of generating) {
+        try {
+          const res = await fetch(`/api/cloud/assets/${a.id}`);
+          const data = await res.json();
+          if (data.status && data.status !== "generating") {
+            setAssets((prev) => prev.map((x) => x.id === a.id ? { ...x, status: data.status, storage_url: data.url || x.storage_url } : x));
+            if (data.status === "failed") setNotice({ text: `Render failed: ${data.error || "provider error"} — no credits charged.`, kind: "error" });
+          }
+        } catch { /* transient — next tick retries */ }
+      }
+    }, 4000);
+    return () => clearInterval(pollTimer.current);
+  }, [assets]);
 
   async function generate(kind: "image" | "video", parentImageId?: string) {
     if (busy) return;
     setBusy(true);
-    setError("");
+    setNotice(null);
     try {
       const res = await fetch("/api/cloud/assets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           kind,
-          prompt: kind === "image" ? prompt : undefined,
+          prompt: prompt || undefined,
           engagementId: forId || undefined,
           parentImageId: parentImageId || (kind === "video" ? sourceId : undefined),
         }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        setError(
-          data.error === "missing_parent_image" ? "Pick a source image first — video always starts from an image."
-          : data.error === "missing_prompt" ? "Write a prompt first."
-          : data.error === "generation_backend_pending" ? "Generation keys aren't enabled yet — your request was recorded, no credits charged."
-          : "Something went wrong — no credits were charged.",
-        );
+        setNotice({
+          kind: "error",
+          text: data.error === "missing_parent_image" ? "Pick a source image first — video always starts from an image."
+            : data.error === "missing_prompt" ? "Write a prompt first."
+            : data.error === "parent_image_not_hosted" ? "That image has no hosted file (mock mode) — regenerate it once storage keys are live, then animate it."
+            : data.error === "generation_failed" ? "The model rejected this one — no credits were charged. Adjust the prompt and retry."
+            : "Something went wrong — no credits were charged.",
+        });
       } else {
         setAssets((prev) => [{
-          id: data.assetId, kind, prompt: kind === "image" ? prompt : null,
-          status: data.status, parent_image_id: parentImageId || sourceId || null,
+          id: data.assetId, kind, prompt: kind === "image" ? prompt : prompt || null,
+          status: data.status, storage_url: data.url || null,
+          parent_image_id: parentImageId || sourceId || null,
           created_at: new Date().toISOString(),
         }, ...prev]);
+        if (data.mock) setNotice({ kind: "info", text: "Mock mode — the flow ran end-to-end; real rendering starts when the provider keys are set. No credits charged." });
+        if (kind === "video" && data.status === "generating") setNotice({ kind: "info", text: "Rendering the video — typically under two minutes. It appears below when done." });
         if (kind === "image") setPrompt("");
       }
     } catch {
-      setError("Couldn't reach the server — no credits were charged.");
+      setNotice({ kind: "error", text: "Couldn't reach the server — no credits were charged." });
     } finally {
       setBusy(false);
     }
@@ -80,11 +116,20 @@ export function StudioComposer({ engagements, initialAssets }: { engagements: En
 
       {mode === "image" ? (
         <div className="cws-compose">
+          {prompts.length > 0 ? (
+            <div className="cws-prompts" aria-label="Prompts the research wrote">
+              {prompts.slice(0, 6).map((p) => (
+                <button key={p.name} onClick={() => setPrompt(p.prompt)} title={p.prompt} type="button">
+                  ✦ {p.name}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <label className="sr-only" htmlFor="studio-prompt">Image prompt</label>
           <textarea
             id="studio-prompt"
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe the image — or open a product's kit and use /image on a block to prefill from its prompts."
+            placeholder={prompts.length ? "Pick a kit prompt above, or describe the image yourself…" : "Describe the image — or open a product's kit and use /image on a block to prefill from its prompts."}
             rows={3}
             value={prompt}
           />
@@ -105,11 +150,24 @@ export function StudioComposer({ engagements, initialAssets }: { engagements: En
                 onClick={() => setSourceId(a.id)}
                 type="button"
               >
-                <ImageIcon aria-hidden="true" size={16} />
+                {realUrl(a.storage_url) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img alt={a.prompt || "generated image"} src={realUrl(a.storage_url)!} />
+                ) : (
+                  <ImageIcon aria-hidden="true" size={16} />
+                )}
                 <span>{(a.prompt || "untitled").slice(0, 42)}</span>
               </button>
             ))}
           </div>
+          <label className="sr-only" htmlFor="studio-motion">Motion direction (optional)</label>
+          <textarea
+            id="studio-motion"
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Optional — how should it move? e.g. slow push-in, the chart line draws itself…"
+            rows={2}
+            value={prompt}
+          />
           <button className="cws-go" disabled={busy || !sourceId} onClick={() => generate("video")} type="button">
             {busy ? <LoaderCircle aria-hidden="true" className="ut-spin" size={15} /> : <Clapperboard aria-hidden="true" size={15} />}
             Animate
@@ -117,7 +175,7 @@ export function StudioComposer({ engagements, initialAssets }: { engagements: En
         </div>
       )}
 
-      {error ? <p className="cws-error" role="alert">{error}</p> : null}
+      {notice ? <p className={notice.kind === "error" ? "cws-error" : "cws-hint"} role={notice.kind === "error" ? "alert" : "status"}>{notice.text}</p> : null}
 
       <h2 className="cws-h">Assets</h2>
       {assets.length === 0 ? (
@@ -126,11 +184,25 @@ export function StudioComposer({ engagements, initialAssets }: { engagements: En
         <div className="cws-grid">
           {assets.map((a) => (
             <div className={`cws-thumb is-card ${a.kind === "video" ? "is-video" : ""}`} key={a.id}>
-              {a.kind === "video" ? <Clapperboard aria-hidden="true" size={16} /> : <ImageIcon aria-hidden="true" size={16} />}
+              {a.kind === "image" && realUrl(a.storage_url) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img alt={a.prompt || "generated image"} src={realUrl(a.storage_url)!} />
+              ) : a.kind === "video" && realUrl(a.storage_url) && a.status === "ready" ? (
+                <video controls muted preload="metadata" src={realUrl(a.storage_url)!} />
+              ) : a.status === "generating" ? (
+                <LoaderCircle aria-hidden="true" className="ut-spin" size={16} />
+              ) : a.kind === "video" ? (
+                <Clapperboard aria-hidden="true" size={16} />
+              ) : (
+                <ImageIcon aria-hidden="true" size={16} />
+              )}
               <span>{(a.prompt || (a.parent_image_id ? "from image" : "untitled")).slice(0, 48)}</span>
               <small>{a.status}{a.parent_image_id ? " · from image" : ""}</small>
               {a.kind === "image" && a.status === "ready" ? (
-                <button onClick={() => generate("video", a.id)} type="button">▸ Animate</button>
+                <button onClick={() => { setSourceId(a.id); generate("video", a.id); }} type="button">▸ Animate</button>
+              ) : null}
+              {realUrl(a.storage_url) ? (
+                <a download href={realUrl(a.storage_url)!} rel="noopener noreferrer" target="_blank">⤓</a>
               ) : null}
             </div>
           ))}

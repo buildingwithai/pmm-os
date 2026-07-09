@@ -1,31 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/cloud/db";
+import { generateImage, startVideo } from "@/lib/cloud/generate";
+import { resolveUserId } from "@/lib/cloud/workspace-auth";
 
 /**
  * POST /api/cloud/assets — create + generate an asset (composer studio).
  * Body: { kind: "image"|"video", prompt?, engagementId?, parentImageId? }
  *
  * Auth: Clerk session (browser). Dev bypass mirrors the workspace pages.
- * Generation: gpt-image-2 for images / Grok Imagine for video — MOCK until the
- * server env holds the keys, so the whole flow (rows, lineage, states, credits)
- * verifies now. Credits are NEVER charged on failure, and the response says so.
+ * Generation: gpt-image-2 (in-request) / Grok Imagine (async job — the
+ * client polls GET /api/cloud/assets/[assetId]). Without provider keys the
+ * whole flow runs in MOCK mode. Credits are NEVER charged on failure,
+ * and the response says so.
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-async function userId(): Promise<string | null> {
-  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    const { auth } = await import("@clerk/nextjs/server");
-    return (await auth()).userId;
-  }
-  if (process.env.NODE_ENV !== "production" && process.env.PMM_OS_DEV_USER) {
-    return process.env.PMM_OS_DEV_USER;
-  }
-  return null;
-}
+export const maxDuration = 300; // image generation runs inside the request
 
 export async function POST(request: NextRequest) {
-  const uid = await userId();
+  const uid = await resolveUserId();
   if (!uid) return NextResponse.json({ error: "sign_in_required" }, { status: 401 });
   const sql = db();
   if (!sql) return NextResponse.json({ error: "cloud_not_configured" }, { status: 503 });
@@ -43,13 +36,15 @@ export async function POST(request: NextRequest) {
 
   // video requires a source image the caller owns
   let parentImageId: string | null = null;
+  let parentImageUrl: string | null = null;
   if (kind === "video") {
     if (!body.parentImageId) return NextResponse.json({ error: "missing_parent_image" }, { status: 400 });
     const [parent] = (await sql`
-      SELECT id FROM assets WHERE id = ${body.parentImageId} AND owner_id = ${uid} AND kind = 'image'
-    `) as Array<{ id: string }>;
+      SELECT id, storage_url FROM assets WHERE id = ${body.parentImageId} AND owner_id = ${uid} AND kind = 'image'
+    `) as Array<{ id: string; storage_url: string | null }>;
     if (!parent) return NextResponse.json({ error: "parent_image_not_found" }, { status: 404 });
     parentImageId = parent.id;
+    parentImageUrl = parent.storage_url;
   }
 
   // engagement scoping (optional, must be owned)
@@ -75,8 +70,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, assetId: asset.id, status: "ready", mock: true, creditsCharged: 0 });
   }
 
-  // real generation lands here when keys exist (kept out of scope until then —
-  // the route contract and state machine are already final)
-  await sql`UPDATE assets SET status = 'failed', error = 'generation backend not yet enabled', credits_charged = 0 WHERE id = ${asset.id}`;
-  return NextResponse.json({ ok: false, assetId: asset.id, status: "failed", error: "generation_backend_pending", creditsCharged: 0 }, { status: 501 });
+  if (kind === "image") {
+    try {
+      const { url } = await generateImage(prompt, asset.id);
+      await sql`UPDATE assets SET status = 'ready', storage_url = ${url}, credits_charged = 1 WHERE id = ${asset.id}`;
+      return NextResponse.json({ ok: true, assetId: asset.id, status: "ready", url, creditsCharged: 1 });
+    } catch (e) {
+      await sql`UPDATE assets SET status = 'failed', error = ${(e as Error).message.slice(0, 500)}, credits_charged = 0 WHERE id = ${asset.id}`;
+      return NextResponse.json({ ok: false, assetId: asset.id, status: "failed", error: "generation_failed", creditsCharged: 0 }, { status: 502 });
+    }
+  }
+
+  // video: async — start the provider job, the client polls GET /api/cloud/assets/[assetId]
+  if (!parentImageUrl || parentImageUrl.startsWith("mock://") || parentImageUrl.startsWith("data:")) {
+    await sql`UPDATE assets SET status = 'failed', error = 'source image has no hosted URL — regenerate it with storage enabled', credits_charged = 0 WHERE id = ${asset.id}`;
+    return NextResponse.json({ ok: false, assetId: asset.id, status: "failed", error: "parent_image_not_hosted", creditsCharged: 0 }, { status: 400 });
+  }
+  try {
+    const jobId = await startVideo(prompt, parentImageUrl);
+    await sql`UPDATE assets SET provider_job_id = ${jobId} WHERE id = ${asset.id}`;
+    return NextResponse.json({ ok: true, assetId: asset.id, status: "generating", creditsCharged: 0 });
+  } catch (e) {
+    await sql`UPDATE assets SET status = 'failed', error = ${(e as Error).message.slice(0, 500)}, credits_charged = 0 WHERE id = ${asset.id}`;
+    return NextResponse.json({ ok: false, assetId: asset.id, status: "failed", error: "generation_failed", creditsCharged: 0 }, { status: 502 });
+  }
 }

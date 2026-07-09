@@ -3,7 +3,24 @@
 // HTML is byte-identical to the local kit. Widgets render as labeled
 // placeholders this phase (full widget parity is the next slice).
 // @ts-ignore vendored untyped module
-import { REGISTRY, resolveType } from "./block-registry.mjs";
+import { REGISTRY, resolveType, blockMenu, transformMap } from "./block-registry.mjs";
+
+// Cloud-only block extension: inline image (registry file is a vendored
+// byte-copy — extend here, never there). `/image` in the editor and the studio
+// both emit this shape: { type:"image", src, alt?, caption?, assetId? }.
+(REGISTRY as Record<string, unknown>)["image"] = {
+  detect: (b: Record<string, unknown>) => b.src != null && b.widget == null,
+  render: (b: Record<string, unknown>, p: string, x: { attr: (s: unknown) => string; esc: (s: unknown) => string }) =>
+    `<figure class="kimg"><img src="${x.attr(b.src)}" alt="${x.attr(b.alt || b.caption || "generated image")}" loading="lazy"/>` +
+    (b.caption ? `<figcaption data-path="${p}.caption">${b.caption}</figcaption>` : "") + `</figure>`,
+  markdown: (b: Record<string, unknown>, x: { strip: (s: unknown) => string }) =>
+    `![${x.strip(b.alt || b.caption || "image")}](${b.src})`,
+};
+
+/** editor metadata for the client — registry slash menu + cloud PMM commands */
+export function editorMeta(): { menu: unknown[]; transform: Record<string, string[]> } {
+  return { menu: blockMenu(), transform: transformMap() };
+}
 
 function renderBlock(b: Record<string, unknown>, path: string, ctx: unknown): string {
   const type = resolveType(b);
@@ -107,13 +124,17 @@ export function renderView(
   const view = kit.views?.[viewId];
   if (!view) return null;
   const ctx = makeCtx((kit.data || {}) as W, viewHref);
+  // same .blk chrome contract as build-kit.mjs line 41 — the editor's block
+  // grips, menus, and drag targets hang off data-block/data-bid
   const blocks = (view.blocks || [])
     .map((b, i) => {
+      let inner: string;
       try {
-        return renderBlock(b, `views.${viewId}.blocks.${i}`, ctx);
+        inner = renderBlock(b, `views.${viewId}.blocks.${i}`, ctx);
       } catch {
-        return `<div class="cwk-widget">unrenderable block (${esc(resolveType?.(b) ?? "unknown")})</div>`;
+        inner = `<div class="cwk-widget">unrenderable block (${esc(resolveType?.(b) ?? "unknown")})</div>`;
       }
+      return `<div class="blk" data-block="views.${viewId}.blocks.${i}" data-bid="${attr((b as { id?: string }).id || "")}">${inner}</div>`;
     })
     .join("\n");
   const head = `
