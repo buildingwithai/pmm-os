@@ -7,9 +7,12 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
  * (e.g. before the owner creates the Clerk app), everything passes through —
  * the live site can never break on a missing key.
  */
-// signed-out visitors to /app are sent to Clerk's hosted sign-in and come back
-const clerk = clerkMiddleware(async (auth) => {
-  await auth.protect();
+// Pages: signed-out visitors to /app are sent to Clerk's hosted sign-in and
+// come back. APIs: middleware must RUN (auth() needs its context) but never
+// redirect — routes return their own 401s, and /api/cloud/sync stays open to
+// the plugin's Bearer-token auth.
+const clerk = clerkMiddleware(async (auth, request) => {
+  if (!request.nextUrl.pathname.startsWith("/api/")) await auth.protect();
 });
 
 export default function middleware(request: NextRequest, event: never) {
@@ -18,5 +21,5 @@ export default function middleware(request: NextRequest, event: never) {
 }
 
 export const config = {
-  matcher: ["/app/:path*"],
+  matcher: ["/app/:path*", "/api/cloud/:path*"],
 };
