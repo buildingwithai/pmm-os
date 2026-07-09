@@ -51,6 +51,14 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
    signed in, tell the user the one-time step (X = stay logged into x.com in a browser; IG =
    `reach.sh ig-login YOUR_IG_USERNAME`) — guide, don't ask for their password. See
    [`../product-marketing-os/references/social-auth-setup.md`](../product-marketing-os/references/social-auth-setup.md).
+   For **LinkedIn**, run `bash scripts/linkedin-setup.sh status` — it names one of three
+   states with the exact fix (never configured → run setup after logging into linkedin.com
+   in a browser; service down → the printed restart one-liner; session expired →
+   `linkedin-setup.sh reauth`). **A platform being un-signed-in NEVER kills a desk:** relay
+   the state + fix to the user verbatim, degrade to the keyless path (LinkedIn → Jina
+   public-page reads via `reach.sh read`; IG/TikTok → skip the cell), log the gap, and
+   continue. If a LinkedIn call errors mid-run with a login/authentication message, that IS
+   the session-expired state — same relay-fix-degrade-continue, never silent failure.
 4. **Fan out — at FULL DEPTH (1:1 with the source repos), decompose, don't batch.** Neither
    engine takes a list of questions: `last30days` = one topic per run; `agent-reach` = one
    query/URL per call. Turn the question set into the recipe's **~15–30 calls** and run them

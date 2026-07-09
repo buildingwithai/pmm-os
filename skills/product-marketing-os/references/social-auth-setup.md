@@ -57,3 +57,31 @@ Important (Instagram is strict):
 
 - `reach.sh tiktok-search <hashtag>` · `reach.sh ig-search <hashtag>` · X flows into `last30days`.
 - Re-run `reach.sh social-status` to confirm. You only do this setup once per machine.
+
+## LinkedIn (company/people/job search for the competitive + KOL desks)
+
+Same philosophy — **you never type a password into the plugin**. Stay logged into
+`linkedin.com` in your normal browser, then run:
+
+```bash
+bash scripts/linkedin-setup.sh
+```
+
+It imports your browser session locally (validated, stored `0600` in `~/.linkedin-mcp/`),
+starts a small always-on local service (launchd on macOS — survives reboots), and registers
+it so the desks can use `search_companies` / `search_people` / company profiles
+authenticated as you. Nothing leaves your machine.
+
+**When something breaks, the plugin tells you exactly which of the three states you're in
+and the one-line fix:**
+
+| State | What you see | Fix |
+| --- | --- | --- |
+| Never configured | `NEVER CONFIGURED — no session has been imported yet` | log into linkedin.com in your browser → `bash scripts/linkedin-setup.sh` |
+| Service down | `SERVICE DOWN — session exists but the local service isn't running` | the printed `launchctl load` / `nohup` one-liner |
+| Session expired | `SESSION EXPIRED or invalid` | log into linkedin.com in your browser → `bash scripts/linkedin-setup.sh reauth` |
+
+Diagnose anytime: `bash scripts/linkedin-setup.sh status`. **Even fully unconfigured,
+LinkedIn research never dies** — the desks fall back to keyless public-page reads
+(`reach.sh read <linkedin-url>` via Jina) and log the gap; setup just unlocks the
+authenticated search tools.

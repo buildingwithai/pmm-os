@@ -50,6 +50,13 @@ else
   warn "agent-reach not installed — run: bash skills/agent-reach/scripts/setup.sh"
 fi
 
+# LinkedIn persistent service (optional; desks fall back to public-page reads without it)
+if curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8371/mcp 2>/dev/null | grep -qE '^4(0[056]|29)$'; then
+  ok "LinkedIn service: up (authenticated search available) — diagnose: bash scripts/linkedin-setup.sh status"
+else
+  warn "LinkedIn service: not running (optional — public-page reads still work). Setup: bash scripts/linkedin-setup.sh"
+fi
+
 if [ "$SMOKE" = "1" ]; then
   echo "── Smoke test (real keyless calls) ─────────"
   # 1) agent-reach keyless web read (Jina)
