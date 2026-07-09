@@ -61,7 +61,9 @@ export default async function EngagementPage({
   const { product_name, content: kit, version } = rows[0];
 
   const viewId = viewParam && kit.views?.[viewParam] ? viewParam : firstViewId(kit);
-  const rendered = viewId ? renderView(kit, viewId) : null;
+  const rendered = viewId
+    ? renderView(kit, viewId, (id) => `/app/${engagementId}?view=${encodeURIComponent(id)}`)
+    : null;
 
   return (
     <main className="cw-shell">

@@ -30,13 +30,61 @@ function strip(s: unknown): string {
   return String(s ?? "").replace(/<[^>]*>/g, "");
 }
 
-function makeCtx() {
+type W = Record<string, unknown>;
+function widgetHtml(name: string, data: W, viewHref: (id: string) => string): string {
+  const rows = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+  switch (name) {
+    case "stats":
+      return `<div class="stats" data-w="stats">${rows<[string, string, number]>(data.stats)
+        .map((s) => `<div><div class="n">${esc(s[0])}</div><div class="l">${esc(s[1])}</div></div>`).join("")}</div>`;
+    case "kitrows":
+      return `<div class="rows">${rows<[string, string, string]>(data.kit)
+        .map((k) => `<a class="row sel-able" href="${attr(viewHref(k[2]))}" style="text-decoration:none;color:inherit"><div><div class="t">${esc(k[0])} · ${esc(k[1])}</div></div><div class="meta">open →</div></a>`).join("")}</div>`;
+    case "taglines":
+      return rows<string>(data.taglines)
+        .map((t) => `<div class="copyline"><span>${t}</span></div>`).join("");
+    case "msgvariants": {
+      const mv = rows<[string, string]>(data.msgVariants);
+      return `<div class="tabs">${mv.map((m, i) => `<button class="${i ? "" : "active"}" disabled>${esc(m[0])}</button>`).join("")}</div>` +
+        mv.map((m, i) => `<div class="copyline"${i ? ' style="margin-top:8px"' : ""}><span><b>${esc(m[0])}:</b> "${m[1]}"</span></div>`).join("");
+    }
+    case "pricing": {
+      const P = data.pricing as { tiers?: string[][]; features?: string[][] } | undefined;
+      if (!P?.tiers) return "";
+      let html = `<table><thead><tr><th>Capability</th>${P.tiers.map((t) => `<th>${esc(t[0])}</th>`).join("")}</tr></thead><tbody>`;
+      html += `<tr><td>Price</td>${P.tiers.map((t) => `<td class="num"><b style="color:var(--accent)">${esc(t[1])}</b> <span class="dim">/mo</span></td>`).join("")}</tr>`;
+      html += (P.features || []).map((f) => `<tr>${f.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("");
+      return html + "</tbody></table>";
+    }
+    case "checklist-launch":
+    case "checklist-rev": {
+      const items = rows<string>(name === "checklist-launch" ? data.launchActs : data.revisions);
+      return items.map((a) => `<label class="chk"><input type="checkbox" disabled><span class="ct">${a}</span></label>`).join("");
+    }
+    case "scorecard":
+      return rows<[string, number]>(data.scorecard)
+        .map((sc) => `<div class="scrow"><span>${esc(sc[0])}</span><div class="track"><div class="fill" style="width:${(sc[1] / 5) * 100}%"></div></div><b style="color:var(--accent)">${sc[1]}</b></div>`).join("");
+    case "gallery":
+      return `<div class="gal">${rows<[string, string, string]>(data.gallery)
+        .map((g) => `<div class="gframe"><div class="gpane" style="aspect-ratio:${attr((g[1] || "1:1").replace(":", "/"))}"><div class="rr">${esc(g[1])}</div><div><div class="nm">${esc(g[0])}</div></div></div></div>`).join("")}</div>`;
+    case "exportFiles":
+      return `<div class="rows">${rows<[string, string]>(data.exportFiles)
+        .map((f) => `<div class="row"><div><div class="t">${esc(f[0])}</div></div><div class="meta">${esc(f[1])}</div></div>`).join("")}</div>`;
+    case "exportDocs":
+      return `<div class="rows">${rows<string>(data.exportDocs)
+        .map((d) => `<div class="row"><div><div class="t">${esc(d)}.md</div></div><div class="meta">markdown</div></div>`).join("")}</div>`;
+    default:
+      return `<div class="cwk-widget" role="note">widget · ${esc(name)} <span>interactive in the editor phase</span></div>`;
+  }
+}
+
+function makeCtx(data: W, viewHref: (id: string) => string) {
   const ctx = {
     esc,
     attr,
     strip,
     widget(name: string): string {
-      return `<div class="cwk-widget" role="note">widget · ${esc(name)} <span>interactive widgets land with the editor phase</span></div>`;
+      return widgetHtml(name, data, viewHref);
     },
     widgetMd(name: string): string {
       return `*(widget: ${strip(name)})*`;
@@ -51,10 +99,14 @@ function makeCtx() {
   return ctx;
 }
 
-export function renderView(kit: KitContent, viewId: string): { head: string; bodyHtml: string } | null {
+export function renderView(
+  kit: KitContent,
+  viewId: string,
+  viewHref: (id: string) => string = (id) => `?view=${encodeURIComponent(id)}`,
+): { head: string; bodyHtml: string } | null {
   const view = kit.views?.[viewId];
   if (!view) return null;
-  const ctx = makeCtx();
+  const ctx = makeCtx((kit.data || {}) as W, viewHref);
   const blocks = (view.blocks || [])
     .map((b, i) => {
       try {
