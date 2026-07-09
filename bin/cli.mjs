@@ -14,7 +14,7 @@
  * Registration goes through the official CLI (`claude plugin ...`) — writing into
  * ~/.claude/plugins directly is unsupported.
  */
-import { cpSync, existsSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -146,11 +146,67 @@ async function doctor() {
   process.exitCode = r.status ?? 1;
 }
 
+// --- research gateway (Pro "Research Intelligence") client wiring ---
+// Points the vendored engine's rerank at the PMM OS Cloud gateway, so the LLM
+// judge runs WITHOUT the member ever holding a real provider key. We reuse the
+// engine's redirectable provider slot: set the token + gateway URL in the
+// engine's own config (~/.config/last30days/.env). The real OpenAI key lives
+// only in the gateway's server env — never here.
+const L30_CONFIG_DIR = join(HOME, '.config', 'last30days');
+const L30_ENV = join(L30_CONFIG_DIR, '.env');
+const GATEWAY_KEYS = ['LAST30DAYS_REASONING_PROVIDER', 'XAI_API_KEY', 'XAI_BASE_URL'];
+
+function readEnvFile(p) {
+  if (!existsSync(p)) return [];
+  return readFileSync(p, 'utf8').split('\n');
+}
+function writeEnvKeys(lines, updates) {
+  const keys = new Set(Object.keys(updates));
+  const kept = lines.filter((l) => {
+    const m = l.match(/^\s*([A-Z0-9_]+)\s*=/);
+    return !(m && keys.has(m[1]));
+  });
+  for (const [k, v] of Object.entries(updates)) if (v !== null) kept.push(`${k}=${v}`);
+  return kept.filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n').replace(/\n+$/, '') + '\n';
+}
+
+function researchConnect() {
+  const url = process.argv[3];
+  const token = process.argv[4];
+  if (!url || !token) {
+    log('\nUsage: npx pmm-os research-connect <gateway-url> <pmm-os-token>');
+    log('  e.g. npx pmm-os research-connect https://pmm-os-green.vercel.app/api/research/rerank pmmos_xxx');
+    log('\nThe token is YOUR PMM OS member credential. The real AI key stays server-side.');
+    process.exitCode = 1;
+    return;
+  }
+  mkdirSync(L30_CONFIG_DIR, { recursive: true });
+  const merged = writeEnvKeys(readEnvFile(L30_ENV), {
+    LAST30DAYS_REASONING_PROVIDER: 'xai', // redirectable, key-only-gated slot; the gateway forces the real cheap model
+    XAI_API_KEY: token,
+    XAI_BASE_URL: url,
+  });
+  writeFileSync(L30_ENV, merged, { mode: 0o600 });
+  try { spawnSync('chmod', ['600', L30_ENV]); } catch { /* best effort */ }
+  log('\nPMM OS — Research Intelligence connected');
+  ok('gateway: ' + url);
+  ok('config:  ' + L30_ENV + ' (chmod 600)');
+  log('\nThe engine now rescoring-ranks candidates via the gateway (Pro). Verify: npx pmm-os doctor --deep');
+}
+
+function researchDisconnect() {
+  if (!existsSync(L30_ENV)) { log('\nNothing to disconnect (no engine config).'); return; }
+  writeFileSync(L30_ENV, writeEnvKeys(readEnvFile(L30_ENV), Object.fromEntries(GATEWAY_KEYS.map((k) => [k, null]))), { mode: 0o600 });
+  log('\nPMM OS — Research Intelligence disconnected (back to local heuristic ranking).');
+}
+
 const cmd = process.argv[2] || 'help';
 if (cmd === 'install') install();
 else if (cmd === 'update') update();
 else if (cmd === 'uninstall') uninstall();
 else if (cmd === 'doctor') await doctor();
+else if (cmd === 'research-connect') researchConnect();
+else if (cmd === 'research-disconnect') researchDisconnect();
 else {
   log('\npmm-os — Product Marketing OS for Claude Code');
   log('\nUsage:');
@@ -158,5 +214,7 @@ else {
   log('  npx pmm-os update      update to this package’s version');
   log('  npx pmm-os uninstall   remove plugin + marketplace + payload');
   log('  npx pmm-os doctor      environment + research-engine health (--deep = live smoke test)');
+  log('  npx pmm-os research-connect <url> <token>   connect Pro Research Intelligence (gateway rerank)');
+  log('  npx pmm-os research-disconnect              revert to local heuristic ranking');
   log('\nDocs: https://github.com/buildingwithai/pmm-os');
 }

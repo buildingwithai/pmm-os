@@ -34,6 +34,7 @@ If `agent-reach` is not on PATH, bootstrap it once: run **`bash scripts/setup.sh
 via `agent-reach install --env=auto`, then runs `agent-reach doctor`).
 <!-- END PMM-OS-SETUP -->
 BLOCK
-# re-apply the PMM-OS env-override patch (transcript/result saturation knobs)
-python3 "$ROOT/scripts/patch-transcript-env-overrides.py"
+# re-apply the PMM-OS engine patches (idempotent; each guards its own anchor)
+python3 "$ROOT/scripts/patch-transcript-env-overrides.py"   # transcript/result saturation knobs
+python3 "$ROOT/scripts/patch-gateway-base-url.py"           # gateway base-URL config->environ
 echo "✓ synced. Review the diff, re-run the plugin validator, and commit."
