@@ -34,6 +34,12 @@ TRANSCRIPT_LIMITS = {
     "deep": 8,
 }
 
+# PMM-OS-ENV-OVERRIDE (re-applied by scripts/patch-transcript-env-overrides.py after upstream sync)
+import os as _os
+if _os.environ.get("LAST30DAYS_TRANSCRIPT_LIMIT", "").isdigit():
+    _n = int(_os.environ["LAST30DAYS_TRANSCRIPT_LIMIT"])
+    TRANSCRIPT_LIMITS = {k: (_n if v else 0) for k, v in TRANSCRIPT_LIMITS.items()}
+
 # Cumulative yt-dlp transcript-fetch stats for the current process. The final
 # report only sees post-pruning items, so it can't distinguish "fetches failed
 # (stale binary)" from "fetches succeeded but the videos were pruned later".

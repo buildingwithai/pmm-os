@@ -26,6 +26,15 @@ DEPTH_CONFIG = {
     "deep":    {"results_per_page": 40, "max_captions": 8},
 }
 
+# PMM-OS-ENV-OVERRIDE (re-applied by scripts/patch-transcript-env-overrides.py after upstream sync)
+import os as _os
+if _os.environ.get("LAST30DAYS_TRANSCRIPT_LIMIT", "").isdigit():
+    for _d in DEPTH_CONFIG.values():
+        _d["max_captions"] = int(_os.environ["LAST30DAYS_TRANSCRIPT_LIMIT"])
+if _os.environ.get("LAST30DAYS_RESULTS_PER_PAGE", "").isdigit():
+    for _d in DEPTH_CONFIG.values():
+        _d["results_per_page"] = int(_os.environ["LAST30DAYS_RESULTS_PER_PAGE"])
+
 # Max words to keep from each caption
 CAPTION_MAX_WORDS = 500
 
