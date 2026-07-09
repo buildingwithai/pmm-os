@@ -300,6 +300,20 @@ function Wordmark() {
   );
 }
 
+/** Clerk's hosted sign-up portal, derived from the publishable key
+    (pk_test_<base64 of frontend-api domain>). No key → /app, which shows the
+    workspace's own not-wired state. */
+function signUpUrl(): string {
+  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!pk) return "/app";
+  try {
+    const domain = atob(pk.split("_")[2]).replace(/\$$/, ""); // e.g. pleasing-akita-1.clerk.accounts.dev
+    return `https://${domain.replace(".clerk.accounts.dev", ".accounts.dev")}/sign-up`;
+  } catch {
+    return "/app";
+  }
+}
+
 export function Header() {
   return (
     <header className="ut-header">
@@ -372,7 +386,8 @@ export function Header() {
           <a className="ut-github-link" href={GITHUB_URL} aria-label="GitHub">
             <GitHubMark />
           </a>
-          <ButtonLink href={GITHUB_URL}>Install</ButtonLink>
+          <Link className="ut-nav-link" href="/app">Sign in</Link>
+          <ButtonLink href={signUpUrl()}>Sign up</ButtonLink>
         </div>
       </div>
     </header>
