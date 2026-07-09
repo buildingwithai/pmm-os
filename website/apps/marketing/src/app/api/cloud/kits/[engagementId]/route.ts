@@ -74,20 +74,23 @@ async function writeVersion(
 ): Promise<number> {
   const hash = createHash("sha256").update(canonical(content)).digest("hex");
   const next = prevVersion + 1;
-  const [kit] = (await sql`
-    INSERT INTO kits (engagement_id, content, version, synced_from, content_hash)
-    VALUES (${engagementId}, ${JSON.stringify(content)}::jsonb, ${next}, ${origin}, ${hash})
-    RETURNING id
-  `) as Array<{ id: string }>;
-  await sql`INSERT INTO users (id, email) VALUES (${uid}, '') ON CONFLICT (id) DO NOTHING`;
-  for (const h of history.slice(0, 200)) {
+  // one atomic transaction: the version row and its history rows land together
+  // or not at all. Neon's HTTP driver batches (no interactive tx), so the kit
+  // id is generated here instead of via RETURNING.
+  const kitId = crypto.randomUUID();
+  await sql.transaction([
+    sql`INSERT INTO users (id, email) VALUES (${uid}, '') ON CONFLICT (id) DO NOTHING`,
+    sql`
+      INSERT INTO kits (id, engagement_id, content, version, synced_from, content_hash)
+      VALUES (${kitId}, ${engagementId}, ${JSON.stringify(content)}::jsonb, ${next}, ${origin}, ${hash})
+    `,
     // schema check allows origin 'cloud'|'sync' only — the descriptive label
     // (cloud-edit / cloud-structural / restore-vN) lives in kits.synced_from
-    await sql`
+    ...history.slice(0, 200).map((h) => sql`
       INSERT INTO kit_block_history (kit_id, block_path, prev_value, new_value, edited_by, origin)
-      VALUES (${kit.id}, ${h.path}, ${JSON.stringify(h.prev ?? null)}::jsonb, ${JSON.stringify(h.next ?? null)}::jsonb, ${uid}, 'cloud')
-    `;
-  }
+      VALUES (${kitId}, ${h.path}, ${JSON.stringify(h.prev ?? null)}::jsonb, ${JSON.stringify(h.next ?? null)}::jsonb, ${uid}, 'cloud')
+    `),
+  ]);
   return next;
 }
 

@@ -27,29 +27,48 @@ export function StudioComposer({
   const [sourceId, setSourceId] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ text: string; kind: "error" | "info" } | null>(null);
-  const pollTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const watched = useRef(new Map<string, EventSource | ReturnType<typeof setInterval>>());
 
   const images = assets.filter((a) => a.kind === "image" && a.status === "ready");
   const prompts = (kitPrompts && forId && kitPrompts[forId]) || [];
 
-  /* videos render async — poll until every generating asset settles */
+  /* videos render async — the server watches the job and PUSHES status over
+     SSE (one stream per render); plain polling only as fallback if the
+     stream can't be held open */
   useEffect(() => {
-    const generating = assets.filter((a) => a.status === "generating");
-    if (generating.length === 0) { clearInterval(pollTimer.current); return; }
-    pollTimer.current = setInterval(async () => {
-      for (const a of generating) {
-        try {
-          const res = await fetch(`/api/cloud/assets/${a.id}`);
-          const data = await res.json();
-          if (data.status && data.status !== "generating") {
-            setAssets((prev) => prev.map((x) => x.id === a.id ? { ...x, status: data.status, storage_url: data.url || x.storage_url } : x));
-            if (data.status === "failed") setNotice({ text: `Render failed: ${data.error || "provider error"} — no credits charged.`, kind: "error" });
-          }
-        } catch { /* transient — next tick retries */ }
-      }
-    }, 4000);
-    return () => clearInterval(pollTimer.current);
+    const settle = (id: string, data: { status?: string; url?: string; error?: string }) => {
+      if (!data.status || data.status === "generating") return false;
+      setAssets((prev) => prev.map((x) => x.id === id ? { ...x, status: data.status!, storage_url: data.url || x.storage_url } : x));
+      if (data.status === "failed") setNotice({ text: `Render failed: ${data.error || "provider error"} — no credits charged.`, kind: "error" });
+      const w = watched.current.get(id);
+      if (w instanceof EventSource) w.close(); else if (w) clearInterval(w);
+      watched.current.delete(id);
+      return true;
+    };
+    const pollFallback = (id: string) => {
+      const t = setInterval(async () => {
+        try { settle(id, await (await fetch(`/api/cloud/assets/${id}`)).json()); } catch { /* next tick */ }
+      }, 4000);
+      watched.current.set(id, t);
+    };
+    for (const a of assets) {
+      if (a.status !== "generating" || watched.current.has(a.id)) continue;
+      if (typeof EventSource === "undefined") { pollFallback(a.id); continue; }
+      const es = new EventSource(`/api/cloud/assets/${a.id}/events`);
+      watched.current.set(a.id, es);
+      es.onmessage = (ev) => { try { settle(a.id, JSON.parse(ev.data)); } catch { /* malformed frame */ } };
+      es.onerror = () => { es.close(); if (watched.current.get(a.id) === es) { watched.current.delete(a.id); pollFallback(a.id); } };
+    }
   }, [assets]);
+
+  /* close every live stream/timer exactly once, on unmount */
+  useEffect(() => {
+    const current = watched.current;
+    return () => {
+      for (const w of current.values()) { if (w instanceof EventSource) w.close(); else clearInterval(w); }
+      current.clear();
+    };
+  }, []);
 
   async function generate(kind: "image" | "video", parentImageId?: string) {
     if (busy) return;
