@@ -70,8 +70,9 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      `--plan`. **Never `--quick`** on a real desk run. *Why it matters (measured):* a bare topic
      hits **1–3 of 9 sources**; the flags are what activate TikTok/IG/X/Threads to reach the full
      **9 sources / 10–15 clusters**. A bare/untargeted topic also returns entity-miss NOISE
-     (verified: "applying to jobs" → horror-movie reviews + Kubernetes docs). The recipe names the
-     entities → flags.
+     (measured: an untargeted consumer-domain topic → horror-movie reviews + Kubernetes docs).
+     The recipe names the entities → flags — always derived from the brief's `{segment}`/`{product}`,
+     never a fixed list.
    - **`agent-reach` — use the FULL channel set, not just `reach.sh`'s keyless 4.** The vendored
      package has **14 channels** (twitter, reddit, linkedin, xiaohongshu, bilibili, xiaoyuzhou,
      xueqiu, exa, rss, youtube, v2ex, github, web). Drive the keyless ones via
@@ -134,7 +135,7 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      triggers a **reformulate-and-retry loop** (up to 3 reformulations per probe, each
      logged with its outcome):
      1. **Quote the buyer's words** — replace your abstraction with verbatims already in
-        the ledger/carry-forward (`"spray and pray"`, not `mass applying behavior`).
+        the ledger/carry-forward (`"waiting on the data team"`, not `analytics delays`).
      2. **Name entities** — add `--x-handle`/`--x-related` (competitor + creator handles
         harvested from earlier desks), tighten `--subreddits` to the segment's real
         communities, name the product/category exactly.
