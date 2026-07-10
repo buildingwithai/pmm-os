@@ -2962,7 +2962,14 @@ a.cw-item:focus-visible { outline: 2px solid #8cb4ff; outline-offset: -2px; }
 .blk.dragging { opacity: .45; }
 .blk.dropbefore { box-shadow: 0 -2px 0 0 #8cb4ff; }
 .blk.dropafter { box-shadow: 0 2px 0 0 #8cb4ff; }
-.cwk-blocks [data-path]:focus { outline: none; box-shadow: 0 0 0 2px rgba(140,180,255,.35); border-radius: 4px; }
+/* paper, not form fields: focus shows as a caret, never a ring
+   (contenteditable always matches :focus-visible on click, so a keyboard-only
+   ring is not distinguishable — the caret is the focus indicator, as in Notion) */
+.cwk-blocks [data-path] { caret-color: #8cb4ff; }
+.cwk-blocks [data-path]:focus { outline: none; }
+.cwk-blocks [data-path]:focus:empty::before { content: "Type “/” for blocks, or just write…"; color: #7d8494; pointer-events: none; }
+.cwk-view { cursor: text; }
+.cwk-view .cw-rail, .cwk-view a, .cwk-view button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .blk .blk-grip, .blk .blk-menu { transition: none; } }
 
 .ck-bubble, .ck-slash, .ck-blkmenu, .ck-cmpop {

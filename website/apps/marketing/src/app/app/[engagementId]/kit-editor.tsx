@@ -320,6 +320,130 @@ export function KitEditor({
       }
     });
 
+    /* ── paper feel: Enter = next block · Backspace on empty = remove ──
+       Optimistic: the DOM updates instantly (no reload mid-typing) and the
+       versioned save runs in the background. Later blocks' data-block /
+       data-path indexes are rewritten in place so follow-up edits stay true. */
+    const TEXTISH = /\.(p|h|quote|callout)$/;
+    function shiftIndices(fromIdx: number, delta: number, skip?: Element) {
+      $$(".blk", work).forEach((b) => {
+        if (b === skip) return;
+        const m = /^views\.([^.]+)\.blocks\.(\d+)$/.exec(b.getAttribute("data-block") || "");
+        if (!m || m[1] !== viewId || +m[2] < fromIdx) return;
+        const oldIdx = +m[2], newIdx = oldIdx + delta;
+        b.setAttribute("data-block", `views.${viewId}.blocks.${newIdx}`);
+        const oldPrefix = `views.${viewId}.blocks.${oldIdx}.`;
+        const newPrefix = `views.${viewId}.blocks.${newIdx}.`;
+        $$("[data-path]", b).forEach((el) => {
+          const p = el.getAttribute("data-path")!;
+          if (p.startsWith(oldPrefix)) el.setAttribute("data-path", newPrefix + p.slice(oldPrefix.length));
+        });
+      });
+    }
+    function persistDoc(label = "Saved") {
+      void post({ full: doc.current }).then((r) => { if (r) flash(`${label} ✓ v${r.version}`, true); });
+    }
+    function makeTextBlockDOM(idx: number, html: string): { blk: HTMLElement; p: HTMLElement } {
+      const blk = document.createElement("div");
+      blk.className = "blk";
+      const id = newId();
+      blk.setAttribute("data-block", `views.${viewId}.blocks.${idx}`);
+      blk.setAttribute("data-bid", id);
+      const p = document.createElement("p");
+      p.setAttribute("data-path", `views.${viewId}.blocks.${idx}.p`);
+      p.setAttribute("contenteditable", "true");
+      p.innerHTML = html;
+      blk.appendChild(p);
+      blk.dataset.newId = id;
+      return { blk, p };
+    }
+    function focusStart(el: HTMLElement) {
+      el.focus();
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      r.collapse(true);
+      const sel = document.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(r);
+    }
+    on("keydown", (e) => {
+      if (slash.classList.contains("open")) return;
+      const host = (document.activeElement as Element | null)?.closest?.(".cwk-blocks [data-path]") as HTMLElement | null;
+      if (!host) return;
+      const path = host.getAttribute("data-path")!;
+      if (!TEXTISH.test(path)) return; // lists/tables keep native behavior
+      const l = locOf(host);
+      if (!l || l.view !== viewId) return;
+      const blocks = doc.current.views[viewId].blocks!;
+      const field = path.split(".").pop() as "p" | "h" | "quote" | "callout";
+
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        snapshot();
+        // split at the caret: everything after moves into the new block
+        let after = "";
+        const sel = document.getSelection();
+        if (sel?.rangeCount) {
+          const r = document.createRange();
+          r.selectNodeContents(host);
+          r.setStart(sel.getRangeAt(0).endContainer, sel.getRangeAt(0).endOffset);
+          const frag = r.extractContents();
+          const tmp = document.createElement("div");
+          tmp.appendChild(frag);
+          after = tmp.innerHTML.trim();
+        }
+        blocks[l.idx][field] = host.innerHTML.trim();
+        delete dirty[path];
+        shiftIndices(l.idx + 1, 1);
+        const { blk, p } = makeTextBlockDOM(l.idx + 1, after);
+        blocks.splice(l.idx + 1, 0, { type: "text", id: blk.dataset.newId, p: after });
+        host.closest(".blk")!.after(blk);
+        focusStart(p);
+        persistDoc();
+        return;
+      }
+
+      if (e.key === "Backspace" && !(host.textContent || "").trim() && l.idx > 0) {
+        e.preventDefault();
+        snapshot();
+        const prevBlk = host.closest(".blk")!.previousElementSibling as HTMLElement | null;
+        blocks.splice(l.idx, 1);
+        delete dirty[path];
+        const own = host.closest(".blk")!;
+        shiftIndices(l.idx + 1, -1, own);
+        own.remove();
+        const prevEditable = prevBlk ? ($$("[data-path]", prevBlk).pop() as HTMLElement | undefined) : undefined;
+        if (prevEditable) {
+          prevEditable.focus();
+          const r = document.createRange();
+          r.selectNodeContents(prevEditable);
+          r.collapse(false);
+          const sel = document.getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(r);
+        }
+        persistDoc("Removed");
+      }
+    });
+
+    /* click on the paper below the last block → start writing there */
+    const view = work.closest(".cwk-view") as HTMLElement | null;
+    if (view) {
+      view.addEventListener("click", (e) => {
+        if (e.target !== view) return; // only the empty area, never content
+        const blocks = doc.current.views[viewId].blocks!;
+        const last = $$(".blk", work).pop();
+        const lastEditable = last ? ($$("[data-path]", last).pop() as HTMLElement | undefined) : undefined;
+        if (lastEditable && !(lastEditable.textContent || "").trim()) { focusStart(lastEditable); return; }
+        snapshot();
+        const { blk, p } = makeTextBlockDOM(blocks.length, "");
+        blocks.push({ type: "text", id: blk.dataset.newId, p: "" });
+        work.appendChild(blk);
+        focusStart(p);
+        persistDoc();
+      }, { signal });
+    }
+
     /* ── block menu (⋯): turn into · move to · AI · duplicate · delete ── */
     const blkMenu = document.createElement("div");
     blkMenu.className = "ck-blkmenu";
