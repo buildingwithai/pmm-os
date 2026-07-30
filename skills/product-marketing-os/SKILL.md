@@ -129,17 +129,17 @@ This plugin now includes additional PMM, GTM, coaching, campaign, and artifact-p
 | Campaign brief | pmm-campaign-brief | pmm-artifact-factory |
 | Many launch deliverables | pmm-artifact-factory | pmm-coach |
 | Interactive launch kit / clickable hub / package the kit into one app | pmm-launch-kit | pmm-artifact-factory, pmm-coach |
-| Signal-based GTM or outbound | gtm-signal-campaign | gtm-account-research, gtm-icp-scoring, pmm-outreach, cold-email, revops, analytics |
-| Messaging proof or testing | pmm-message-market-fit | copywriting, cro, ads |
-| Feature announcement | pmm-feature-announcement | social, emails, image |
-| Technical marketing content | osp-content-optimizer | osp-value-map, osp-technical-marketing, ai-seo, schema, content-strategy |
-| AI visibility or LLM citations | pmm-aeo-geo | ai-seo, schema, pmm-competitive-intelligence |
-| PLG, activation, growth loops, PQL/PQA | plg-gtm-strategy | analytics, lifecycle, pricing |
+| Signal-based GTM or outbound | gtm-signal-campaign | gtm-account-research, gtm-icp-scoring, pmm-outreach, gtm-signal-campaign, post-launch-learning-loop |
+| Messaging proof or testing | pmm-message-market-fit | pmm-content-writer, pmm-message-market-fit, pmm-campaign-brief |
+| Feature announcement | pmm-feature-announcement | pmm-feature-announcement, pmm-artifact-factory |
+| Technical marketing content | osp-content-optimizer | osp-value-map, osp-technical-marketing, pmm-aeo-geo, pmm-content-writer |
+| AI visibility or LLM citations | pmm-aeo-geo | pmm-aeo-geo, pmm-competitive-intelligence |
+| PLG, activation, growth loops, PQL/PQA | plg-gtm-strategy | post-launch-learning-loop, plg-gtm-strategy, pmm-pricing-packaging |
 | Product lifecycle, roadmap, PRD, prototype | product-lifecycle-os | prd-prototype-factory, pmm-go-to-market |
-| Post-launch impact, feedback, iteration | post-launch-learning-loop | analytics, pmm-coach, plg-gtm-strategy |
+| Post-launch impact, feedback, iteration | post-launch-learning-loop | post-launch-learning-loop, pmm-coach, plg-gtm-strategy |
 | Battlecard or competitive sales response | pmm-battlecard | pmm-adaptive-messaging, sales-enablement |
 | Positioning exercise | pmm-positioning-exercise | pmm-positioning-audit, pmm-messaging-hierarchy |
-| Competitive pricing analysis | pmm-pricing-analysis | pricing, paywalls, plg-gtm-strategy |
+| Competitive pricing analysis | pmm-pricing-analysis | pmm-pricing-packaging, plg-gtm-strategy |
 | ICP definition or scoring | pmm-icp-definition | gtm-icp-scoring, gtm-account-research |
 | VOC synthesis | pmm-voc-synthesis | pmm-messaging-hierarchy, pmm-personas |
 | Sales narrative | pmm-sales-narrative | sales-enablement, pmm-coach |

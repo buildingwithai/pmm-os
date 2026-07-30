@@ -26,14 +26,14 @@ Use this sequence:
 
 | Need | Deliverables |
 |---|---|
-| Product launch | Launch brief, campaign brief, blog, email, social pack, deck outline, sales one-pager, FAQ, image briefs, measurement plan |
+| Product launch | Launch brief, campaign brief, blog, email, pmm-feature-announcement pack, deck outline, sales one-pager, FAQ, pmm-artifact-factory briefs, measurement plan |
 | Campaign | Campaign brief, channel plan, copy matrix, asset list, budget, RACI, KPIs, deck outline |
 | Sales enablement | Battlecard, one-pager, pitch narrative, demo script, objection handling, discovery questions |
 | Research | Research plan, interview guide, synthesis, persona cards, evidence bank |
 | Competitive | Competitor profile, battlecard, comparison page outline, landmine questions |
 | AEO/GEO | Query set, gap inventory, fix briefs, measurement dashboard spec |
-| CRO | Audit, hypotheses, experiment plan, copy variants, analytics events |
-| Visual creative | Hero image brief, ad concepts, social carousel outline, landing page wireframe, product mockup brief |
+| CRO | Audit, hypotheses, experiment plan, copy variants, post-launch-learning-loop events |
+| Visual creative | Hero pmm-artifact-factory brief, ad concepts, pmm-feature-announcement carousel outline, landing page wireframe, product mockup brief |
 
 ## File formats
 

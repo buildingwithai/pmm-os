@@ -87,8 +87,8 @@ Outputs:
 | Mode | Use when | Behavior |
 |---|---|---|
 | Autopilot | Low-risk drafts or internal planning | Generate complete draft and flag assumptions |
-| Copilot | Strategy, PRD, launch, roadmap | Ask for approvals at quality gates |
-| Manual | High-stakes executive, customer, pricing, or legal work | Provide frameworks, drafts, and decision support only |
+| Copilot | Strategy, PRD, pmm-go-to-market, roadmap | Ask for approvals at quality gates |
+| Manual | High-stakes executive, customer, pmm-pricing-packaging, or legal work | Provide frameworks, drafts, and decision support only |
 
 Default to copilot for product and GTM decisions.
 

@@ -53,7 +53,7 @@ When context is adequate, produce a concrete deliverable. Always explain which f
 
 | Situation | Primary framework | Output |
 |---|---|---|
-| Users sign up but do not activate | AHA Moment + Time to Value | Activation diagnosis and onboarding experiment plan |
+| Users sign up but do not activate | AHA Moment + Time to Value | Activation diagnosis and plg-gtm-strategy experiment plan |
 | Product has usage data but weak sales handoff | PQL/PQA model | Signal scoring model and sales-assist handoff plan |
 | Growth depends on users inviting others | Growth loop design | Loop map, inputs, friction points, metrics |
 | Free trial conversion is weak | Trial mode selection + paywall placement | Trial strategy and conversion experiment roadmap |
