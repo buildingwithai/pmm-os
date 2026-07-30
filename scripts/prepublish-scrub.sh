@@ -1,27 +1,39 @@
 #!/usr/bin/env bash
 # Leak scrub — blocks `npm publish` (prepublishOnly) and `git push` (pre-push hook).
 #
-# Three leak classes, learned the hard way:
-#   1. secrets/keys/tokens
-#   2. private strategy content
-#   3. run fingerprints in doc prose (example verbatims, entity lists, real
-#      subreddit/handle/venue names from an owner's actual research runs)
+# Leak classes, learned the hard way:
+#   1. secrets/keys/tokens — objective, always hard-blocked, patterns are in-script
+#   2. things that must never ship — third-party/client names, confidential data
+#   3. things you publish ON PURPOSE but must never publish BY ACCIDENT — your own
+#      products and case studies
 #
-# Classes 2+3 are owner-specific terms. They must NEVER be hardcoded here (this
-# script is public — the denylist itself would be the leak). They live in a
-# PRIVATE file outside the repo, one extended-regex term per line, # comments ok:
-#     ~/.config/pmm-os/scrub-denylist.txt   (chmod 600)
+# Classes 2 and 3 need different treatment, and conflating them was a mistake.
+# Blocking your own product names stops you writing the case studies you meant to
+# write, and trains you to reach for --no-verify — which is the habit that let the
+# 2026-07-08 leak through in the first place. What actually went wrong then wasn't
+# that a product name appeared; it was that an unreleased product's whole strategy
+# shipped without anyone looking. So:
+#
+#   ~/.config/pmm-os/scrub-denylist.txt    HARD BLOCK. Never ships. Client names,
+#                                          customer verbatims, third-party data.
+#   ~/.config/pmm-os/scrub-reviewlist.txt  REVIEW. Prints exactly which files are
+#                                          about to go public mentioning each term,
+#                                          then passes. Visibility, not obstruction.
+#
+# Both are PRIVATE, outside the repo, chmod 600 — this script is public and the
+# term list itself would be the leak. One extended-regex term per line, # comments ok.
 #
 # Scan set is EVERY TRACKED FILE, not the npm `files` whitelist. The 2026-07-08
 # leak sat in a directory the old hardcoded SHIP_DIRS list didn't name, and it
 # leaked via the public *repo*, which `npm publish` gates never see.
 #
-# Missing denylist FAILS. A scrub that passes because it checked nothing is
+# A missing denylist FAILS. A scrub that passes because it checked nothing is
 # worse than no scrub — that is how 3.0.0 shipped.
 # Escape hatch for CI/contributors who have no denylist: PMM_OS_SCRUB_NO_DENYLIST=1
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DENYLIST="${PMM_OS_SCRUB_DENYLIST:-$HOME/.config/pmm-os/scrub-denylist.txt}"
+REVIEWLIST="${PMM_OS_SCRUB_REVIEWLIST:-$HOME/.config/pmm-os/scrub-reviewlist.txt}"
 FAIL=0
 
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; }
@@ -46,7 +58,7 @@ if [ -f "$DENYLIST" ]; then
   if [ -n "$TERMS" ]; then
     HITS=$(git -C "$ROOT" grep -IliE "$TERMS" -- . 2>/dev/null | head -10)
     if [ -n "$HITS" ]; then
-      bad "denylist hits (strategy/fingerprint terms) in tracked files:"
+      bad "denylist hits (must-never-ship terms) in tracked files:"
       printf '%s\n' "$HITS" | sed 's/^/      /'
     else
       ok "denylist ($(printf '%s' "$TERMS" | tr '|' '\n' | wc -l | tr -d ' ') terms): clean"
@@ -55,11 +67,29 @@ if [ -f "$DENYLIST" ]; then
     bad "denylist at $DENYLIST is EMPTY — classes 2+3 unchecked. Refusing."
   fi
 elif [ "${PMM_OS_SCRUB_NO_DENYLIST:-0}" = "1" ]; then
-  warn "PMM_OS_SCRUB_NO_DENYLIST=1 — strategy/fingerprint check deliberately skipped."
+  warn "PMM_OS_SCRUB_NO_DENYLIST=1 — never-ship check deliberately skipped."
 else
-  bad "NO DENYLIST at $DENYLIST — classes 2+3 unchecked. Refusing to pass."
+  bad "NO DENYLIST at $DENYLIST — never-ship terms unchecked. Refusing to pass."
   warn "Create it (one extended-regex term per line, chmod 600), or set"
   warn "PMM_OS_SCRUB_NO_DENYLIST=1 if you are not the owner and have nothing to hide."
+fi
+
+# 2b. review terms — your own products. Publishing these is the point; publishing
+# them WITHOUT NOTICING is the failure. Show the blast radius, then get out of the way.
+if [ -f "$REVIEWLIST" ]; then
+  RTERMS=$(grep -vE '^\s*(#|$)' "$REVIEWLIST" | paste -sd'|' -)
+  if [ -n "$RTERMS" ]; then
+    RHITS=$(git -C "$ROOT" grep -IliE "$RTERMS" -- . 2>/dev/null)
+    if [ -n "$RHITS" ]; then
+      N=$(printf '%s\n' "$RHITS" | wc -l | tr -d ' ')
+      printf '  \033[33m!\033[0m REVIEW — %s tracked file(s) mention a product you track:\n' "$N"
+      printf '%s\n' "$RHITS" | head -12 | sed 's/^/        /'
+      [ "$N" -gt 12 ] && printf '        … and %s more\n' "$((N - 12))"
+      printf '        Intentional? Then carry on. Surprised by any of these? Stop now.\n'
+    else
+      ok "review terms: no mentions"
+    fi
+  fi
 fi
 
 # 4. personal / machine identifiers that shouldn't be in a public repo
