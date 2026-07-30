@@ -24,6 +24,14 @@ for c in "$HOME/.cache/chrome-for-testing/chrome/mac_arm-"*/chrome-mac-arm64/"Go
 done
 [ -n "$CHROME" ] || { echo "✗ no Chrome found — install Chrome or Chrome for Testing"; exit 1; }
 
+# Checksums before regeneration, in a temp file rather than an associative array —
+# macOS ships bash 3.2, which has no `declare -A`.
+BEFORE=$(mktemp)
+trap 'rm -f "$BEFORE" "${SHIM:-}"' EXIT
+for f in "$OUT"/*.png "$OUT"/*.gif; do
+  [ -f "$f" ] && printf '%s %s\n' "$(md5 -q "$f")" "$f" >> "$BEFORE"
+done
+
 echo "── rebuilding the demo kit ──"
 node skills/pmm-launch-kit/scripts/build-kit.mjs "$DEMO" >/dev/null
 echo "  ✓ $DEMO/plotline-launch-kit.html"
@@ -42,13 +50,25 @@ cat > "$SHIM" <<'EOF'
   location.replace('./plotline-launch-kit.html' + location.hash);
 </script>
 EOF
-trap 'rm -f "$SHIM"' EXIT
+
+CHANGED=0; TOTAL=0
+# Report changed vs unchanged. Without this the script looks like it did nothing
+# whenever the images are already current, which is the common case.
+report() {  # report <path>
+  TOTAL=$((TOTAL+1))
+  f="$1"; state="unchanged"
+  was=$(grep -F " $f" "$BEFORE" 2>/dev/null | head -1 | cut -d" " -f1)
+  now=$(md5 -q "$f" 2>/dev/null)
+  if [ -z "$was" ]; then state="new"; CHANGED=$((CHANGED+1))
+  elif [ "$was" != "$now" ]; then state="UPDATED"; CHANGED=$((CHANGED+1)); fi
+  printf '  %-24s %-6s %s\n' "$(basename "$f")" "$(du -h "$f" | cut -f1)" "$state"
+}
 
 shot() {  # shot <hash> <output-name>
   "$CHROME" --headless --disable-gpu --hide-scrollbars --allow-file-access-from-files \
     --window-size=$W,$H --virtual-time-budget=6000 \
     --screenshot="$OUT/$2.png" "file://$PWD/$SHIM#$1" >/dev/null 2>&1
-  printf '  ✓ %-22s %s\n' "$2.png" "$(du -h "$OUT/$2.png" | cut -f1)"
+  report "$OUT/$2.png"
 }
 
 echo "── capturing views ──"
@@ -89,7 +109,7 @@ PY
   --window-size=$W,$H --virtual-time-budget=6000 \
   --screenshot="$OUT/command-palette.png" "file://$PWD/$PAL#v-overview" >/dev/null 2>&1
 rm -f "$PAL"
-printf '  ✓ %-22s %s\n' "command-palette.png" "$(du -h "$OUT/command-palette.png" | cut -f1)"
+report "$OUT/command-palette.png"
 
 if command -v ffmpeg >/dev/null 2>&1; then
   echo "── click-through gif ──"
@@ -102,7 +122,7 @@ if command -v ffmpeg >/dev/null 2>&1; then
     -vf "scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer" \
     -loop 0 "$OUT/launch-kit-demo.gif" >/dev/null 2>&1
   rm -rf "$T"
-  printf '  ✓ %-22s %s\n' "launch-kit-demo.gif" "$(du -h "$OUT/launch-kit-demo.gif" | cut -f1)"
+  report "$OUT/launch-kit-demo.gif"
 else
   echo "  ! ffmpeg not found — launch-kit-demo.gif left as-is"
 fi
@@ -113,7 +133,11 @@ echo "── social preview (reuses the fresh events-desk shot) ──"
   --screenshot="$OUT/.social@2x.png" "file://$PWD/$OUT/social-preview.source.html" >/dev/null 2>&1
 sips -z 640 1280 "$OUT/.social@2x.png" --out "$OUT/social-preview.png" >/dev/null 2>&1
 rm -f "$OUT/.social@2x.png"
-printf '  ✓ %-22s %s\n' "social-preview.png" "$(du -h "$OUT/social-preview.png" | cut -f1)"
+report "$OUT/social-preview.png"
 
 echo
-echo "✓ done — review with: git diff --stat docs/images/"
+if [ "$CHANGED" -eq 0 ]; then
+  echo "✓ $TOTAL images regenerated, 0 changed — they were already current."
+else
+  echo "✓ $TOTAL images regenerated, $CHANGED changed. Review: git diff --stat docs/images/"
+fi

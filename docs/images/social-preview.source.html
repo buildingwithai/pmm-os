@@ -1,74 +1,49 @@
 <!doctype html>
-<!-- Social preview source. Regenerate after editing:
-       cd docs/images && chrome --headless --force-device-scale-factor=2 \
-         --screenshot=social-preview@2x.png --window-size=1280,640 file://$PWD/social-preview.source.html
-     Palette is lifted from skills/pmm-launch-kit/scripts/.kit-style.css — if the kit
-     is restyled, update both or the card stops matching the product. -->
+<!-- Social preview source. Regenerate with: bash scripts/regen-screenshots.sh
+     Palette is lifted from skills/pmm-launch-kit/scripts/.kit-style.css — if the
+     kit is restyled, this follows automatically because the screenshot does. -->
 <meta charset="utf-8">
 <style>
-  /* Palette lifted verbatim from skills/pmm-launch-kit/scripts/.kit-style.css,
-     so the card and the product are the same surface rather than a lookalike. */
   :root {
-    --bg:#0c0e11; --side:#0a0b0e; --ink:#f7f8fa; --muted:#c5ccd4; --dim:#9aa3ad;
-    --accent:#8cb8ff; --accent-line:rgba(140,184,255,.40); --line2:rgba(255,255,255,.12);
+    --side:#0a0b0e; --ink:#f7f8fa; --muted:#c5ccd4; --dim:#9aa3ad;
+    --accent:#8cb8ff; --accent-line:rgba(140,184,255,.40);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { width:1280px; height:640px; overflow:hidden; }
   body {
-    background:var(--side);
+    background:var(--side); color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;
-    color:var(--ink);
-    display:grid; grid-template-columns:468px 1fr;
+    display:grid; grid-template-columns:392px 1fr; align-items:center;
   }
 
-  /* ---------- left rail: the kit's own sidebar ---------- */
-  .rail {
-    background:var(--side); border-right:1px solid var(--line2);
-    padding:44px 40px; display:flex; flex-direction:column; gap:28px;
-  }
-  .brand { display:flex; align-items:center; gap:12px; }
-  .brand svg { width:32px; height:32px; border-radius:8px; display:block; }
-  .brand .n { font-size:15px; font-weight:700; letter-spacing:-.01em; }
-  .brand .n span { color:var(--dim); font-weight:500; letter-spacing:.12em; font-size:11px;
-                   text-transform:uppercase; margin-left:8px; }
+  .rail { padding:0 36px; display:flex; flex-direction:column; gap:20px; }
+  .brand { display:flex; align-items:center; gap:11px; }
+  .brand svg { width:30px; height:30px; border-radius:7px; display:block; }
+  .brand .n { font-size:14.5px; font-weight:700; letter-spacing:-.01em; }
+  .brand .n span { color:var(--dim); font-weight:500; letter-spacing:.12em;
+                   font-size:10.5px; text-transform:uppercase; margin-left:7px; }
 
-  .eyebrow { font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
-             color:var(--accent); margin-bottom:14px; }
-  h1 { font-size:39px; line-height:1.11; font-weight:700; letter-spacing:-.028em; }
-  .sub { margin-top:14px; font-size:15px; line-height:1.55; color:var(--muted); max-width:33ch; }
+  h1 { font-size:36px; line-height:1.1; font-weight:700; letter-spacing:-.028em; }
+  h1 em { font-style:normal; color:var(--accent); }
+  .sub { font-size:14.5px; line-height:1.55; color:var(--muted); }
 
-  /* the numbered section list people recognise from the kit */
-  .toc { margin-top:22px; display:grid; gap:8px; padding-top:20px;
-         border-top:1px solid rgba(255,255,255,.07); }
-  .toc div { display:flex; gap:12px; font-size:12.5px; align-items:baseline; }
-  .toc b { color:var(--muted); font-weight:500; }
-  .toc i { font-style:normal; color:#5b636d; font-variant-numeric:tabular-nums;
-           font-size:11px; min-width:22px; }
-  .toc .on b { color:var(--accent); font-weight:600; }
-  .toc .on i { color:var(--accent); }
+  .facts { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px;
+           padding-top:18px; border-top:1px solid rgba(255,255,255,.08); }
+  .facts div { font-size:12.5px; color:var(--dim); }
+  .facts b { color:var(--muted); font-weight:600; }
 
-  .proof { margin-top:auto; padding-top:22px; display:flex; gap:18px; font-size:12px;
-           color:var(--dim); border-top:1px solid rgba(255,255,255,.07); }
-  .proof b { color:var(--muted); font-weight:600; }
-  .cmd { margin-top:16px; font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:15px;
+  .cmd { font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:14.5px;
          color:var(--accent); border:1px solid var(--accent-line); border-radius:8px;
-         padding:11px 14px; background:rgba(140,184,255,.07); align-self:start; }
+         padding:10px 13px; background:rgba(140,184,255,.07); align-self:start; }
 
-  /* ---------- right: real UI, native scale, spliced past the disclaimer ---------- */
-  .shot { position:relative; overflow:hidden; background:var(--bg); }
-  .band { position:relative; overflow:hidden; }
-  .band img { position:absolute; width:1440px; height:900px; left:-286px;
-              image-rendering:-webkit-optimize-contrast; }
-  .label { height:52px; display:flex; align-items:center; padding:0 0 0 26px;
-           font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
-           color:var(--accent); background:var(--bg); }
-  .band.grid { height:501px; }           /* table + the reasoning, stopping before the first-run toast */
-  .band.grid img { top:-330px; }
-  /* seat it in the card: shadow into the rail, fade out at the bleed */
-  .shot::after {
-    content:""; position:absolute; inset:0; pointer-events:none;
-    box-shadow:inset 30px 0 40px -30px rgba(0,0,0,.9);
-    background:linear-gradient(to bottom, transparent 84%, rgba(12,14,17,.55) 92%, rgba(12,14,17,.9) 100%);
+  /* The whole app, scaled to fit — the point is the shape of a real workspace:
+     toolbar, ten-desk sidebar, content, inspector. Body text going small is fine;
+     nobody reads a social card, they recognise it. */
+  .app { height:640px; display:flex; align-items:flex-start; overflow:hidden; }
+  .app img {
+    width:1024px; height:640px;     /* 1440x900 at 0.711 — full bleed */
+    margin-left:0;
+    border-left:1px solid rgba(255,255,255,.10);
   }
 </style>
 
@@ -82,28 +57,16 @@
     <div class="n">PMM OS<span>Launch Kit</span></div>
   </div>
 
-  <div>
-    <div class="eyebrow">Product Marketing &middot; GTM</div>
-    <h1>Research that comes back as a deliverable.</h1>
-    <p class="sub">Ten specialist desks fan out across two engines, capture sourced
-      evidence, and emit the real artifact &mdash; not a summary.</p>
-    <div class="toc">
-      <div><i>03</i><b>Positioning</b></div>
-      <div><i>05</i><b>Competitive</b></div>
-      <div><i>06</i><b>Pricing</b></div>
-      <div class="on"><i>08b</i><b>Events desk</b></div>
-      <div><i>11</i><b>Coach review</b></div>
-    </div>
+  <h1>A launch that ships as <em>an app</em>, not a folder of docs.</h1>
+  <p class="sub">Positioning, messaging, pricing and ten research desks — every
+    claim traced to the evidence that justifies it.</p>
+
+  <div class="facts">
+    <div><b>45</b> skills</div><div><b>10</b> research desks</div>
+    <div><b>2</b> research engines</div><div><b>0</b> dependencies</div>
   </div>
 
-  <div class="proof">
-    <span><b>45</b> skills</span><span><b>10</b> desks</span>
-    <span><b>2</b> engines</span><span><b>0</b> deps</span>
-  </div>
   <div class="cmd">npx pmm-os install</div>
 </div>
 
-<div class="shot">
-  <div class="label">08b &middot; Events desk &nbsp;&middot;&nbsp; ranked targets</div>
-  <div class="band grid"><img src="./events-desk.png" alt=""></div>
-</div>
+<div class="app"><img src="./overview.png" alt=""></div>
