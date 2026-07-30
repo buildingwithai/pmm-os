@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Run the leak scrub before anything reaches the public repo.
+#
+# prepublishOnly gates `npm publish` only. The 2026-07-08 leak reached people
+# through the *repo*, which no gate had ever scanned. This closes that.
+#
+# Install (once per clone):  git config core.hooksPath .githooks
+# Bypass (you had better be sure):  git push --no-verify
+exec "$(dirname "$0")/../scripts/prepublish-scrub.sh"
