@@ -356,7 +356,19 @@ function probeAgentReach() {
         fix: `log into ${ch} in Chrome; the first real call returns AUTH_REQUIRED if not`,
       });
     } else if (v.status === 'ok') {
-      out[key] = P('live', backend || 'unknown', { evidence: 'agent-reach doctor probed this backend', ttlSec: TTL.binary });
+      // NOT `live`. agent-reach's doctor checks that a backend is INSTALLED and
+      // reachable, not that a real query returns data — and the difference is not
+      // hypothetical. Measured 2026-07-30: `exa_search` reported ok while the call its
+      // own SKILL.md documents
+      //   mcporter call 'exa.web_search_exa(query: "...", numResults: 5)'
+      // returned HTTP 429 "You've hit Exa's free MCP rate limit". Reporting that as
+      // live is the same bug as calling a 402'd ScrapeCreators key healthy.
+      // These never enter --search regardless (liveSources filters reach:*), so this
+      // only changes what the table claims — which is the point.
+      out[key] = P('unverifiable', backend || 'unknown', {
+        reason: 'agent-reach doctor confirms the backend is installed, not that a query returns data',
+        fix: `make one real call through ${backend || 'the backend'} before relying on it`,
+      });
     } else if (v.status === 'warn') {
       out[key] = P('blocked', backend || 'none', { reason: (v.message || '').split('\n')[0].slice(0, 120) });
     } else {
