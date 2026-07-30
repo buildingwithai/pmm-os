@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import time
 import json
+from datetime import datetime
 import os
 import re
 from _common import read_event
@@ -79,11 +81,74 @@ def _last_message_from_transcript(event: dict) -> str:
     return ""
 
 
+RESEARCH_CLAIM = re.compile(
+    r"research (?:complete|done|finished)|Research quality|"
+    r"sources?\s*(?:searched|queried|covered)|"
+    r"(?:^|\n)\s*[✓✅]\s*\w+.*\bsources?\b|"
+    r"across \d+ sources|\bVoC\b|voice[- ]of[- ]customer",
+    re.I | re.M,
+)
+
+
+def _receipt_conflict(message: str) -> str | None:
+    """Block when the turn reports research that the receipt says was degraded.
+
+    The other gate in this file is advisory on purpose — refusing to finish
+    someone's first launch request is how a plugin gets uninstalled. This one is
+    different in kind: that gate makes a JUDGEMENT about whether enough research
+    was done; this one states a FACT about whether the run that just happened was
+    degraded. Blocking on a fact is defensible.
+
+    It exists because the engine exits 0 on every degraded run and can print
+    "Research quality: 5/5 core sources" while four sources returned nothing —
+    so a model summarising its own run has no honest signal unless it reads the
+    receipt, and nothing made it.
+    """
+    if not RESEARCH_CLAIM.search(message):
+        return None
+    path = os.path.expanduser("~/.pmm-os/last-receipt.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            r = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    if r.get("verdict") in (None, "CLEAN"):
+        return None
+    # Only this turn's run. A stale receipt must not block unrelated work.
+    try:
+        age = time.time() - datetime.fromisoformat(
+            r["at"].replace("Z", "+00:00")).timestamp()
+    except Exception:
+        return None
+    if age > 3600:
+        return None
+
+    silent = ", ".join(r.get("silentZero") or []) or "none"
+    notlive = ", ".join(n.get("name", "?") for n in (r.get("notLive") or [])) or "none"
+    fix = next((n.get("fix") for n in (r.get("notLive") or []) if n.get("fix")), None)
+    return (
+        "STOP: the research run you are describing was not clean.\n\n"
+        f"  verdict:      {r['verdict']}\n"
+        f"  returned:     {r.get('total', '?')} items\n"
+        f"  silent zeros: {silent}   (requested, returned nothing)\n"
+        f"  not queried:  {notlive}\n"
+        + (f"  fix:          {fix}\n" if fix else "")
+        + "\nDo not present this as complete coverage. Revise your answer to state the\n"
+        "gap and its cause in the body — not a footnote — then stop. If the gap is\n"
+        "acceptable for this task, say why explicitly."
+    )
+
+
 def main() -> None:
     event = read_event()
     if event.get("stop_hook_active"):
         return
     message = str(event.get("last_assistant_message") or "") or _last_message_from_transcript(event)
+
+    conflict = _receipt_conflict(message)
+    if conflict:
+        print(json.dumps({"decision": "block", "reason": conflict}))
+        return
     prompt = str(event.get("prompt") or event.get("last_user_message") or "")
     lower = message.lower()
     combined = (prompt + "\n" + message).lower()

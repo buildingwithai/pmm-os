@@ -243,6 +243,26 @@ def check_compiles() -> None:
     check("python and node sources compile", bad)
 
 
+def check_receipt_gate_selftest() -> None:
+    """Ring 4 is the last thing between a degraded run and a turn that calls it
+    complete. It also must not fire on ordinary work."""
+    t = ROOT / "hooks" / "test_stop_receipt_gate.py"
+    if not t.is_file():
+        check("Stop receipt-gate self-check", ["hooks/test_stop_receipt_gate.py is missing"])
+        return
+    r = subprocess.run([sys.executable, str(t)], capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    check("Stop receipt-gate self-check", [] if r.returncode == 0 else [r.stdout.strip()[:400]])
+
+
+def check_launch_gate() -> None:
+    """sync-research-engines.sh deletes the engine's scripts/ wholesale, so the
+    gate has to be re-applied by a patcher. Assert it is currently applied."""
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "patch-engine-launch-gate.py"), "--check"],
+                       capture_output=True, text=True)
+    check("engine launch gate applied", [] if r.returncode == 0 else [r.stdout.strip()[:200]])
+
+
 def check_guard_selftest() -> None:
     """The guard is the only thing standing between a model and a silent bad
     research run. If its fixtures rot, we lose that without noticing."""
@@ -317,6 +337,8 @@ def main() -> None:
     check_compiles()
     check_policy_selftest()
     check_guard_selftest()
+    check_receipt_gate_selftest()
+    check_launch_gate()
     check_official_validator()
 
     if FAILURES:

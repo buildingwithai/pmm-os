@@ -39,6 +39,32 @@ def ensure_supported_python(version_info: tuple[int, int, int] | object | None =
 
 ensure_supported_python()
 
+# --- PMM-OS-LAUNCH-GATE (re-applied by scripts/patch-engine-launch-gate.py) ---
+# Direct invocation skips Python resolution, live source health, --search
+# synthesis and the post-run receipt — every one of which exists because a
+# silent bad run already happened. The wrapper sets PMM_OS_LAUNCH=1.
+import os as _pmm_os
+import sys as _pmm_sys
+
+_PMM_INERT = ("--help", "-h", "--version", "--welcome", "--preflight", "--diagnose")
+if _pmm_os.environ.get("PMM_OS_LAUNCH") != "1" and not any(
+    _a in _pmm_sys.argv for _a in _PMM_INERT
+) and not (len(_pmm_sys.argv) > 1 and _pmm_sys.argv[1] in ("setup", "doctor")):
+    _pmm_sys.stderr.write(
+        "last30days must be launched through PMM OS's wrapper:\n"
+        '  "$CLAUDE_PLUGIN_ROOT/bin/pmm-research" last30days "TOPIC" '
+        '--depth deep --plan-file FILE\n'
+        "\nDirect invocation skips:\n"
+        "  - Python resolution (this engine needs 3.12+; stock macOS ships 3.9)\n"
+        "  - live source health, and --search synthesised from what is actually up\n"
+        "  - the run receipt, which is the only thing that reports a degraded run\n"
+        "    (the engine exits 0 and can print 5/5 core sources while four\n"
+        "     sources returned nothing)\n"
+        "\nSet PMM_OS_LAUNCH=1 to override deliberately.\n"
+    )
+    raise SystemExit(78)
+# --- END PMM-OS-LAUNCH-GATE ---
+
 if os.name == "nt":
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
