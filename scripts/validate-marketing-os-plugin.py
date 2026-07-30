@@ -289,6 +289,20 @@ def check_ig_fetch_selftest() -> None:
           else [(r.stdout + r.stderr).strip()[:400]])
 
 
+def check_ig_reels_window() -> None:
+    """Upstream's search_instagram() returned every OUT-OF-WINDOW reel whenever none
+    fell inside the window — a Jan-2023 reel presented as last-30-days evidence, with
+    no error set. The patcher fixes it; this proves the patch is applied and correct."""
+    t = ROOT / "scripts" / "test_instagram_reels_window.py"
+    if not t.is_file():
+        check("IG reels date-window self-check", ["scripts/test_instagram_reels_window.py is missing"])
+        return
+    r = subprocess.run([sys.executable, str(t)], capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    check("IG reels date-window self-check", [] if r.returncode == 0
+          else [(r.stdout + r.stderr).strip()[:400]])
+
+
 def check_policy_selftest() -> None:
     t = ROOT / "hooks" / "test_pre_tool_use_policy.py"
     if not t.is_file():
@@ -353,6 +367,7 @@ def main() -> None:
     check_guard_selftest()
     check_receipt_gate_selftest()
     check_ig_fetch_selftest()
+    check_ig_reels_window()
     check_launch_gate()
     check_official_validator()
 

@@ -38,4 +38,5 @@ BLOCK
 python3 "$ROOT/scripts/patch-transcript-env-overrides.py"   # transcript/result saturation knobs
 python3 "$ROOT/scripts/patch-gateway-base-url.py"           # gateway base-URL config->environ
 python3 "$ROOT/scripts/patch-engine-launch-gate.py"         # refuse launches outside bin/pmm-research
+python3 "$ROOT/scripts/patch-instagram-reels-search.py"     # IG reels: send the date window, page it, never return stale
 echo "✓ synced. Review the diff, re-run the plugin validator, and commit."

@@ -82,10 +82,15 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      **Free, keyless, no login:** `reach.sh ig <user>` (Instagram accounts) ·
      `reach.sh tiktok @user` · `reach.sh yt <url>` · `reach.sh yt-comments <url>` ·
      `reach.sh bsky <query>`. **Free but flaky:** `reach.sh tiktok-search <hashtag>`
-     (TikTokApi+webkit — rerun on empty). **No free keyless path:** Instagram *hashtag*
-     search — either `ig-search` after a one-time `instaloader --login` (residential IP),
-     or ScrapeCreators. SC buys exactly three things: Threads, Pinterest, and reliable
-     hashtag search on IG + TikTok. It does **not** gate YouTube comments.
+     (TikTokApi+webkit — rerun on empty). **Instagram theme/keyword discovery is the
+     last30days lane, not reach.sh** — `search_instagram()` hits SC
+     `/v2/instagram/reels/search` with a free-text keyword and returns Reels with play
+     counts inside the date window. That is the only route with the metric Reels rank
+     by, and it needs the SC key. Keyless IG *hashtag* search has no path at all
+     (all logged-out routes 302/401/404); `ig-search` needs a one-time
+     `instaloader --login` on a residential IP. SC buys four things: IG theme→Reels
+     discovery, Threads, Pinterest, and reliable hashtag search on IG + TikTok. It does
+     **not** gate YouTube comments.
      **Issue the recipe's full ~15–30 calls** —
      read each competitor's site + pricing + reviews + socials, search GitHub + the social hashtags.
      Two reads is not a desk run.

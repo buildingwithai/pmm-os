@@ -51,7 +51,8 @@ Needs **Python 3.12+**.
 | **X / Twitter** | **free, just log in** | be logged into **x.com in a browser** (Chrome/Brave/Safari/Firefox) → cookies auto-extracted. Fallbacks: `AUTH_TOKEN`+`CT0` env, or `XAI_API_KEY`/`XQUIK_API_KEY` |
 | **TikTok** — creator (reliable) **and hashtag SEARCH** (flaky) | **free** | `reach.sh tiktok @user` (yt-dlp — reliable). `reach.sh tiktok-search <hashtag>` (TikTokApi + Playwright **webkit** — *verified: returned 30 real #jobsearch videos*, but **probabilistic**: TikTok rate-limits per IP, so it intermittently returns empty — it retries 3×, rerun if it fails). Headless **chromium** is always blocked; headless **webkit** sometimes gets through. For heavy/at-scale TikTok discovery, SC is the reliable fallback. |
 | **Instagram** — **named accounts** | **free, keyless, no login** | `reach.sh ig <username>` — Instagram's own logged-out web endpoint (`/api/v1/feed/user/<u>/username/` with the public `X-IG-App-ID`). Verified 2026-07-30: `@nasa`, `@natgeo`, `@nike` all HTTP 200 with real captions, likes and play counts, no cookies. |
-| **Instagram** — **hashtag search** | **no free path** | Not a rate limit — a wall. All five logged-out routes (web tag page, `/api/v1/tags/`, the GraphQL hashtag query, explore, the `i/api` tag feed) return 302/401/404. Either SC, or `reach.sh ig-search` with a one-time `instaloader --login` (residential IP, secondary account, low volume). |
+| **Instagram** — **theme/keyword → Reels** | **paid (SC), and it is the main reason to have the key** | `search_instagram()` in `lib/instagram.py` → SC `GET /v2/instagram/reels/search`. **Free-text keyword**, not just hashtags. Returns `taken_at`, `video_play_count`, `video_view_count`, `like_count`, `comment_count`, caption, `product_type: "clips"`. Server-side `date_posted=last-month`; pages 1–11 (12+ is a documented 400). 1 credit per page. This is the only route in the stack that answers "give me a theme, get the recent Reels" **with play counts** — the metric Reels are actually ranked by. |
+| **Instagram** — **hashtag search, keyless** | **no free path** | Not a rate limit — a wall. All five logged-out routes (web tag page, `/api/v1/tags/`, the GraphQL hashtag query, explore, the `i/api` tag feed) return 302/401/404. Either SC (above), or `reach.sh ig-search` with a one-time `instaloader --login` (residential IP, secondary account, low volume). |
 | **YouTube comments** | **free, keyless** | `reach.sh yt-comments <url>` — yt-dlp reads the same comment API. Verified 2026-07-30, no key. *(The last30days engine still gates its own comment enrichment on the SC key — `lib/env.py:854`. That is a code gate, not a technical requirement.)* |
 | **Bluesky** | **free, keyless, no account** | `reach.sh bsky <query>` — `api.bsky.app/xrpc/app.bsky.feed.searchPosts`. Note: it must be `api.bsky.app`; `public.api.bsky.app` returns **403** for searchPosts. |
 | Threads, Pinterest, TruthSocial | paid (SC) | `SCRAPECREATORS_API_KEY` (100 free then PAYG) |
@@ -64,15 +65,26 @@ all. Corrected:
 | | Free path | SC needed? |
 | --- | --- | --- |
 | IG named accounts | keyless web endpoint | **no** |
+| **IG keyword → Reels (theme discovery)** | **none that carries play counts** | **yes — the headline reason to hold the key** |
 | IG hashtag search | none keyless (login-only) | **yes**, unless you log in |
 | TikTok accounts | yt-dlp | **no** |
 | TikTok hashtag search | TikTokApi+webkit, probabilistic | as a reliable fallback |
 | YouTube search + transcripts + **comments** | yt-dlp | **no** |
 | Threads, Pinterest | none | **yes** |
 
-So SC buys exactly three things: **Threads, Pinterest, and reliable hashtag/keyword search on
-IG + TikTok.** Everything else on this page runs at zero cost. Run `setup.sh` only if you want
-the flaky-but-free TikTok search stack (`curl_cffi` + `TikTokApi` + Playwright `webkit`).
+So SC buys four things: **theme→Reels discovery on Instagram, Threads, Pinterest, and reliable
+hashtag search on IG + TikTok.** Everything else on this page runs at zero cost. Run `setup.sh`
+only if you want the flaky-but-free TikTok search stack (`curl_cffi` + `TikTokApi` + Playwright
+`webkit`).
+
+**There is a free-ish keyless route to IG theme discovery, and it is deliberately not wired in.**
+DuckDuckGo restricted to `site:instagram.com/reel/`, read through `r.jina.ai`, does return real
+reels for a keyword — it was measured, and rejected: **no view counts anywhere on the path** (so
+nothing can be ranked), ~10 results per query hard cap, a verifiable timestamp on only ~58% of
+hydrated posts, heavy source concentration (27 of 56 results from a single account in testing),
+and honest zeros on B2B themes. It is a three-party dependency — Jina egress × DDG's index ×
+Instagram serving `og:` tags to crawlers — and when any one of them breaks it looks exactly like
+"nobody is talking about this." A visible gap is better than a confident wrong answer.
 
 **The TikTok-search trick:** TikTok detects and empties headless *chromium* but not headless
 *webkit* — `tiktok_search.py` uses `browser="webkit"`. If a run returns 0, retry (TikTok is

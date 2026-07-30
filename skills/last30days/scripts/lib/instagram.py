@@ -26,6 +26,11 @@ DEPTH_CONFIG = {
     "deep":    {"results_per_page": 40, "max_captions": 8},
 }
 
+# PMM-OS-IG-REELS-WINDOW (re-applied by scripts/patch-instagram-reels-search.py after upstream sync)
+# SC's date_posted enum; "last-month" is the only value that covers a 30-day brief.
+_IG_WINDOW = "last-month"
+_IG_MAX_PAGE = 11          # page 12 or greater is a documented HTTP 400
+
 # PMM-OS-ENV-OVERRIDE (re-applied by scripts/patch-transcript-env-overrides.py after upstream sync)
 import os as _os
 if _os.environ.get("LAST30DAYS_TRANSCRIPT_LIMIT", "").isdigit():
@@ -201,7 +206,11 @@ def _parse_items(raw_items: List[Dict[str, Any]], core_topic: str) -> List[Dict[
             text = raw.get("desc", raw.get("text", ""))
 
         # Engagement metrics
-        play_count = raw.get("video_play_count") or raw.get("video_view_count") or raw.get("play_count") or 0
+        # PMM-OS-IG-REELS-WINDOW: plays != views (docs sample: 21808 views, 46018 plays).
+        play_count = raw.get("video_play_count") or raw.get("play_count") or 0
+        view_count = raw.get("video_view_count") or 0
+        if not play_count:
+            play_count = view_count
         like_count = raw.get("like_count") or 0
         comment_count = raw.get("comment_count") or 0
 
@@ -239,6 +248,8 @@ def _parse_items(raw_items: List[Dict[str, Any]], core_topic: str) -> List[Dict[
             "date": date_str,
             "engagement": {
                 "views": play_count,
+                "plays": play_count,
+                "video_views": view_count,
                 "likes": like_count,
                 "comments": comment_count,
             },
@@ -290,7 +301,10 @@ def search_instagram(
     depth: str = "default",
     token: str = None,
 ) -> Dict[str, Any]:
-    """Search Instagram Reels via ScrapeCreators API.
+    """Search Instagram Reels by KEYWORD via ScrapeCreators, inside the date window.
+
+    PMM-OS-IG-REELS-WINDOW (re-applied by scripts/patch-instagram-reels-search.py
+    after every upstream sync — see that file for what upstream got wrong).
 
     Args:
         topic: Search topic
@@ -300,71 +314,83 @@ def search_instagram(
         token: ScrapeCreators API key
 
     Returns:
-        Dict with 'items' list and optional 'error'.
+        Dict with 'items' list and optional 'error'. An empty window returns
+        items=[] WITH an error string — never out-of-window reels.
     """
     if not token:
         return {"items": [], "error": "No SCRAPECREATORS_API_KEY configured"}
 
     config = DEPTH_CONFIG.get(depth, DEPTH_CONFIG["default"])
     core_topic = _extract_core_subject(topic)
+    want = config["results_per_page"]
 
-    _log(f"Searching Instagram for '{core_topic}' (depth={depth}, count={config['results_per_page']})")
+    _log(f"Searching Instagram reels for '{core_topic}' "
+         f"(depth={depth}, want={want}, window={from_date}..{to_date})")
 
-    try:
+    def _page(query: str, page: int):
+        """One request. Returns the raw list, or raises."""
         data = http.get(
             f"{SCRAPECREATORS_BASE}/v2/instagram/reels/search",
-            params={"query": core_topic},
+            params={"query": query, "date_posted": _IG_WINDOW, "page": page},
             headers=http.scrapecreators_headers(token),
             timeout=30,
             retries=2,
         )
-    except http.HTTPError as e:
-        # SC's v2 reels search wraps Google Search and 500s frequently on
-        # multi-token queries. Single tokens hit the stable hashtag-page
-        # path. Retry once with hashtag form before bubbling up.
-        if getattr(e, "status_code", None) == 500 and ' ' in core_topic:
-            _log(f"IG search 500 on '{core_topic}', retrying with hashtag form")
-            try:
-                data = http.get(
-                    f"{SCRAPECREATORS_BASE}/v2/instagram/reels/search",
-                    params={"query": _to_hashtag_form(core_topic)},
-                    headers=http.scrapecreators_headers(token),
-                    timeout=30,
-                    retries=2,
-                )
-            except Exception as retry_e:
-                _log(f"IG search retry failed: {retry_e}")
-                return {"items": [], "error": f"{type(retry_e).__name__}: {retry_e}"}
-        else:
-            _log(f"ScrapeCreators error: {e}")
-            return {"items": [], "error": f"{type(e).__name__}: {e}"}
-    except Exception as e:
-        _log(f"ScrapeCreators error: {e}")
-        return {"items": [], "error": f"{type(e).__name__}: {e}"}
+        return data.get("reels") or data.get("items") or data.get("data") or []
 
-    # Items are in the 'reels' array (ScrapeCreators v2 response)
-    raw_items = data.get("reels") or data.get("items") or data.get("data") or []
+    raw_items = []
+    query = core_topic
+    page = 1
+    while len(raw_items) < want and page <= _IG_MAX_PAGE:
+        try:
+            batch = _page(query, page)
+        except http.HTTPError as e:
+            # SC's v2 reels search wraps Google Search and 500s frequently on
+            # multi-token queries; single tokens hit the stable hashtag-page path.
+            # Switch query form once, then keep going from the same page.
+            if (getattr(e, "status_code", None) == 500 and " " in query
+                    and query == core_topic):
+                query = _to_hashtag_form(core_topic)
+                _log(f"IG search 500 on '{core_topic}', retrying as '{query}'")
+                continue
+            if page == 1:
+                _log(f"ScrapeCreators error: {e}")
+                return {"items": [], "error": f"{type(e).__name__}: {e}"}
+            _log(f"IG search stopped at page {page}: {e}")
+            break
+        except Exception as e:
+            if page == 1:
+                _log(f"ScrapeCreators error: {e}")
+                return {"items": [], "error": f"{type(e).__name__}: {e}"}
+            _log(f"IG search stopped at page {page}: {e}")
+            break
+        if not batch:
+            break
+        raw_items.extend(batch)
+        page += 1
 
-    # Limit to configured count
-    raw_items = raw_items[:config["results_per_page"]]
+    if not raw_items:
+        return {"items": [], "error":
+                f"Instagram returned no reels for '{core_topic}' in the last month"}
 
-    # Parse items
-    items = _parse_items(raw_items, core_topic)
+    items = _parse_items(raw_items[:want], core_topic)
 
-    # Hard date filter
+    # Exact window, on top of the server's coarse `last-month` bucket.
     in_range = [i for i in items if i["date"] and from_date <= i["date"] <= to_date]
-    out_of_range = len(items) - len(in_range)
-    if in_range:
-        items = in_range
-        if out_of_range:
-            _log(f"Filtered {out_of_range} reels outside date range")
-    else:
-        _log(f"No reels within date range, keeping all {len(items)}")
+    if not in_range:
+        # A hole the receipt can see. Upstream returned everything here instead,
+        # which put pre-window reels into last-30-days briefs as current evidence.
+        _log(f"Discarded all {len(items)} reels — none inside {from_date}..{to_date}")
+        return {"items": [], "error":
+                f"no Instagram reels in {from_date}..{to_date} "
+                f"({len(items)} returned, all outside the window)"}
+    if len(in_range) < len(items):
+        _log(f"Filtered {len(items) - len(in_range)} reels outside date range")
+    items = in_range
 
-    # Sort by views descending
+    # Reels are ranked by plays, not likes.
     items.sort(key=lambda x: x["engagement"]["views"], reverse=True)
-
-    _log(f"Found {len(items)} Instagram reels")
+    _log(f"Found {len(items)} Instagram reels across {page - 1} page(s)")
     return {"items": items}
 
 

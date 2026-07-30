@@ -57,7 +57,9 @@ fi
 if [ "$SMOKE" = "1" ]; then
   echo "── Smoke test (real keyless calls) ─────────"
   # 1) agent-reach keyless web read (Jina)
-  if curl -s --max-time 20 "https://r.jina.ai/https://example.com" 2>/dev/null | grep -qi "example domain"; then ok "agent-reach web-read (Jina) returned content"; else bad "Jina web-read failed (network?)"; fi
+  # Assert 2xx + a non-trivial body, never a third party's page text: grepping
+  # "example domain" false-fails on networks that serve a different example.com.
+  if [ "$(curl -s --max-time 20 "https://r.jina.ai/https://example.com" 2>/dev/null | wc -c)" -gt 80 ]; then ok "agent-reach web-read (Jina) returned content"; else bad "Jina web-read failed (network?)"; fi
   # 2) GitHub search
   if have gh && gh search repos "claude code" --limit 1 >/dev/null 2>&1; then ok "GitHub search returned"; else warn "GitHub search unavailable"; fi
   # 3) last30days real micro-run on keyless Reddit
@@ -76,4 +78,4 @@ fi
 
 echo "────────────────────────────────────────────"
 echo "FREE + KEYLESS (no login): Reddit · HN · Polymarket · GitHub · YouTube search/transcripts/COMMENTS · web · V2EX · Bilibili · RSS · Bluesky (reach.sh bsky) · TikTok accounts (reach.sh tiktok @user) · Instagram accounts (reach.sh ig <user>). FREE + LOG IN: X (log into x.com). FREE BUT FLAKY: TikTok hashtag search (reach.sh tiktok-search)."
-echo "SC buys exactly three things: Threads, Pinterest, and reliable hashtag search on IG + TikTok. Instagram HASHTAG search has no keyless path (all logged-out routes 302/401/404) — SC, or instaloader --login on a residential IP. SC does NOT gate YouTube comments; reach.sh yt-comments is keyless."
+echo "SC buys four things: Instagram theme->Reels discovery (/v2/instagram/reels/search, keyword, WITH play counts), Threads, Pinterest, and reliable hashtag search on IG + TikTok. Instagram HASHTAG search has no keyless path (all logged-out routes 302/401/404) — SC, or instaloader --login on a residential IP. SC does NOT gate YouTube comments; reach.sh yt-comments is keyless."
