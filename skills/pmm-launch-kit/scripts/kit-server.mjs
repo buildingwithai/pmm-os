@@ -14,10 +14,20 @@
 import { createServer } from 'node:http';
 import { readFileSync, writeFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { dirname, join, normalize, extname } from 'node:path';
+import { dirname, join, normalize, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const DIR = dirname(fileURLToPath(import.meta.url));
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+// Content directory, matching build-kit.mjs: argv[2], else the cwd you launched from.
+// This used to be the script's own directory — which, once installed, is the plugin
+// cache. Every edit you saved landed there and was destroyed by the next plugin
+// update. Falls back to SCRIPT_DIR only when a kit-content.json actually sits beside
+// the script (the copied-folder layout), so old habits still work.
+const ARG_DIR = process.argv[2] ? resolve(process.argv[2]) : null;
+const DIR = ARG_DIR
+  || (existsSync(join(process.cwd(), 'kit-content.json')) ? process.cwd()
+      : existsSync(join(SCRIPT_DIR, 'kit-content.json')) ? SCRIPT_DIR
+      : process.cwd());
 const PORT = process.env.PORT || 4317;
 const JSONP = join(DIR, 'kit-content.json');
 
@@ -27,7 +37,7 @@ const sseClients = new Set();
 function broadcast(msg) { for (const res of sseClients) { try { res.write('data: ' + msg + '\n\n'); } catch (e) {} } }
 
 function build() {
-  const r = spawnSync('node', ['build-kit.mjs'], { cwd: DIR, encoding: 'utf8' });
+  const r = spawnSync('node', [join(SCRIPT_DIR, 'build-kit.mjs'), DIR], { encoding: 'utf8' });
   if (r.status !== 0) throw new Error(r.stderr || 'build failed');
   return r.stdout;
 }

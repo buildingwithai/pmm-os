@@ -48,6 +48,7 @@
     "README.md",
     "LICENSE",
     "PRIVACY.md",
+    "SECURITY.md",
     "THIRD_PARTY_NOTICES.md",
     "ADAPTED_REPOSITORY_MANIFEST.md",
     "!**/__pycache__",
