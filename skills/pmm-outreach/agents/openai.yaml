@@ -1,7 +1,3 @@
-display_name: Pmm Outreach
-category: product-marketing
-invocation_policy: automatic when the user request matches the skill description
-allowed_tools:
-  - Read
-  - Write
-  - mcp__marketing-os__outreach_sequence_builder
+interface:
+  display_name: "PMM Outreach"
+  short_description: "Cold email, DMs, and follow-ups grounded in real account context"

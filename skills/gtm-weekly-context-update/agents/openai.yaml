@@ -1,8 +1,3 @@
-display_name: Gtm Weekly Context Update
-category: product-marketing
-invocation_policy: automatic when the user request matches the skill description
-allowed_tools:
-  - Read
-  - Write
-  - Edit
-  - mcp__marketing-os__weekly_gtm_update_plan
+interface:
+  display_name: "GTM Weekly Context Update"
+  short_description: "Refresh GTM context: priorities, signals, ICP, and competitors"

@@ -1,9 +1,3 @@
-name: AEO and GEO Strategy
-description: Audit and improve AI assistant visibility, LLM citations, and answer-engine positioning.
-invocation:
-  mode: auto
-  confidence: medium
-tools:
-  required: []
-  suggested:
-    - marketing-os
+interface:
+  display_name: "PMM AEO GEO"
+  short_description: "Get cited by AI search: audit, gaps, fixes, and measurement"

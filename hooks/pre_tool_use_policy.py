@@ -16,12 +16,32 @@ DESTRUCTIVE_PATTERNS = [
     r":\(\)\s*\{\s*:\|:",
 ]
 
-SECRET_PATTERNS = [
-    r"\bcat\s+\.env(\.|\s|$)",
-    r"\bcat\s+.*(secret|token|password|credential|key).*(\.json|\.txt|\.env)?\b",
-    r"\bgrep\b.*(OPENAI_API_KEY|API_KEY|SECRET|TOKEN|PASSWORD|PRIVATE_KEY)",
-    r"\bprintenv\b",
-]
+# Match the FILE ARGUMENT, not the whole command line. Matching the line meant
+# `cat src/styles/tokens.css` and `cat monkey-patch.js` were both hard-denied
+# ("token", "key" as substrings). Basename-anchored, so a path can't smuggle a
+# match in from a directory name either.
+READ_COMMANDS = r"cat|bat|less|more|head|tail|strings|xxd|od|nl"
+SECRET_FILE_RE = re.compile(
+    r"(^|/)("
+    r"\.env(\.[\w-]+)?"
+    r"|credentials|\.netrc|\.pgpass|\.htpasswd"
+    r"|id_(rsa|dsa|ecdsa|ed25519)"
+    r"|[\w.-]*(secret|password|credential)s?[\w.-]*\.(json|ya?ml|txt|env|ini|conf|pem)"
+    r"|[\w.-]*\.(pem|p12|pfx|key)"
+    r")$",
+    re.IGNORECASE,
+)
+# Case-SENSITIVE, full identifier. `grep -rn token src/` is an everyday command;
+# `grep OPENAI_API_KEY` is not.
+# An ALL-CAPS compound identifier (>=1 underscore) containing a secret word
+# anywhere in it, so STRIPE_SECRET_KEY and OPENAI_API_KEY both match.
+SECRET_IDENT_RE = re.compile(
+    r"\bgrep\b[^|;]*"
+    r"\b(?=[A-Z0-9_]*(?:KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL))"
+    r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b"
+)
+# Only a bare dump. `printenv NODE_ENV` asks for one non-secret variable.
+BARE_ENV_DUMP_RE = re.compile(r"(^|[;&|]\s*)(printenv|env)\s*($|[;&|])")
 
 PRODUCTION_WRITE_TERMS = [
     "send", "publish", "launch", "activate", "pause", "delete", "archive", "refund",
@@ -36,14 +56,24 @@ RISKY_SYSTEM_TERMS = [
 ]
 
 
-def deny(reason: str) -> None:
+def decide(decision: str, reason: str) -> None:
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
-            "permissionDecision": "deny",
+            "permissionDecision": decision,
             "permissionDecisionReason": reason,
         }
     }))
+
+
+def deny(reason: str) -> None:
+    decide("deny", reason)
+
+
+def ask(reason: str) -> None:
+    """Surface it and let the user judge. A marketing plugin has no business
+    hard-denying a command it merely finds suspicious."""
+    decide("ask", reason)
 
 
 def add_context(text: str) -> None:
@@ -53,6 +83,15 @@ def add_context(text: str) -> None:
             "additionalContext": text,
         }
     }))
+
+
+def _reads_secret_file(command: str) -> bool:
+    """True if a read command targets a secret-shaped filename."""
+    for m in re.finditer(rf"\b({READ_COMMANDS})\s+((?:-\S+\s+)*)(\S+)", command):
+        arg = m.group(3).strip("\"'")
+        if SECRET_FILE_RE.search(arg):
+            return True
+    return False
 
 
 def main() -> None:
@@ -68,10 +107,13 @@ def main() -> None:
             if re.search(pattern, lowered):
                 deny("Blocked destructive shell command. Use a narrower, reviewed command instead.")
                 return
-        for pattern in SECRET_PATTERNS:
-            if re.search(pattern, lowered, flags=re.IGNORECASE):
-                deny("Blocked command that may expose secrets or credentials. Use a targeted redacted check instead.")
-                return
+        # Note: match against `command`, not `lowered` — SECRET_IDENT_RE is
+        # deliberately case-sensitive so lowercase `token` doesn't trip it.
+        if _reads_secret_file(command) or SECRET_IDENT_RE.search(command) \
+                or BARE_ENV_DUMP_RE.search(command):
+            ask("This command may print a secret or credential. Approve it if that's intended, "
+                "or narrow it to the specific non-secret value you need.")
+            return
         if re.search(r"(curl|wget).+\|\s*(sh|bash)", lowered):
             add_context("This command pipes remote code into a shell. Prefer downloading, inspecting, and pinning the script before execution.")
             return

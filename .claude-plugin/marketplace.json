@@ -5,13 +5,13 @@
     "url": "https://github.com/buildingwithai/pmm-os"
   },
   "metadata": {
-    "description": "Marketplace hosting the PMM OS plugin — a Product Marketing Operating System with built-in research."
+    "description": "PMM OS \u2014 product marketing, GTM, and launch workflows for Claude Code."
   },
   "plugins": [
     {
       "name": "pmm-os",
-      "description": "Product Marketing Operating System: 40+ PMM, GTM, and PLG skills, two built-in research engines (last30days + Agent-Reach), and an interactive launch-kit generator.",
-      "version": "3.0.2",
+      "description": "Product marketing and GTM in your terminal: positioning, messaging, personas, pricing, battlecards, competitive intel, and launch plans \u2014 45 skills, two research engines, and an interactive launch kit.",
+      "version": "3.0.3",
       "author": {
         "name": "Jovanny Tovar",
         "url": "https://github.com/buildingwithai/pmm-os"
@@ -19,7 +19,7 @@
       "source": "./",
       "category": "productivity",
       "homepage": "https://github.com/buildingwithai/pmm-os",
-      "displayName": "PMM OS — Product Marketing Operating System",
+      "displayName": "PMM OS \u2014 Product Marketing Operating System",
       "tags": [
         "product-marketing",
         "gtm",

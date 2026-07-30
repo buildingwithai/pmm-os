@@ -1,9 +1,3 @@
-name: GTM Signal Campaign
-description: Turn account signals into research briefs, sequences, and campaign measurement plans.
-invocation:
-  mode: auto
-  confidence: medium
-tools:
-  required: []
-  suggested:
-    - marketing-os
+interface:
+  display_name: "GTM Signal Campaign"
+  short_description: "Turn buying signals into researched, sequenced outbound"

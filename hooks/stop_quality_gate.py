@@ -50,11 +50,40 @@ REQUIRED_BY_TOPIC = [
 COACH_TRIGGERS = r"\b(feedback|critique|review|pressure test|improve|coach|stakeholder|leadership|exec|sales team|customer-facing)\b"
 
 
+def _last_message_from_transcript(event: dict) -> str:
+    """Fall back to the transcript when the payload has no last_assistant_message.
+
+    Older clients send only `last_assistant_message_id`, so every check here
+    silently no-opped. Reading the transcript makes the behavior the same on
+    both payload shapes instead of depending on the client version.
+    """
+    path = event.get("transcript_path")
+    if not path:
+        return ""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            lines = fh.readlines()
+    except OSError:
+        return ""
+    for line in reversed(lines[-400:]):
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        if entry.get("type") != "assistant":
+            continue
+        content = (entry.get("message") or {}).get("content") or []
+        text = "".join(c.get("text", "") for c in content if isinstance(c, dict))
+        if text.strip():
+            return text
+    return ""
+
+
 def main() -> None:
     event = read_event()
     if event.get("stop_hook_active"):
         return
-    message = str(event.get("last_assistant_message") or "")
+    message = str(event.get("last_assistant_message") or "") or _last_message_from_transcript(event)
     prompt = str(event.get("prompt") or event.get("last_user_message") or "")
     lower = message.lower()
     combined = (prompt + "\n" + message).lower()
@@ -71,16 +100,17 @@ def main() -> None:
                 missing = [s for s in sections if ledger is None or s not in ledger]
                 if missing:
                     where = "does not exist" if ledger is None else ("has no " + ", ".join(missing))
+                    # Advisory, not a block. Refusing to finish someone's first
+                    # "help me launch my product" because they haven't run a
+                    # ten-desk research sweep yet is how a plugin gets uninstalled.
+                    # Say the deliverable is ungrounded; let them decide.
                     print(json.dumps({
-                        "decision": "block",
-                        "reason": (
-                            "HARD RESEARCH GATE (research-first is on). You produced a strategy deliverable, "
-                            "but the research that must feed it is missing -- `.agents/research/evidence.md` " + where + ". "
-                            "Run the relevant research desk first via `pmm-research-desk` (" + desk + "): it fans the "
-                            "specialist question set across last30days + agent-reach, captures SOURCED evidence into the "
-                            "ledger, then emits the artifact. After the ledger holds the section(s), regenerate this "
-                            "deliverable grounded in it and CITE the sources. Override only if the user explicitly said "
-                            "to proceed without research."
+                        "systemMessage": (
+                            "PMM OS: this deliverable isn't grounded in research yet — "
+                            "`.agents/research/evidence.md` " + where + ". Run `pmm-research-desk` (" + desk + ") "
+                            "to fan the specialist question set across last30days + agent-reach, capture sourced "
+                            "evidence into the ledger, then regenerate this grounded and cited. "
+                            "Strategy built on guesses reads confident and is still wrong."
                         ),
                     }))
                     return

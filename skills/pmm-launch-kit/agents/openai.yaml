@@ -1,0 +1,3 @@
+interface:
+  display_name: "PMM Launch Kit"
+  short_description: "Package a launch into one interactive, self-contained HTML app"

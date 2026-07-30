@@ -1,9 +1,3 @@
-name: PMM Coach
-description: Review, pressure test, roleplay, and improve product marketing work.
-invocation:
-  mode: auto
-  confidence: medium
-tools:
-  required: []
-  suggested:
-    - marketing-os
+interface:
+  display_name: "PMM Coach"
+  short_description: "Senior-PMM critique that pressure-tests your work before it ships"

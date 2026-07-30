@@ -1,9 +1,3 @@
-name: Campaign Brief Builder
-description: Build export-ready campaign briefs using a 14-section framework.
-invocation:
-  mode: auto
-  confidence: medium
-tools:
-  required: []
-  suggested:
-    - marketing-os
+interface:
+  display_name: "PMM Campaign Brief"
+  short_description: "A 14-section campaign brief stakeholders will actually sign off"

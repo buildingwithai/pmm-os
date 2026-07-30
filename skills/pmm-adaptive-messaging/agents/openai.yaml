@@ -1,9 +1,3 @@
-display_name: Pmm Adaptive Messaging
-category: product-marketing
-invocation_policy: automatic when the user request matches the skill description
-allowed_tools:
-  - Read
-  - Write
-  - WebSearch
-  - mcp__marketing-os__adaptive_messaging_response
-  - mcp__marketing-os__battlecard_builder
+interface:
+  display_name: "PMM Adaptive Messaging"
+  short_description: "Fast messaging response to a competitor move or market shift"

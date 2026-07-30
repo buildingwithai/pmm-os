@@ -11,9 +11,12 @@
   "plugins": [
     {
       "name": "pmm-os",
-      "description": "A complete PMM OS for Codex with adapted PMM, GTM, product, PLG, OSP, competitive, campaign, coaching, artifact, MCP, hook, and agent workflows.",
+      "description": "Product marketing and GTM: positioning, messaging, personas, pricing, battlecards, competitive intel, and launch plans \u2014 45 skills plus an interactive launch kit.",
       "source": "./",
-      "version": "3.0.0"
+      "version": "3.0.3"
     }
-  ]
+  ],
+  "interface": {
+    "displayName": "PMM OS"
+  }
 }

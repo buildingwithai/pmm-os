@@ -1,7 +1,3 @@
-display_name: Pmm Sales Narrative
-category: product-marketing
-invocation_policy: automatic when the user request matches the skill description
-allowed_tools:
-  - Read
-  - Write
-  - mcp__marketing-os__sales_narrative_builder
+interface:
+  display_name: "PMM Sales Narrative"
+  short_description: "The story sales tells, from problem to proof"

@@ -1,7 +1,7 @@
 {
   "name": "pmm-os",
-  "version": "3.0.2",
-  "description": "Product Marketing Operating System for Claude Code — 45 PMM/GTM/PLG skills, two built-in research engines, consulting-grade quality gates, and an interactive launch-kit workspace generator. Install: npx pmm-os install",
+  "version": "3.0.3",
+  "description": "Product Marketing Operating System for Claude Code and Codex \u2014 45 PMM/GTM/PLG skills, two built-in research engines, and an interactive launch-kit generator. Install: npx pmm-os install",
   "keywords": [
     "claude-code",
     "claude-code-plugin",
@@ -40,6 +40,7 @@
     "skills/",
     "hooks/",
     "scripts/",
+    "assets/",
     ".claude-plugin/",
     ".codex-plugin/",
     ".agents/plugins/",
@@ -47,8 +48,7 @@
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "ADAPTED_REPOSITORY_MANIFEST.md",
-    "CODEX_PLUGIN.md"
+    "ADAPTED_REPOSITORY_MANIFEST.md"
   ],
   "scripts": {
     "postpack": "echo 'Payload packed. Users install with: npx pmm-os install'",

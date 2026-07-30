@@ -1,0 +1,3 @@
+interface:
+  display_name: "Agent Reach"
+  short_description: "Fetch and read across 13 platforms, from GitHub to video transcripts"

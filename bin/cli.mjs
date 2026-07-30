@@ -17,7 +17,7 @@
 import { cpSync, existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -39,13 +39,25 @@ function hasClaude() {
   const r = claude(['--version']);
   return r.status === 0 ? r.stdout.trim() : null;
 }
+// Skipped by FIRST PATH SEGMENT, not by substring match anywhere in the path.
+// The old filter tested the whole absolute path against /node_modules|.../, so
+// under npx — where PKG_ROOT is always inside a node_modules directory — it
+// rejected its own source root and cpSync copied nothing. Silently. Every
+// published version shipped that way.
+const SKIP_TOP_LEVEL = new Set(['node_modules', 'bin', '.git', '.github', 'demo', 'website']);
+
 function copyPayload() {
   mkdirSync(dirname(PAYLOAD), { recursive: true });
   rmSync(PAYLOAD, { recursive: true, force: true });
   cpSync(PKG_ROOT, PAYLOAD, {
     recursive: true,
-    filter: (src) => !/node_modules|[\\/]bin[\\/]|\.git($|[\\/])/.test(src)
+    filter: (src) => src === PKG_ROOT || !SKIP_TOP_LEVEL.has(relative(PKG_ROOT, src).split(sep)[0])
   });
+  // Never let a caller past this point believing a copy happened — update()
+  // rmSync's the old payload first, so a silent no-op there is destructive.
+  if (!existsSync(join(PAYLOAD, '.claude-plugin', 'plugin.json'))) {
+    throw new Error(`payload copy produced nothing from ${PKG_ROOT} — refusing to continue`);
+  }
   ok('payload → ' + PAYLOAD);
 }
 function manualSteps() {
@@ -76,9 +88,9 @@ function install() {
   }
   ok('plugin installed (' + PLUGIN + ')');
   log('\nDone. Restart Claude Code (or run /reload-plugins).');
-  log('First session auto-installs the research engines in the background;');
-  log('then wire your logged-in X / Instagram / TikTok sessions (no passwords):');
-  log('  bash ' + join(PAYLOAD, 'skills', 'agent-reach', 'scripts', 'reach.sh') + ' social-setup');
+  log('\n`last30days` research works with no setup (Reddit/HN/Polymarket/GitHub).');
+  log('For the full sweep — video transcripts, web reading, more platforms:');
+  log('  npx pmm-os setup');
   log('\nStart with: "take <your product> to market" — or any PMM request.');
 }
 
@@ -90,6 +102,12 @@ function update() {
   if (r.status !== 0) { r = claude(['plugin', 'marketplace', 'add', PAYLOAD]); }
   if (r.status === 0) ok('marketplace refreshed'); else warn('marketplace refresh failed — try: claude plugin marketplace add ' + PAYLOAD);
   r = claude(['plugin', 'install', PLUGIN]);
+  if (r.status !== 0 && !/already/i.test((r.stderr || '') + (r.stdout || ''))) {
+    fail('plugin reinstall failed: ' + (r.stderr || r.stdout || '').trim());
+    manualSteps();
+    process.exitCode = 1;
+    return;
+  }
   ok('plugin reinstalled at v' + requireVersion());
   log('\nRestart Claude Code (or /reload-plugins) to pick up the update.');
 }
@@ -108,6 +126,35 @@ function uninstall() {
   ok('payload removed (' + PAYLOAD + ')');
   log('\nNote: research-engine state under ~/.pmm-os and ~/.config/last30days is kept;');
   log('delete those folders yourself if you want a full wipe.');
+}
+
+function setup() {
+  log('\nPMM OS — research engine setup\n');
+  log('`last30days` already works with no setup: Reddit, Hacker News, Polymarket, GitHub.');
+  log('This step adds `agent-reach` for video transcripts, web reading, and more platforms.\n');
+  log('It will, on this machine:');
+  log('  • pip/pipx install: curl_cffi, instaloader, TikTokApi, browser_cookie3');
+  log('  • download a headless WebKit browser via playwright (a few hundred MB)');
+  log('  • add a line to ~/.config/yt-dlp/config\n');
+  const script = [join(PAYLOAD, 'skills', 'agent-reach', 'scripts', 'setup.sh'),
+                  join(PKG_ROOT, 'skills', 'agent-reach', 'scripts', 'setup.sh')].find(existsSync);
+  if (!script) { fail('setup.sh not found — run `npx pmm-os install` first.'); process.exitCode = 1; return; }
+  if (!process.argv.includes('--yes')) {
+    log('Re-run with --yes to proceed:');
+    log('  npx pmm-os setup --yes');
+    return;
+  }
+  const r = spawnSync('bash', [script, '--no-social-wire'], { stdio: 'inherit', shell: false });
+  if (r.status === 0) {
+    mkdirSync(join(HOME, '.pmm-os'), { recursive: true });
+    writeFileSync(join(HOME, '.pmm-os', 'research-setup'), 'installed\n');
+    ok('research engines installed');
+    log('\nOptional — wire your already-logged-in X / Instagram / TikTok sessions (no passwords):');
+    log('  bash ' + join(dirname(script), 'reach.sh') + ' social-setup');
+  } else {
+    fail('setup failed — see the output above');
+  }
+  process.exitCode = r.status ?? 1;
 }
 
 function requireVersion() {
@@ -131,7 +178,7 @@ async function doctor() {
     ? (pyOk ? ok('python: ' + pyv) : warn('python: ' + pyv + ' — the research engines need 3.10+ (verify-research.sh finds newer installs)'))
     : warn('python3 not found — the research engines need Python 3.10+');
   const marker = join(HOME, '.pmm-os', 'research-setup');
-  existsSync(marker) ? ok('research engines: set up') : warn('research engines: not yet set up (first Claude Code session auto-installs them)');
+  existsSync(marker) ? ok('research engines: set up') : warn('research engines: not set up — last30days works anyway; run `npx pmm-os setup` for the rest');
   const verify = [join(PAYLOAD, 'scripts', 'verify-research.sh'), join(PKG_ROOT, 'scripts', 'verify-research.sh')].find(existsSync);
   if (!process.argv.includes('--deep')) {
     log('\nDeep health check (live keyless engine calls): npx pmm-os doctor --deep');
@@ -281,6 +328,7 @@ const cmd = process.argv[2] || 'help';
 if (cmd === 'install') install();
 else if (cmd === 'update') update();
 else if (cmd === 'uninstall') uninstall();
+else if (cmd === 'setup') setup();
 else if (cmd === 'doctor') await doctor();
 else if (cmd === 'sync') await cloudSync();
 else if (cmd === 'research-connect') researchConnect();
@@ -291,6 +339,7 @@ else {
   log('  npx pmm-os install     install the plugin into Claude Code');
   log('  npx pmm-os update      update to this package’s version');
   log('  npx pmm-os uninstall   remove plugin + marketplace + payload');
+  log('  npx pmm-os setup       opt-in install of the full research engine stack');
   log('  npx pmm-os doctor      environment + research-engine health (--deep = live smoke test)');
   log('  npx pmm-os sync <url> <token>               push this engagement to PMM OS Cloud');
   log('  npx pmm-os research-connect <url> <token>   connect Pro Research Intelligence (gateway rerank)');

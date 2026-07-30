@@ -4,34 +4,50 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from _common import emit_additional, read_event
 
+_SKILLS_DIR = Path(__file__).resolve().parent.parent / "skills"
+
+
+def _installed_skills() -> set[str]:
+    """Skills that actually exist on disk.
+
+    The routing table drifted to naming 22 skills that were never in this
+    plugin (ab-testing, cold-email, paywalls...), and the model was told to
+    "consider" them on every matching prompt. Filtering against the directory
+    means the table can never lie again, whatever anyone edits into it.
+    """
+    try:
+        return {d.name for d in _SKILLS_DIR.iterdir() if (d / "SKILL.md").is_file()}
+    except OSError:
+        return set()
+
 ROUTES = [
-    (r"\b(/battlecard|/positioning|/launch-brief|/pricing-analysis)\b", ["pmm-battlecard", "pmm-positioning-exercise", "pmm-launch-brief", "pmm-pricing-analysis"], ["marketing-os.slash_command_manifest"]),
-    (r"\b(i have a (product|app|tool|feature|startup|extension|saas|platform)|take (it|this|my product|my app|my feature) to market|go to market with|launch (my|our|a|this) (product|feature|app|tool)|i'?m building|we'?re building|help me (launch|take .* to market)|new product called|product called)\b", ["pmm-research-brief", "product-marketing-os", "pmm-research-desk"], ["marketing-os.route_marketing_workflow"]),
-    (r"\b(research|deep dive|deep-dive|deep research|look (this |it )?up|find out|what (are|do) people say(ing)?|what people (are )?say|sentiment|social listening|trending|what'?s trending|scrape|see what'?s being said|read this (url|link|post|thread)|search (twitter|x|reddit|youtube|github|the web|xiaohongshu|bilibili))\b", ["pmm-research-desk", "last30days", "agent-reach", "pmm-voc-synthesis", "pmm-customer-research"], ["marketing-os.route_marketing_workflow"]),
-    (r"\b(event|events|conference|conferences|field marketing|sponsorship|sponsor|trade show|tradeshow|booth|cfp|expo|summit|meetup)\b", ["pmm-research-desk", "pmm-go-to-market", "pmm-campaign-brief"], ["marketing-os.route_marketing_workflow"]),
-    (r"\b(plg|product-led growth|product led growth|activation|aha moment|time to value|growth loop|pql|pqa|free trial|freemium|reverse trial|north star|aarrr|retention|expansion|churn)\b", ["plg-gtm-strategy", "analytics", "pricing", "onboarding"], ["marketing-os.plg_readiness_assessment", "marketing-os.plg_metrics_map", "marketing-os.growth_loop_designer", "marketing-os.recommend_mcp_servers"]),
-    (r"\b(product lifecycle|product strategy|roadmap|prioritization|rice|moscow|prd|requirements document|product spec|user stories|acceptance criteria|prototype|wireframe|mockup|html prototype)\b", ["product-lifecycle-os", "prd-prototype-factory", "pmm-go-to-market", "pmm-artifact-factory"], ["marketing-os.pm_lifecycle_plan", "marketing-os.prd_plan_builder", "marketing-os.prototype_brief_builder", "marketing-os.artifact_bundle_plan"]),
-    (r"\b(post-launch|post launch|retrospective|impact analysis|campaign readout|feedback synthesis|iteration plan|adoption review|measure impact)\b", ["post-launch-learning-loop", "pmm-coach", "plg-gtm-strategy", "analytics"], ["marketing-os.post_launch_learning_plan", "marketing-os.pmm_coach_review", "marketing-os.recommend_mcp_servers"]),
-    (r"\b(product marketing|pmm|positioning|messaging|value proposition|message house|tagline|persona messaging)\b", ["product-marketing-os", "pmm-product-context", "pmm-positioning-exercise", "pmm-positioning-audit", "pmm-messaging-hierarchy"], ["marketing-os.route_marketing_workflow", "marketing-os.list_pmm_resources"]),
-    (r"\b(launch|go to market|gtm|rollout|release plan|announcement|beta|ga|general availability|feature flag)\b", ["pmm-research-brief", "pmm-research-desk", "product-marketing-os", "pmm-go-to-market", "pmm-launch-brief", "pmm-campaign-brief", "pmm-artifact-factory", "pmm-launch-kit", "launch", "emails", "social", "sales-enablement"], ["marketing-os.launch_plan_builder", "marketing-os.artifact_bundle_plan", "marketing-os.recommend_mcp_servers"]),
-    (r"\b(campaign brief|creative brief|campaign plan|smp|single-minded|single minded)\b", ["pmm-campaign-brief", "pmm-artifact-factory", "pmm-coach"], ["marketing-os.campaign_brief_builder", "marketing-os.artifact_bundle_plan"]),
-    (r"\b(deliverable|artifact|asset pack|launch kit|slides|pptx|docx|deck|social posts|mockup|image prompt|generate images|visual)\b", ["pmm-artifact-factory", "pmm-launch-kit", "pmm-coach"], ["marketing-os.artifact_bundle_plan", "marketing-os.image_prompt_pack"]),
-    (r"\b(feedback|critique|review my|pressure test|roleplay|walk through|coach|improve this|30-60-90|30 60 90)\b", ["pmm-coach"], ["marketing-os.pmm_coach_review"]),
-    (r"\b(signal|account research|outbound sequence|prospecting|icp scoring|target account|sales sequence)\b", ["gtm-account-research", "gtm-icp-scoring", "gtm-signal-campaign", "pmm-outreach", "cold-email", "revops"], ["marketing-os.gtm_signal_campaign_plan", "marketing-os.recommend_mcp_servers"]),
-    (r"\b(aeo|geo|ai visibility|llm citation|answer engine|generative engine|chatgpt mentions|ai search)\b", ["pmm-aeo-geo", "ai-seo", "schema", "pmm-competitive-intelligence"], ["marketing-os.route_marketing_workflow", "marketing-os.recommend_mcp_servers"]),
-    (r"\b(feature announcement|release notes|changelog|product update|announce this)\b", ["pmm-feature-announcement", "emails", "social", "image"], ["marketing-os.image_prompt_pack", "marketing-os.artifact_bundle_plan"]),
-    (r"\b(value map|technical marketing|metadata|technical writing|editing codes|on-page seo|osp)\b", ["osp-value-map", "osp-content-optimizer", "osp-technical-marketing", "ai-seo", "schema", "content-strategy"], ["marketing-os.osp_value_map_skeleton", "marketing-os.recommend_mcp_servers"]),
-    (r"\b(naming|rename|product name|feature name|brand name|program name)\b", ["product-marketing-os", "pmm-messaging-positioning"], ["marketing-os.naming_scorecard", "marketing-os.read_pmm_resource"]),
-    (r"\b(competitor|competitive|battlecard|battle card|alternatives|comparison page|objection)\b", ["pmm-research-desk", "pmm-battlecard", "pmm-adaptive-messaging", "pmm-competitive-intelligence", "last30days", "agent-reach", "competitor-profiling", "competitors", "sales-enablement"], ["marketing-os.recommend_mcp_servers"]),
-    (r"\b(customer research|voice of customer|voc|jtbd|jobs to be done|win loss|persona|icp)\b", ["pmm-research-desk", "pmm-icp-definition", "pmm-voc-synthesis", "pmm-personas", "pmm-customer-research", "last30days", "agent-reach", "customer-research", "revops"], ["marketing-os.route_marketing_workflow"]),
-    (r"\b(pricing|packaging|tier|plan|sku|value metric|monetization|paywall)\b", ["pmm-research-desk", "pmm-pricing-analysis", "pmm-pricing-packaging", "pricing", "paywalls", "analytics", "plg-gtm-strategy"], ["marketing-os.recommend_mcp_servers"]),
-    (r"\b(market analysis|category|tam|swot|porter|five forces|pestel|market research|channels|communities|where (do|does) (my|our|the) (icp|audience|buyers?)|kol|influencer|analyst relations)\b", ["pmm-research-desk", "pmm-positioning-exercise", "pmm-go-to-market", "pmm-aeo-geo"], ["marketing-os.route_marketing_workflow"]),
-    (r"\b(cro|conversion|landing page|homepage|signup|funnel|ab test|a/b test|experiment)\b", ["product-marketing-os", "cro", "copywriting", "analytics", "ab-testing"], ["marketing-os.lookup_skill", "marketing-os.recommend_mcp_servers"]),
-    (r"\b(seo|keyword|schema|programmatic seo|ai seo|search console|content strategy)\b", ["product-marketing-os", "seo-audit", "ai-seo", "schema", "content-strategy"], ["marketing-os.list_marketing_tools"]),
-    (r"\b(ad|ads|paid search|google ads|meta ads|linkedin ads|creative)\b", ["product-marketing-os", "ads", "ad-creative", "analytics", "pmm-campaign-brief"], ["marketing-os.recommend_mcp_servers"]),
-    (r"\b(email|newsletter|lifecycle|drip|sequence|cold email|transactional)\b", ["product-marketing-os", "emails", "cold-email", "copywriting"], ["marketing-os.recommend_mcp_servers"]),
+    (r"\b(i have a (product|app|tool|feature|startup|extension|saas|platform)|take (it|this|my product|my app|my feature) to market|go to market with|launch (my|our|a|this) (product|feature|app|tool)|i'?m building|we'?re building|help me (launch|take .* to market)|new product called|product called)\b", ["pmm-research-brief", "product-marketing-os", "pmm-research-desk"]),
+    (r"\b(research|deep dive|deep-dive|deep research|look (this |it )?up|find out|what (are|do) people say(ing)?|what people (are )?say|sentiment|social listening|trending|what'?s trending|scrape|see what'?s being said|read this (url|link|post|thread)|search (twitter|x|reddit|youtube|github|the web|xiaohongshu|bilibili))\b", ["pmm-research-desk", "last30days", "agent-reach", "pmm-voc-synthesis", "pmm-customer-research"]),
+    (r"\b(event|events|conference|conferences|field marketing|sponsorship|sponsor|trade show|tradeshow|booth|cfp|expo|summit|meetup)\b", ["pmm-research-desk", "pmm-go-to-market", "pmm-campaign-brief"]),
+    (r"\b(plg|product-led growth|product led growth|activation|aha moment|time to value|growth loop|pql|pqa|free trial|freemium|reverse trial|north star|aarrr|retention|expansion|churn)\b", ["plg-gtm-strategy"]),
+    (r"\b(product lifecycle|product strategy|roadmap|prioritization|rice|moscow|prd|requirements document|product spec|user stories|acceptance criteria|prototype|wireframe|mockup|html prototype)\b", ["product-lifecycle-os", "prd-prototype-factory", "pmm-go-to-market", "pmm-artifact-factory"]),
+    (r"\b(post-launch|post launch|retrospective|impact analysis|campaign readout|feedback synthesis|iteration plan|adoption review|measure impact)\b", ["post-launch-learning-loop", "pmm-coach", "plg-gtm-strategy"]),
+    (r"\b(product marketing|pmm|positioning|messaging|value proposition|message house|tagline|persona messaging)\b", ["product-marketing-os", "pmm-product-context", "pmm-positioning-exercise", "pmm-positioning-audit", "pmm-messaging-hierarchy"]),
+    (r"\b(launch|go to market|gtm|rollout|release plan|announcement|beta|ga|general availability|feature flag)\b", ["pmm-research-brief", "pmm-research-desk", "product-marketing-os", "pmm-go-to-market", "pmm-launch-brief", "pmm-campaign-brief", "pmm-artifact-factory", "pmm-launch-kit", "sales-enablement"]),
+    (r"\b(campaign brief|creative brief|campaign plan|smp|single-minded|single minded)\b", ["pmm-campaign-brief", "pmm-artifact-factory", "pmm-coach"]),
+    (r"\b(deliverable|artifact|asset pack|launch kit|slides|pptx|docx|deck|social posts|mockup|image prompt|generate images|visual)\b", ["pmm-artifact-factory", "pmm-launch-kit", "pmm-coach"]),
+    (r"\b(feedback|critique|review my|pressure test|roleplay|walk through|coach|improve this|30-60-90|30 60 90)\b", ["pmm-coach"]),
+    (r"\b(signal|account research|outbound sequence|prospecting|icp scoring|target account|sales sequence)\b", ["gtm-account-research", "gtm-icp-scoring", "gtm-signal-campaign", "pmm-outreach"]),
+    (r"\b(aeo|geo|ai visibility|llm citation|answer engine|generative engine|chatgpt mentions|ai search)\b", ["pmm-aeo-geo", "pmm-competitive-intelligence"]),
+    (r"\b(feature announcement|release notes|changelog|product update|announce this)\b", ["pmm-feature-announcement"]),
+    (r"\b(value map|technical marketing|metadata|technical writing|editing codes|on-page seo|osp)\b", ["osp-value-map", "osp-content-optimizer", "osp-technical-marketing"]),
+    (r"\b(naming|rename|product name|feature name|brand name|program name)\b", ["product-marketing-os", "pmm-messaging-positioning"]),
+    (r"\b(competitor|competitive|battlecard|battle card|alternatives|comparison page|objection)\b", ["pmm-research-desk", "pmm-battlecard", "pmm-adaptive-messaging", "pmm-competitive-intelligence", "last30days", "agent-reach", "sales-enablement"]),
+    (r"\b(customer research|voice of customer|voc|jtbd|jobs to be done|win loss|persona|icp)\b", ["pmm-research-desk", "pmm-icp-definition", "pmm-voc-synthesis", "pmm-personas", "pmm-customer-research", "last30days", "agent-reach"]),
+    (r"\b(pricing|packaging|tier|plan|sku|value metric|monetization|paywall)\b", ["pmm-research-desk", "pmm-pricing-analysis", "pmm-pricing-packaging", "plg-gtm-strategy"]),
+    (r"\b(market analysis|category|tam|swot|porter|five forces|pestel|market research|channels|communities|where (do|does) (my|our|the) (icp|audience|buyers?)|kol|influencer|analyst relations)\b", ["pmm-research-desk", "pmm-positioning-exercise", "pmm-go-to-market", "pmm-aeo-geo"]),
+    (r"\b(cro|conversion|landing page|homepage|signup|funnel|ab test|a/b test|experiment)\b", ["product-marketing-os"]),
+    (r"\b(seo|keyword|schema|programmatic seo|ai seo|search console|content strategy)\b", ["product-marketing-os"]),
+    (r"\b(ad|ads|paid search|google ads|meta ads|linkedin ads|creative)\b", ["product-marketing-os", "pmm-campaign-brief"]),
+    (r"\b(email|newsletter|lifecycle|drip|sequence|cold email|transactional)\b", ["product-marketing-os"]),
 ]
 
 
@@ -39,22 +55,18 @@ def main() -> None:
     event = read_event()
     prompt = str(event.get("prompt", ""))
     lower = prompt.lower()
+    installed = _installed_skills()
     skills: list[str] = []
-    tools: list[str] = []
-    for pattern, route_skills, route_tools in ROUTES:
+    for pattern, route_skills in ROUTES:
         if re.search(pattern, lower):
             for skill in route_skills:
-                if skill not in skills:
+                if skill not in skills and (not installed or skill in installed):
                     skills.append(skill)
-            for tool in route_tools:
-                if tool not in tools:
-                    tools.append(tool)
     if not skills:
         return
     lines = [
         "PMM OS routing note:",
         "- Consider skills: " + ", ".join(f"${s}" for s in skills[:10]),
-        "- Consider bundled MCP tools: " + ", ".join(tools[:8]),
         "- Prefer the unified chain: context -> research -> product or PLG strategy -> positioning -> messaging -> PRD/prototype or GTM plan -> artifacts -> PMM Coach review -> interactive launch kit (pmm-launch-kit) -> measurement -> iteration.",
         "- If the user asks for a launch, campaign, or GTM motion, create concrete deliverables instead of stopping at advice.",
         "- ALWAYS finish a launch or GTM motion by building the interactive launch-kit HTML (pmm-launch-kit): author one kit-content.json from the artifacts, then run `node <PMM OS>/skills/pmm-launch-kit/scripts/build-kit.mjs <launch-folder>` (no copy needed). The clickable kit -- not just markdown -- is the deliverable. Skip only if the user says they don't want it.",

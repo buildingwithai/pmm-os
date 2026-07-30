@@ -1,7 +1,0 @@
-{
-  "marketing-os": {
-    "command": "node",
-    "args": ["./mcp/marketing-os-server.js"],
-    "cwd": "."
-  }
-}

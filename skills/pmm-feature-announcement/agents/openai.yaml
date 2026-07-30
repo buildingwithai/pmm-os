@@ -1,9 +1,3 @@
-name: Feature Announcement
-description: Turn release notes into multi-channel customer-facing announcement packages.
-invocation:
-  mode: auto
-  confidence: medium
-tools:
-  required: []
-  suggested:
-    - marketing-os
+interface:
+  display_name: "PMM Feature Announcement"
+  short_description: "Turn release notes into an announcement customers care about"
