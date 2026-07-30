@@ -6,8 +6,10 @@
 <title>Plotline — Launch Kit</title>
 <style>
   :root{
-    --bg:#0c0d11; --surface:#0f1116; --side:#0a0b0e; --ink:#f3eeda; --muted:#a7a08c; --dim:#6f6a5c;
-    --accent:#19e3ff; --accent-soft:rgba(25,227,255,.10); --accent-line:rgba(25,227,255,.4);
+    /* Apple-standard palette (apple-grade-design-course): cool neutral ramp + ONE blue accent.
+       Dark theme; neutrals carry, accent reserved for true interactive moments. */
+    --bg:#0c0e11; --surface:#15181c; --side:#0a0b0e; --ink:#f7f8fa; --muted:#c5ccd4; --dim:#9aa3ad;
+    --accent:#8cb8ff; --accent-soft:rgba(140,184,255,.12); --accent-line:rgba(140,184,255,.40);
     --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
     --good:#3ad29a; --warn:#f3c052; --bad:#f6776f;
     --t1:26px; --t2:16px; --t3:13px; --t4:11px; --u:8px; --tb:48px;
@@ -24,7 +26,7 @@
 
   .toolbar{height:var(--tb);display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--line2);background:var(--side);position:sticky;top:0;z-index:30}
   .mark{display:flex;align-items:center;gap:9px;cursor:pointer}
-  .mark .dot{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#0077ff);display:grid;place-items:center;color:#021016;font:900 13px "Arial Black"}
+  .mark .dot{width:22px;height:22px;border-radius:6px;background:var(--accent);display:grid;place-items:center;color:#06121f;font:800 13px var(--mono,ui-monospace)}
   .mark b{font-size:var(--t3);letter-spacing:.02em}.mark span{color:var(--dim);font-size:var(--t4);text-transform:uppercase;letter-spacing:.16em;margin-left:2px}
   .sep{width:1px;height:20px;background:var(--line2)}
   .crumb{color:var(--muted);font-size:var(--t3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}
@@ -50,8 +52,8 @@
   .nav a .ix{color:var(--dim);font-size:10px;font-variant-numeric:tabular-nums;min-width:18px}
   .nav a .nl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .nav a:hover{background:rgba(255,255,255,.04);color:var(--ink)}
-  .nav a.active{background:var(--accent-soft);color:var(--ink);border-left-color:var(--accent)}
-  .nav a.active .ix{color:var(--accent)}
+  .nav a.active{background:rgba(255,255,255,.06);color:var(--ink);border-left-color:transparent}
+  .nav a.active .ix{color:var(--ink)}
   .scnt{font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
   .sdot{width:7px;height:7px;border-radius:50%;background:transparent;flex:0 0 auto}
   .sdot.draft{background:var(--warn)} .sdot.review{background:var(--accent)} .sdot.approved{background:var(--good)}
@@ -65,7 +67,7 @@
   .vhead .eyebrow{color:var(--accent);font-size:var(--t4);font-weight:800;text-transform:uppercase;letter-spacing:.16em}
   .vhead h1{font-size:var(--t1);margin:6px 0}
   .vhead .sub{color:var(--muted);max-width:64ch}
-  .h{font-size:var(--t4);font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin:32px 0 10px}
+  .h{font-size:var(--t2);font-weight:600;color:var(--ink);letter-spacing:-.01em;margin:24px 0 8px}
   .muted{color:var(--muted)} .small{font-size:12.5px} .dim{color:var(--dim)}
   p{margin:0 0 12px}
 
@@ -93,7 +95,7 @@
   .badge.cy{color:var(--accent);border-color:var(--accent-line)} .badge.bd{color:var(--bad);border-color:rgba(246,119,111,.4)}
   .chip{display:inline-block;font-size:11.5px;color:var(--muted);border:1px solid var(--line2);border-radius:6px;padding:3px 9px;margin:0 6px 6px 0}
 
-  .callout{border:1px solid var(--line2);border-left:3px solid var(--accent);border-radius:8px;padding:14px 16px;margin:8px 0;background:rgba(25,227,255,.04)}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--line2);border-radius:8px;padding:14px 16px;margin:8px 0;background:rgba(255,255,255,.035)}
   .callout.warn{border-left-color:var(--warn);background:rgba(243,192,82,.05)}
   .stmt{font-size:15px;line-height:1.55}
 
@@ -111,7 +113,7 @@
 
   .scrow{display:grid;grid-template-columns:156px 1fr 28px;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--t3)}
   .track{height:6px;background:#1a1d24;border-radius:4px;overflow:hidden}
-  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#0077ff);transition:width .9s ease}
+  .fill{height:100%;width:0;background:var(--accent);transition:width .9s ease}
 
   .chk{display:flex;gap:11px;align-items:flex-start;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
   .chk input{margin-top:3px;accent-color:var(--accent)}
@@ -127,7 +129,7 @@
   .tree{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted);white-space:pre;line-height:1.8;border-top:1px solid var(--line);padding-top:12px}
 
   .gal{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-  .gframe{border:1px solid var(--line2);border-radius:8px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,rgba(25,227,255,.14),rgba(0,119,255,.05),#11131a)}
+  .gframe{border:1px solid var(--line2);border-radius:8px;overflow:hidden;cursor:pointer;background:var(--surface)}
   .gframe.sel-frame{outline:2px solid var(--accent)}
   .gpane{aspect-ratio:16/9;display:grid;place-content:center;text-align:center;position:relative}
   .gpane .rr{position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;color:var(--accent);background:rgba(0,0,0,.45);padding:2px 6px;border-radius:5px}
@@ -153,11 +155,11 @@
   .pitem.cur{background:var(--accent-soft)}
   .pitem .pi{color:var(--dim);font-size:11px;min-width:26px;font-variant-numeric:tabular-nums}
 
-  .intro{position:fixed;inset:0;z-index:90;background:radial-gradient(120% 80% at 50% 0%,#0d2230,#07080c 60%);display:none;overflow-y:auto;scroll-snap-type:y mandatory}
+  .intro{position:fixed;inset:0;z-index:90;background:radial-gradient(120% 80% at 50% 0%,#15181c,#0c0e11 60%);display:none;overflow-y:auto;scroll-snap-type:y mandatory}
   .intro.open{display:block}
   .ipanel{min-height:100vh;display:grid;place-content:center;text-align:center;padding:8vh 8vw;scroll-snap-align:start;opacity:.25;transform:translateY(20px);transition:opacity .6s,transform .6s}
   .ipanel.in{opacity:1;transform:none}
-  .ipanel h1{font-size:clamp(34px,8vw,82px);background:linear-gradient(120deg,var(--ink),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ipanel h1{font-size:clamp(34px,8vw,82px);color:var(--ink);letter-spacing:-.02em}
   .ipanel .s{color:var(--muted);font-size:clamp(15px,2.4vw,21px);max-width:60ch;margin:18px auto 0}
   .ibig{display:flex;gap:clamp(20px,5vw,64px);justify-content:center;flex-wrap:wrap}
   .ibig .n{font:900 clamp(36px,7vw,66px)/1 "Arial Black";color:var(--accent)}.ibig .l{color:var(--muted);font-size:13px;margin-top:6px}
@@ -231,7 +233,7 @@
   /* modeless inline editing — Notion feel: no mode toggle, no boxy borders */
   .work [data-path]{border-radius:4px;transition:background .12s}
   .work [data-path]:hover{background:rgba(255,255,255,.025)}
-  .work [data-path]:focus{outline:none;background:rgba(25,227,255,.06);box-shadow:inset 2px 0 0 var(--accent)}
+  .work [data-path]:focus{outline:none;background:rgba(255,255,255,.05);box-shadow:inset 2px 0 0 var(--accent)}
   .work [data-path]:empty::before{content:"Type \2026";color:var(--dim)}
   .work td[data-path],.work th[data-path]{cursor:text}
 
@@ -307,7 +309,7 @@
   .cmt-empty{color:var(--dim);font-size:12px;padding:18px 4px}
 
   /* jump-to flash */
-  @keyframes cflash{0%{background:rgba(25,227,255,.30)}100%{background:transparent}}
+  @keyframes cflash{0%{background:rgba(140,184,255,.28)}100%{background:transparent}}
   .cflash{animation:cflash 1.3s ease-out}
 
   /* to-do blocks (in-content checkboxes) */
@@ -348,6 +350,63 @@
     :root{--ink:#15171f;--muted:#444;--line:#d8d8d8;--line2:#bbb;--accent:#0a6e85;--surface:#fff}
     .fill{background:#0a6e85}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
+/* evidence / citation block — Notion quote-bar (a left rule, NOT a card). claim → verbatim → source */
+ol.evidence{list-style:none;margin:12px 0;padding:0;display:flex;flex-direction:column;gap:14px}
+.evidence .ev{display:flex;gap:10px;align-items:flex-start;border-left:2px solid var(--line2);padding-left:14px}
+.evidence .ev-n{flex:0 0 auto;font-size:11px;font-weight:700;color:var(--dim,var(--muted));font-variant-numeric:tabular-nums;margin-top:3px}
+.evidence .ev-body{flex:1;min-width:0}
+.evidence .ev-q{display:block;font-style:italic;color:var(--ink);line-height:1.55}
+.evidence .ev-q::before{content:'“'}.evidence .ev-q::after{content:'”'}
+.evidence .ev-meta{margin-top:5px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.evidence .ev-who{color:var(--muted);font-weight:600}
+.evidence .ev-metric{color:var(--muted);font-weight:500}
+.evidence .ev-src{color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap;border:1px solid var(--line2);border-radius:4px;padding:0 5px;font-size:11px}
+.evidence .ev-src:hover{text-decoration:underline}
+.evidence .ev-src.ev-nolink{color:var(--muted);font-weight:500;cursor:default;border-style:dashed}
+.evidence .ev-shot{display:inline-block;margin-top:8px;border-radius:7px;outline-offset:2px}
+.evidence .ev-shot img{display:block;max-width:260px;max-height:180px;object-fit:cover;border:1px solid var(--line2);border-radius:7px}
+.evidence .ev-shot:hover img{border-color:var(--accent)}
+/* code block — monospace, subtle surface (Notion /code) */
+pre.code{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow:auto;margin:12px 0}
+pre.code code{font-family:ui-monospace,'SF Mono','Roboto Mono',monospace;font-size:13px;color:var(--ink);white-space:pre}
+/* heading levels (Notion /h1 /h2 /h3) — distinct sizes, hierarchy from weight+size not color */
+.h.lvl1{font-size:24px;font-weight:700;letter-spacing:-.01em;margin:18px 0 6px}
+.h.lvl2{font-size:19px;font-weight:600;margin:16px 0 6px}
+.h.lvl3{font-size:16px;font-weight:600;margin:14px 0 4px}
+/* @-mention chip (interactive → accent, used sparingly) + Referenced-by backlinks */
+a.mention{color:var(--accent);text-decoration:none;background:var(--accent-soft);border-radius:4px;padding:0 4px;font-weight:500;white-space:nowrap}
+a.mention:hover{text-decoration:underline}
+.atmenu{max-height:300px;overflow:auto}
+.backlinks{margin-top:32px;padding-top:16px;border-top:1px solid var(--line)}
+.backlinks .bl-h{font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.backlinks .bl-i{display:inline-block;color:var(--muted);text-decoration:none;font-size:13px;border:1px solid var(--line2);border-radius:6px;padding:4px 11px;margin:0 6px 6px 0}
+.backlinks .bl-i:hover{border-color:var(--accent);color:var(--ink)}
+
+/* research databases — quiet filter bar (selects recede; count keeps the slice honest),
+   hairline table (no card), one flag style (label, never color alone) */
+.db-bar{display:flex;gap:8px;align-items:center;margin:4px 0 16px;flex-wrap:wrap}
+.db-bar select{background:var(--surface);border:1px solid var(--line2);color:var(--ink);border-radius:7px;padding:6px 10px;font-size:12.5px;font-family:inherit;min-height:32px}
+.db-bar select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.db-count{margin-left:auto;font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+table.db-table{border-collapse:collapse;width:100%;font-size:13px}
+table.db-table th{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line2);cursor:pointer;user-select:none;white-space:nowrap}
+table.db-table th:hover{color:var(--ink)}
+table.db-table td{padding:10px;border-bottom:1px solid var(--line);color:var(--muted);vertical-align:top;line-height:1.5}
+table.db-table td:first-child{color:var(--ink)}
+table.db-table tr.sel-able:hover td{background:rgba(255,255,255,.025)}
+.db-flag{font-size:10px;border:1px dashed var(--line2);border-radius:4px;padding:0 5px;color:var(--dim);white-space:nowrap}
+.db-empty{padding:40px 0;text-align:center;color:var(--muted);font-size:13.5px}
+.db-empty .cbtn{margin-left:10px}
+
+/* side peek record (renders in the right inspector): the quote leads, fields recede */
+.peek-q{font-size:15px;font-style:italic;line-height:1.6;color:var(--ink);border-left:2px solid var(--line2);padding-left:12px;margin:0 0 14px}
+.peek-fields{display:flex;flex-direction:column}
+.peek-fields .pf{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.peek-fields .pf span{color:var(--dim)}
+.peek-fields .pf b{color:var(--ink);font-weight:500;text-align:right}
+.peek-h{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:700;margin:16px 0 8px}
+.peek-open{display:inline-block;background:var(--accent);color:#06262b;font-size:12.5px;font-weight:700;padding:9px 14px;border-radius:7px;text-decoration:none;min-height:32px}
+.peek-open:hover{filter:brightness(1.08)}
 
 </style>
 </head>
@@ -386,83 +445,83 @@
     <div class="nav"><a href="#v-coach" data-v="v-coach"><span class="ix">11</span><span class="nl">Coach review</span><span class="scnt"></span><span class="sdot"></span></a></div>
     <div class="grp">Appendix</div>
     <div class="nav"><a href="#v-exports" data-v="v-exports"><span class="ix">+</span><span class="nl">Exports</span><span class="scnt"></span><span class="sdot"></span></a></div>
-    <div class="sidefoot"><b>Launch-gating:</b> broke-ICP monetization + brand-safety perception. Make consent / AI-label / anti-fraud structural before scaling loops.<br/><span class="dim" style="font-size:10px">build 2026-06-20 18:18 UTC</span></div>
+    <div class="sidefoot"><b>Launch-gating:</b> broke-ICP monetization + brand-safety perception. Make consent / AI-label / anti-fraud structural before scaling loops.<br/><span class="dim" style="font-size:10px">build 2026-07-30 03:11 UTC</span></div>
   </nav>
   <main class="work" id="work">
     <article class="view" id="v-overview" data-title="Overview">
       <div class="vhead"><div class="eyebrow">Product marketing · launch kit</div><h1>Ask your product a question.</h1><p class="sub">11 interlocking docs, grounded in the Plotline product context. The through-line: the people with the questions can't get the answers — Plotline makes it <b>ask · in plain English · in minutes.</b></p></div>
         <div class="blk" data-block="views.v-overview.blocks.0" data-bid=""><div class="stats" data-w="stats"></div></div>
-        <div class="blk" data-block="views.v-overview.blocks.1" data-bid=""><div class="h" data-path="views.v-overview.blocks.1.h">The kit</div></div>
+        <div class="blk" data-block="views.v-overview.blocks.1" data-bid=""><div class="h lvl2" data-path="views.v-overview.blocks.1.h">The kit</div></div>
         <div class="blk" data-block="views.v-overview.blocks.2" data-bid=""><div class="rows" data-w="kitrows"></div></div>
     </article>
     <article class="view" id="v-product" data-title="Product context">
       <div class="vhead"><div class="eyebrow">Product Desk · 01</div><h1>Product context</h1><p class="sub">The shared brief every other doc reads from.</p></div>
         <div class="blk" data-block="views.v-product.blocks.0" data-bid=""><dl class="kv"><dt>Product</dt><dd data-path="views.v-product.blocks.0.kv.0.1">Plotline — self-serve product analytics</dd><dt>What it does</dt><dd data-path="views.v-product.blocks.0.kv.1.1">Ask a plain-English question <code>→</code> get a funnel, cohort, or chart in seconds. No SQL.</dd><dt>Surfaces</dt><dd data-path="views.v-product.blocks.0.kv.2.1">Web app · auto-instrumented SDK · shared metric catalog</dd><dt>Pricing</dt><dd data-path="views.v-product.blocks.0.kv.3.1">Usage-based on MTU · Free / Team / Business</dd><dt>Stage</dt><dd data-path="views.v-product.blocks.0.kv.4.1">Launching 'Ask' (plain-English questions) — the feature that <i>is</i> the positioning</dd></dl></div>
         <div class="blk" data-block="views.v-product.blocks.1" data-bid=""><div class="callout" data-path="views.v-product.blocks.1.callout"><b>POV.</b> Everyone bought 'powerful' analytics. On a team without a data department it becomes shelfware — the people with the questions can't write the query, so they file a ticket and wait.</div></div>
-        <div class="blk" data-block="views.v-product.blocks.2" data-bid=""><div class="h" data-path="views.v-product.blocks.2.h">Audience</div></div>
+        <div class="blk" data-block="views.v-product.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-product.blocks.2.h">Audience</div></div>
         <div class="blk" data-block="views.v-product.blocks.3" data-bid=""><table><thead><tr><th>Segment</th><th>Trigger</th><th>Pain</th><th>Alternative today</th></tr></thead><tbody><tr><td data-path="views.v-product.blocks.3.table.rows.0.0">PM / growth owner</td><td data-path="views.v-product.blocks.3.table.rows.0.1">needs to know why a metric moved</td><td data-path="views.v-product.blocks.3.table.rows.0.2">blocked on the data queue for days</td><td data-path="views.v-product.blocks.3.table.rows.0.3">file a ticket · guess · wait</td></tr><tr><td data-path="views.v-product.blocks.3.table.rows.1.0">Lifecycle / PMM</td><td data-path="views.v-product.blocks.3.table.rows.1.1">measuring a campaign or activation</td><td data-path="views.v-product.blocks.3.table.rows.1.2">no shared definition of 'activated'</td><td data-path="views.v-product.blocks.3.table.rows.1.3">argue over whose number is right</td></tr><tr><td data-path="views.v-product.blocks.3.table.rows.2.0">Head of Product</td><td data-path="views.v-product.blocks.3.table.rows.2.1">wants more decisions per week</td><td data-path="views.v-product.blocks.3.table.rows.2.2">bought Vista; nobody opens it</td><td data-path="views.v-product.blocks.3.table.rows.2.3">shelfware + a data-hire ask</td></tr></tbody></table></div>
     </article>
     <article class="view" id="v-personas" data-title="ICP &amp; personas">
       <div class="vhead"><div class="eyebrow">Customer Desk · 02</div><h1>ICP & personas</h1><p class="sub">Select a persona to inspect JTBD, pain, and the message that lands.</p></div>
-        <div class="blk" data-block="views.v-personas.blocks.0" data-bid=""><div class="h" data-path="views.v-personas.blocks.0.h">Personas</div></div>
+        <div class="blk" data-block="views.v-personas.blocks.0" data-bid=""><div class="h lvl2" data-path="views.v-personas.blocks.0.h">Personas</div></div>
         <div class="blk" data-block="views.v-personas.blocks.1" data-bid=""><div class="rows"><div class="row sel-able" data-detail="p-priya"><div><div class="t" data-path="views.v-personas.blocks.1.rows.0.t">Priya — the PM <span class="badge cy">primary</span></div><div class="d" data-path="views.v-personas.blocks.1.rows.0.d">Answer my own product questions and ship the fix this week.</div></div><div class="meta">20–200-person B2B SaaS</div></div><div class="row sel-able" data-detail="p-marcus"><div><div class="t" data-path="views.v-personas.blocks.1.rows.1.t">Marcus — lifecycle / PMM</div><div class="d" data-path="views.v-personas.blocks.1.rows.1.d">Measure campaigns against one shared definition.</div></div><div class="meta">growth team</div></div><div class="row sel-able" data-detail="p-dana"><div><div class="t" data-path="views.v-personas.blocks.1.rows.2.t">Dana — Head of Product <span class="badge">economic buyer</span></div><div class="d" data-path="views.v-personas.blocks.1.rows.2.d">More decisions per week, no data hire, no shelfware.</div></div><div class="meta">budget owner</div></div><div class="row sel-able" data-detail="p-sam"><div><div class="t" data-path="views.v-personas.blocks.1.rows.3.t">Sam — Head of Data <span class="badge">blocker</span></div><div class="d" data-path="views.v-personas.blocks.1.rows.3.d">Stop being the bottleneck for everyone's 'why' question.</div></div><div class="meta">if present</div></div></div></div>
-        <div class="blk" data-block="views.v-personas.blocks.2" data-bid=""><div class="h" data-path="views.v-personas.blocks.2.h">Anti-ICP — design to repel</div></div>
+        <div class="blk" data-block="views.v-personas.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-personas.blocks.2.h">Anti-ICP — design to repel</div></div>
         <div class="blk" data-block="views.v-personas.blocks.3" data-bid=""><div class="callout warn" data-path="views.v-personas.blocks.3.callout">Data-mature orgs that want warehouse-native modeling (dbt + a BI tool), and pre-PMF teams with no usage yet. Selling to them creates churn and a 'this isn't a modeling layer' review — disqualify, don't chase.</div></div>
     </article>
     <article class="view" id="v-positioning" data-title="Positioning">
       <div class="vhead"><div class="eyebrow">03 · April Dunford</div><h1>Positioning</h1><p class="sub">Statement, category, value themes, and the tagline tester.</p></div>
         <div class="blk" data-block="views.v-positioning.blocks.0" data-bid=""><div class="callout" data-path="views.v-positioning.blocks.0.callout"><span class="eyebrow" style="color:var(--accent);font-size:10px;letter-spacing:.16em;text-transform:uppercase">Positioning statement</span><br/><span class="stmt">For product and growth teams at scaling B2B SaaS <b>without a data team to lean on</b>, <b>Plotline</b> is the <b>self-serve product analytics tool</b> that answers 'why' in plain English in minutes — unlike Vista or a SQL queue, which make the people with the questions wait on the few who can write the query.</span></div></div>
         <div class="blk" data-block="views.v-positioning.blocks.1" data-bid=""><dl class="kv"><dt>Category</dt><dd data-path="views.v-positioning.blocks.1.kv.0.1">Self-serve product analytics — 'answers without SQL.' We deliberately don't frame as BI (invites a warehouse comparison we lose).</dd><dt>Value themes</dt><dd data-path="views.v-positioning.blocks.1.kv.1.1"><span class="chip">Plain English</span><span class="chip">No waiting</span><span class="chip">One set of numbers</span></dd><dt>Best-fit market</dt><dd data-path="views.v-positioning.blocks.1.kv.2.1">20–200-person B2B SaaS with real usage but no (or overloaded) data team</dd><dt>Where we don't win</dt><dd data-path="views.v-positioning.blocks.1.kv.3.1">Data-mature orgs wanting a modeling layer; not free like GA. We win on <i>who can use it</i>, not the deepest query.</dd></dl></div>
-        <div class="blk" data-block="views.v-positioning.blocks.2" data-bid=""><div class="h" data-path="views.v-positioning.blocks.2.h">Tagline tester — copy & star your pick</div></div>
+        <div class="blk" data-block="views.v-positioning.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-positioning.blocks.2.h">Tagline tester — copy & star your pick</div></div>
         <div class="blk" data-block="views.v-positioning.blocks.3" data-bid=""><div data-w="taglines"></div></div>
     </article>
     <article class="view" id="v-messaging" data-title="Messaging">
       <div class="vhead"><div class="eyebrow">04 · Message architecture</div><h1>Messaging house</h1><p class="sub">POV → value prop → three pillars. Select a pillar to inspect proof; switch persona variants with the tabs.</p></div>
         <div class="blk" data-block="views.v-messaging.blocks.0" data-bid=""><dl class="kv"><dt>Roof · POV</dt><dd data-path="views.v-messaging.blocks.0.kv.0.1">The people with the questions should be able to get the answers.</dd><dt>Value proposition</dt><dd data-path="views.v-messaging.blocks.0.kv.1.1">Ask your product data anything, in plain English, and get the answer yourself — in minutes, not a ticket queue.</dd></dl></div>
-        <div class="blk" data-block="views.v-messaging.blocks.1" data-bid=""><div class="h" data-path="views.v-messaging.blocks.1.h">Pillars</div></div>
+        <div class="blk" data-block="views.v-messaging.blocks.1" data-bid=""><div class="h lvl2" data-path="views.v-messaging.blocks.1.h">Pillars</div></div>
         <div class="blk" data-block="views.v-messaging.blocks.2" data-bid=""><div class="rows"><div class="row sel-able" data-detail="m-0"><div><div class="t" data-path="views.v-messaging.blocks.2.rows.0.t">1 · Ask in plain English</div><div class="d" data-path="views.v-messaging.blocks.2.rows.0.d">Type the question, get the analysis. No SQL.</div></div><div class="meta">proof →</div></div><div class="row sel-able" data-detail="m-1"><div><div class="t" data-path="views.v-messaging.blocks.2.rows.1.t">2 · No tickets, no waiting</div><div class="d" data-path="views.v-messaging.blocks.2.rows.1.d">Auto-instrumented + self-serve.</div></div><div class="meta">proof →</div></div><div class="row sel-able" data-detail="m-2"><div><div class="t" data-path="views.v-messaging.blocks.2.rows.2.t">3 · One set of numbers</div><div class="d" data-path="views.v-messaging.blocks.2.rows.2.d">Shared metric definitions across teams.</div></div><div class="meta">proof →</div></div></div></div>
-        <div class="blk" data-block="views.v-messaging.blocks.3" data-bid=""><div class="h" data-path="views.v-messaging.blocks.3.h">Persona message variant</div></div>
+        <div class="blk" data-block="views.v-messaging.blocks.3" data-bid=""><div class="h lvl2" data-path="views.v-messaging.blocks.3.h">Persona message variant</div></div>
         <div class="blk" data-block="views.v-messaging.blocks.4" data-bid=""><div class="tabs" data-w="msgtabs"></div><div class="copyline" data-w="msgvariant"></div></div>
     </article>
     <article class="view" id="v-competitive" data-title="Competitive">
       <div class="vhead"><div class="eyebrow">Competitive Desk · 05</div><h1>Competitive intelligence</h1><p class="sub">Artifact of the Competitive Desk: comparison matrix + battlecards. The real incumbent is the data-queue. Select an alternative to inspect when-we-win / when-they-win + guidance.</p></div>
-        <div class="blk" data-block="views.v-competitive.blocks.0" data-bid=""><div class="h" data-path="views.v-competitive.blocks.0.h">Comparison matrix</div></div>
+        <div class="blk" data-block="views.v-competitive.blocks.0" data-bid=""><div class="h lvl2" data-path="views.v-competitive.blocks.0.h">Comparison matrix</div></div>
         <div class="blk" data-block="views.v-competitive.blocks.1" data-bid=""><table><thead><tr><th>Dimension</th><th>Plotline</th><th>Vista</th><th>Pulse</th></tr></thead><tbody><tr><td data-path="views.v-competitive.blocks.1.table.rows.0.0">Core use case</td><td data-path="views.v-competitive.blocks.1.table.rows.0.1">Ask in plain English → answer</td><td data-path="views.v-competitive.blocks.1.table.rows.0.2">Enterprise analytics suite</td><td data-path="views.v-competitive.blocks.1.table.rows.0.3">Dashboards (the 'what')</td></tr><tr><td data-path="views.v-competitive.blocks.1.table.rows.1.0">Time to value</td><td data-path="views.v-competitive.blocks.1.table.rows.1.1">Minutes</td><td data-path="views.v-competitive.blocks.1.table.rows.1.2">Weeks (implementation)</td><td data-path="views.v-competitive.blocks.1.table.rows.1.3">Days</td></tr><tr><td data-path="views.v-competitive.blocks.1.table.rows.2.0">Who can use it</td><td data-path="views.v-competitive.blocks.1.table.rows.2.1">Anyone on the team</td><td data-path="views.v-competitive.blocks.1.table.rows.2.2">Analysts / data team</td><td data-path="views.v-competitive.blocks.1.table.rows.2.3">Dashboard builders</td></tr><tr><td data-path="views.v-competitive.blocks.1.table.rows.3.0">Pricing model</td><td data-path="views.v-competitive.blocks.1.table.rows.3.1">Usage (MTU) · seats free</td><td data-path="views.v-competitive.blocks.1.table.rows.3.2">Seat + platform fee</td><td data-path="views.v-competitive.blocks.1.table.rows.3.3">Per seat</td></tr><tr><td data-path="views.v-competitive.blocks.1.table.rows.4.0">Best fit</td><td data-path="views.v-competitive.blocks.1.table.rows.4.1">No / overloaded data team</td><td data-path="views.v-competitive.blocks.1.table.rows.4.2">Mature data org</td><td data-path="views.v-competitive.blocks.1.table.rows.4.3">Dashboard-first team</td></tr></tbody></table></div>
-        <div class="blk" data-block="views.v-competitive.blocks.2" data-bid=""><div class="h" data-path="views.v-competitive.blocks.2.h">Alternatives</div></div>
+        <div class="blk" data-block="views.v-competitive.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-competitive.blocks.2.h">Alternatives</div></div>
         <div class="blk" data-block="views.v-competitive.blocks.3" data-bid=""><div class="rows"><div class="row sel-able" data-detail="c-vista"><div><div class="t" data-path="views.v-competitive.blocks.3.rows.0.t">Vista Analytics</div><div class="d" data-path="views.v-competitive.blocks.3.rows.0.d">Enterprise suite — powerful, needs a maintainer, becomes shelfware</div></div><div class="meta"><span class="badge bd">primary</span></div></div><div class="row sel-able" data-detail="c-pulse"><div><div class="t" data-path="views.v-competitive.blocks.3.rows.1.t">Pulse</div><div class="d" data-path="views.v-competitive.blocks.3.rows.1.d">Mid-market point tool — see what happened, then file a ticket for why</div></div><div class="meta"><span class="badge">adjacent</span></div></div><div class="row sel-able" data-detail="c-queue"><div><div class="t" data-path="views.v-competitive.blocks.3.rows.2.t">SQL analyst + data queue</div><div class="d" data-path="views.v-competitive.blocks.3.rows.2.d">Accurate but rationed — a quick question is a multi-day ticket</div></div><div class="meta"><span class="badge">status quo</span></div></div></div></div>
-        <div class="blk" data-block="views.v-competitive.blocks.4" data-bid=""><div class="h" data-path="views.v-competitive.blocks.4.h">Objection handling</div></div>
+        <div class="blk" data-block="views.v-competitive.blocks.4" data-bid=""><div class="h lvl2" data-path="views.v-competitive.blocks.4.h">Objection handling</div></div>
         <div class="blk" data-block="views.v-competitive.blocks.5" data-bid=""><div class="rows"><div class="row"><div><div class="t" data-path="views.v-competitive.blocks.5.rows.0.t">"We already have Vista."</div><div class="d" data-path="views.v-competitive.blocks.5.rows.0.d">And how many of your team actually open it? Plotline is the one your PMs use without a data person.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-competitive.blocks.5.rows.1.t">"Plain-English analytics can't be trusted."</div><div class="d" data-path="views.v-competitive.blocks.5.rows.1.d">We show the generated query and the metric definition. It's transparent, not a black box.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-competitive.blocks.5.rows.2.t">"We'll just ask our analyst."</div><div class="d" data-path="views.v-competitive.blocks.5.rows.2.d">How long is that queue right now? Plotline frees the analyst for the modeling only they can do.</div></div><div class="meta"></div></div></div></div>
     </article>
     <article class="view" id="v-pricing" data-title="Pricing">
       <div class="vhead"><div class="eyebrow">Pricing Desk · 06</div><h1>Pricing & packaging</h1><p class="sub">Value metric = monthly tracked users (MTU), not seats — because the value scales with usage analyzed, and per-seat would tax the cross-team adoption we want.</p></div>
         <div class="blk" data-block="views.v-pricing.blocks.0" data-bid=""><div class="seg" data-w="billtoggle"><button class="active" data-b="mo">Monthly</button><button data-b="yr">Annual −20%</button></div><table data-w="pricetable" style="margin-top:12px"></table></div>
-        <div class="blk" data-block="views.v-pricing.blocks.1" data-bid=""><div class="h" data-path="views.v-pricing.blocks.1.h">The cost of the queue</div></div>
+        <div class="blk" data-block="views.v-pricing.blocks.1" data-bid=""><div class="h lvl2" data-path="views.v-pricing.blocks.1.h">The cost of the queue</div></div>
         <div class="blk" data-block="views.v-pricing.blocks.2" data-bid=""><table><thead><tr><th></th><th>Today (the queue)</th><th>With Plotline</th></tr></thead><tbody><tr><td data-path="views.v-pricing.blocks.2.table.rows.0.0">Time to an answer</td><td data-path="views.v-pricing.blocks.2.table.rows.0.1">~2 days</td><td data-path="views.v-pricing.blocks.2.table.rows.0.2">4 minutes</td></tr><tr><td data-path="views.v-pricing.blocks.2.table.rows.1.0">Who can ask</td><td data-path="views.v-pricing.blocks.2.table.rows.1.1">the analyst</td><td data-path="views.v-pricing.blocks.2.table.rows.1.2">anyone</td></tr><tr><td data-path="views.v-pricing.blocks.2.table.rows.2.0">Cost to scale</td><td data-path="views.v-pricing.blocks.2.table.rows.2.1">a data hire</td><td data-path="views.v-pricing.blocks.2.table.rows.2.2">MTU usage</td></tr></tbody></table></div>
         <div class="blk" data-block="views.v-pricing.blocks.3" data-bid=""><p data-path="views.v-pricing.blocks.3.p"><span class="small muted">Anchor the pricing page to the <i>queue you remove</i>, not 'an analytics seat.' Seats are always unlimited — that's the strategy made visible.</span></p></div>
     </article>
     <article class="view" id="v-launch" data-title="Launch plan">
       <div class="vhead"><div class="eyebrow">07 · Tier-1 launch</div><h1>Go-to-market / launch plan</h1><p class="sub">Launching 'Ask' as Tier-1 — it's the differentiator and the reason a non-technical buyer chooses us. Pitch: 'Ask your product data anything, in plain English, in minutes.'</p></div>
-        <div class="blk" data-block="views.v-launch.blocks.0" data-bid=""><div class="h" data-path="views.v-launch.blocks.0.h">Timeline</div></div>
+        <div class="blk" data-block="views.v-launch.blocks.0" data-bid=""><div class="h lvl2" data-path="views.v-launch.blocks.0.h">Timeline</div></div>
         <div class="blk" data-block="views.v-launch.blocks.1" data-bid=""><table><thead><tr><th>Phase</th><th>Move</th></tr></thead><tbody><tr><td data-path="views.v-launch.blocks.1.table.rows.0.0"><b>T-3 wk</b></td><td data-path="views.v-launch.blocks.1.table.rows.0.1">Enablement + demo built; beta accuracy guardrail watched</td></tr><tr><td data-path="views.v-launch.blocks.1.table.rows.1.0"><b>Launch week</b></td><td data-path="views.v-launch.blocks.1.table.rows.1.1">Launch blog + founder POV + Product Hunt + homepage 'Ask' live + lifecycle email</td></tr><tr><td data-path="views.v-launch.blocks.1.table.rows.2.0"><b>T+30</b></td><td data-path="views.v-launch.blocks.1.table.rows.2.1">Read activation delta · harvest first customer outcome → case study</td></tr></tbody></table></div>
-        <div class="blk" data-block="views.v-launch.blocks.2" data-bid=""><div class="h" data-path="views.v-launch.blocks.2.h">Launch activities</div></div>
+        <div class="blk" data-block="views.v-launch.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-launch.blocks.2.h">Launch activities</div></div>
         <div class="blk" data-block="views.v-launch.blocks.3" data-bid=""><div data-w="checklist-launch"></div></div>
-        <div class="blk" data-block="views.v-launch.blocks.4" data-bid=""><div class="h" data-path="views.v-launch.blocks.4.h">Measurement</div></div>
+        <div class="blk" data-block="views.v-launch.blocks.4" data-bid=""><div class="h lvl2" data-path="views.v-launch.blocks.4.h">Measurement</div></div>
         <div class="blk" data-block="views.v-launch.blocks.5" data-bid=""><table><thead><tr><th>Metric</th><th>Target</th><th>Decision rule</th></tr></thead><tbody><tr><td data-path="views.v-launch.blocks.5.table.rows.0.0">Accounts running ≥1 Ask</td><td data-path="views.v-launch.blocks.5.table.rows.0.1">>50% wk1</td><td data-path="views.v-launch.blocks.5.table.rows.0.2"><30% → fix onboarding / TTV</td></tr><tr><td data-path="views.v-launch.blocks.5.table.rows.1.0">Demo → trial CVR</td><td data-path="views.v-launch.blocks.5.table.rows.1.1">beat baseline</td><td data-path="views.v-launch.blocks.5.table.rows.1.2">tune the demo question</td></tr><tr><td data-path="views.v-launch.blocks.5.table.rows.2.0">Activation w/ Ask vs without</td><td data-path="views.v-launch.blocks.5.table.rows.2.1">+10pt</td><td data-path="views.v-launch.blocks.5.table.rows.2.2">no lift → reposition the feature</td></tr><tr><td data-path="views.v-launch.blocks.5.table.rows.3.0">Trial → paid</td><td data-path="views.v-launch.blocks.5.table.rows.3.1">beat baseline</td><td data-path="views.v-launch.blocks.5.table.rows.3.2">identify the paywall trigger (MTU)</td></tr></tbody></table></div>
     </article>
     <article class="view" id="v-plg" data-title="PLG &amp; loops">
       <div class="vhead"><div class="eyebrow">08 · Growth</div><h1>PLG & growth loops</h1><p class="sub">The product is the marketing — every shared chart is an ad. AHA = first real answer in under 5 minutes, no SQL.</p></div>
-        <div class="blk" data-block="views.v-plg.blocks.0" data-bid=""><div class="h" data-path="views.v-plg.blocks.0.h">Primary loop</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.0" data-bid=""><div class="h lvl2" data-path="views.v-plg.blocks.0.h">Primary loop</div></div>
         <div class="blk" data-block="views.v-plg.blocks.1" data-bid=""><div class="flow"><div class="step"><div class="sn">01</div><div class="st" data-path="views.v-plg.blocks.1.flow.0.1">Ask (free)</div></div><div class="step"><div class="sn">02</div><div class="st" data-path="views.v-plg.blocks.1.flow.1.1">Answer in 4 min</div></div><div class="step"><div class="sn">03</div><div class="st" data-path="views.v-plg.blocks.1.flow.2.1">Invite the team</div></div><div class="step"><div class="sn">04</div><div class="st" data-path="views.v-plg.blocks.1.flow.3.1">Hit the MTU ceiling</div></div><div class="step"><div class="sn">05</div><div class="st" data-path="views.v-plg.blocks.1.flow.4.1">Upgrade → 01</div></div></div></div>
-        <div class="blk" data-block="views.v-plg.blocks.2" data-bid=""><div class="h" data-path="views.v-plg.blocks.2.h">Other loops</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-plg.blocks.2.h">Other loops</div></div>
         <div class="blk" data-block="views.v-plg.blocks.3" data-bid=""><ul class="list"><li data-path="views.v-plg.blocks.3.list.0"><b>Shared-catalog loop</b> — one person's metric definition pulls the rest of the team in to use the same numbers.</li><li data-path="views.v-plg.blocks.3.list.1"><b>Answer-sharing loop</b> — a Plotline chart pasted in Slack drives 'how did you get that?' → new users.</li><li data-path="views.v-plg.blocks.3.list.2"><b>Auto-instrument loop</b> — events captured without eng means coverage grows on its own; more to analyze, more reasons to return.</li></ul></div>
-        <div class="blk" data-block="views.v-plg.blocks.4" data-bid=""><div class="h" data-path="views.v-plg.blocks.4.h">Metric tree</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.4" data-bid=""><div class="h lvl2" data-path="views.v-plg.blocks.4.h">Metric tree</div></div>
         <div class="blk" data-block="views.v-plg.blocks.5" data-bid=""><div class="tree" data-path="views.v-plg.blocks.5.tree">North star: weekly active question-askers
 ├─ New users (from shared charts + invites)
 ├─ Activation (first answer &lt;5 min)
 ├─ Questions / user / week
 ├─ Team seats activated / account
 └─ Free→Team (MTU ceiling · shared catalog · SSO)</div></div>
-        <div class="blk" data-block="views.v-plg.blocks.6" data-bid=""><div class="h" data-path="views.v-plg.blocks.6.h">PQL triggers</div></div>
+        <div class="blk" data-block="views.v-plg.blocks.6" data-bid=""><div class="h lvl2" data-path="views.v-plg.blocks.6.h">PQL triggers</div></div>
         <div class="blk" data-block="views.v-plg.blocks.7" data-bid=""><div><span class="chip">hit MTU ceiling</span><span class="chip">invited a teammate</span><span class="chip">saved a dashboard</span><span class="chip">asked 3+ questions</span><span class="chip">wants SSO</span></div></div>
     </article>
     <article class="view" id="v-events" data-title="Events desk">
@@ -476,10 +535,10 @@
       <div class="vhead"><div class="eyebrow">Market Desk</div><h1>Market & category brief</h1><p class="sub">Artifact of the Market Desk: SWOT + Porter's Five Forces + why-now for the self-serve product-analytics category, from the strategic-analysis frameworks.</p></div>
         <div class="blk" data-block="views.v-market.blocks.0" data-bid=""><div class="callout warn" data-path="views.v-market.blocks.0.callout"><b>Illustrative Market Desk output.</b> A live run sources each force/trend from analyst posts, reviews, and last-30-days sentiment.</div></div>
         <div class="blk" data-block="views.v-market.blocks.1" data-bid=""><dl class="kv"><dt>Category</dt><dd data-path="views.v-market.blocks.1.kv.0.1">Self-serve product analytics ("answers without SQL") — an emerging cut of product analytics</dd><dt>Why now</dt><dd data-path="views.v-market.blocks.1.kv.1.1">Data teams are the bottleneck; the 'be data-driven' mandate hit non-technical teams; LLM-era UX made plain-English querying an expectation, not a moonshot</dd><dt>Whitespace</dt><dd data-path="views.v-market.blocks.1.kv.2.1">The non-technical self-server — incumbents optimize for the analyst, not the PM who has the question</dd></dl></div>
-        <div class="blk" data-block="views.v-market.blocks.2" data-bid=""><div class="h" data-path="views.v-market.blocks.2.h">SWOT</div></div>
+        <div class="blk" data-block="views.v-market.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-market.blocks.2.h">SWOT</div></div>
         <div class="blk" data-block="views.v-market.blocks.3" data-bid=""><table><thead><tr><th>Strengths</th><th>Weaknesses</th></tr></thead><tbody><tr><td data-path="views.v-market.blocks.3.table.rows.0.0">Plain-English Ask · 4-min time-to-answer · doesn't become shelfware</td><td data-path="views.v-market.blocks.3.table.rows.0.1">Not warehouse-native; thinner deep-modeling; low brand vs incumbents</td></tr></tbody></table></div>
         <div class="blk" data-block="views.v-market.blocks.4" data-bid=""><table><thead><tr><th>Opportunities</th><th>Threats</th></tr></thead><tbody><tr><td data-path="views.v-market.blocks.4.table.rows.0.0">Non-technical buyers underserved · the AI-analytics wave · a clean PLG self-serve motion</td><td data-path="views.v-market.blocks.4.table.rows.0.1">Incumbents bolt on AI query · analytics commoditized to free tiers · DIY (SQL+BI) is entrenched</td></tr></tbody></table></div>
-        <div class="blk" data-block="views.v-market.blocks.5" data-bid=""><div class="h" data-path="views.v-market.blocks.5.h">Porter's Five Forces</div></div>
+        <div class="blk" data-block="views.v-market.blocks.5" data-bid=""><div class="h lvl2" data-path="views.v-market.blocks.5.h">Porter's Five Forces</div></div>
         <div class="blk" data-block="views.v-market.blocks.6" data-bid=""><table><thead><tr><th>Force</th><th>Read</th></tr></thead><tbody><tr><td data-path="views.v-market.blocks.6.table.rows.0.0">Rivalry</td><td data-path="views.v-market.blocks.6.table.rows.0.1">High — Amplitude, Mixpanel, PostHog, Heap</td></tr><tr><td data-path="views.v-market.blocks.6.table.rows.1.0">Buyer power</td><td data-path="views.v-market.blocks.6.table.rows.1.1">Medium — many cheap options, but switching cost rises with instrumentation</td></tr><tr><td data-path="views.v-market.blocks.6.table.rows.2.0">Substitutes</td><td data-path="views.v-market.blocks.6.table.rows.2.1">High — SQL + BI, spreadsheets, 'ask the analyst'</td></tr><tr><td data-path="views.v-market.blocks.6.table.rows.3.0">New entrants</td><td data-path="views.v-market.blocks.6.table.rows.3.1">High — LLM-analytics startups entering constantly</td></tr><tr><td data-path="views.v-market.blocks.6.table.rows.4.0">Supplier power</td><td data-path="views.v-market.blocks.6.table.rows.4.1">Low — commodity infra</td></tr></tbody></table></div>
         <div class="blk" data-block="views.v-market.blocks.7" data-bid=""><p data-path="views.v-market.blocks.7.p"><span class="small muted"><b>Verify on live run:</b> force ratings + the 'incumbents add AI query' threat are directional until sourced.</span></p></div>
     </article>
@@ -499,14 +558,14 @@
       <div class="vhead"><div class="eyebrow">GTM & Launch Desk</div><h1>Launch-motion brief + tactics map</h1><p class="sub">Artifact of the GTM/Launch Desk: how comparable products launched + which tactics fit Plotline, ranked by evidence-of-ROI × fit × effort. Exports <code>launch-tactics.csv</code>.</p></div>
         <div class="blk" data-block="views.v-gtm.blocks.0" data-bid=""><div class="callout warn" data-path="views.v-gtm.blocks.0.callout"><b>Illustrative GTM Desk output.</b> A live run sources each tactic from comparable-launch retros (PostHog, Amplitude, June) + last-30-days launch sentiment.</div></div>
         <div class="blk" data-block="views.v-gtm.blocks.1" data-bid=""><dl class="kv"><dt>Recommended motion</dt><dd data-path="views.v-gtm.blocks.1.kv.0.1">Product-led (self-serve free tier) + sales-assist for Business/SSO — the category is PLG-first</dd><dt>Activation / aha</dt><dd data-path="views.v-gtm.blocks.1.kv.1.1">First real answer in under 5 min, no SQL — onboarding optimizes to it</dd><dt>Launch tier</dt><dd data-path="views.v-gtm.blocks.1.kv.2.1">Tier-1 marquee for 'Ask' (the differentiator)</dd></dl></div>
-        <div class="blk" data-block="views.v-gtm.blocks.2" data-bid=""><div class="h" data-path="views.v-gtm.blocks.2.h">Launch-tactics map</div></div>
+        <div class="blk" data-block="views.v-gtm.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-gtm.blocks.2.h">Launch-tactics map</div></div>
         <div class="blk" data-block="views.v-gtm.blocks.3" data-bid=""><table><thead><tr><th>#</th><th>Tactic</th><th>Fit</th><th>Evidence (comparable)</th><th>Effort</th></tr></thead><tbody><tr><td data-path="views.v-gtm.blocks.3.table.rows.0.0">1</td><td data-path="views.v-gtm.blocks.3.table.rows.0.1">Product Hunt launch</td><td data-path="views.v-gtm.blocks.3.table.rows.0.2">High — PLG, builder audience</td><td data-path="views.v-gtm.blocks.3.table.rows.0.3">June / PostHog launched on PH</td><td data-path="views.v-gtm.blocks.3.table.rows.0.4">Low</td></tr><tr><td data-path="views.v-gtm.blocks.3.table.rows.1.0">2</td><td data-path="views.v-gtm.blocks.3.table.rows.1.1">Founder POV blog + Show HN</td><td data-path="views.v-gtm.blocks.3.table.rows.1.2">High — technical credibility</td><td data-path="views.v-gtm.blocks.3.table.rows.1.3">PostHog grew on HN + content</td><td data-path="views.v-gtm.blocks.3.table.rows.1.4">Low</td></tr><tr><td data-path="views.v-gtm.blocks.3.table.rows.2.0">3</td><td data-path="views.v-gtm.blocks.3.table.rows.2.1">Interactive 'ask a question' demo</td><td data-path="views.v-gtm.blocks.3.table.rows.2.2">High — the product is the marketing</td><td data-path="views.v-gtm.blocks.3.table.rows.2.3">Amplitude/Heap lead with demo</td><td data-path="views.v-gtm.blocks.3.table.rows.2.4">Med</td></tr><tr><td data-path="views.v-gtm.blocks.3.table.rows.3.0">4</td><td data-path="views.v-gtm.blocks.3.table.rows.3.1">Lenny's + r/ProductManagement</td><td data-path="views.v-gtm.blocks.3.table.rows.3.2">High — exact ICP</td><td data-path="views.v-gtm.blocks.3.table.rows.3.3">(see Channels desk)</td><td data-path="views.v-gtm.blocks.3.table.rows.3.4">Med</td></tr><tr><td data-path="views.v-gtm.blocks.3.table.rows.4.0">5</td><td data-path="views.v-gtm.blocks.3.table.rows.4.1">Paid search 'Vista alternative'</td><td data-path="views.v-gtm.blocks.3.table.rows.4.2">Med — capture intent</td><td data-path="views.v-gtm.blocks.3.table.rows.4.3">competitor-alternative SEM</td><td data-path="views.v-gtm.blocks.3.table.rows.4.4">Med (phase 2)</td></tr></tbody></table></div>
         <div class="blk" data-block="views.v-gtm.blocks.4" data-bid=""><p data-path="views.v-gtm.blocks.4.p"><span class="small"><b>Why this order:</b> PLG products win launch week on Product Hunt + community + a self-serve demo, not paid. Paid 'alternative' search is a phase-2 capture play once the funnel converts.</span></p></div>
     </article>
     <article class="view" id="v-narrative" data-title="Narrative">
       <div class="vhead"><div class="eyebrow">09 · Story</div><h1>Brand / sales narrative</h1><p class="sub">The change → stakes → villain → promised land → proof → flag.</p></div>
         <div class="blk" data-block="views.v-narrative.blocks.0" data-bid=""><div class="rows"><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.0.t">1 · The change</div><div class="d" data-path="views.v-narrative.blocks.0.rows.0.d">Every team is told to be 'data-driven' — but the people who need answers aren't the ones who can write SQL.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.1.t">2 · The stakes</div><div class="d" data-path="views.v-narrative.blocks.0.rows.1.d">So every question becomes a ticket. Decisions wait days, or get made on gut and relitigated next week.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.2.t">3 · The villain</div><div class="d" data-path="views.v-narrative.blocks.0.rows.2.d">Not the tools — the bottleneck: the gap between who has the question and who can get the answer.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.3.t">4 · The promised land</div><div class="d" data-path="views.v-narrative.blocks.0.rows.3.d">Ask in plain English, get the answer yourself, in minutes — on numbers the whole team shares.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.4.t">5 · The proof</div><div class="d" data-path="views.v-narrative.blocks.0.rows.4.d">Median first answer: 4 minutes. 71% of active users write no SQL. The tool that doesn't become shelfware.</div></div><div class="meta"></div></div><div class="row"><div><div class="t" data-path="views.v-narrative.blocks.0.rows.5.t">6 · The flag</div><div class="d" data-path="views.v-narrative.blocks.0.rows.5.d">Product analytics the people with the questions can finally run themselves.</div></div><div class="meta"></div></div></div></div>
-        <div class="blk" data-block="views.v-narrative.blocks.1" data-bid=""><div class="h" data-path="views.v-narrative.blocks.1.h">Lines to copy</div></div>
+        <div class="blk" data-block="views.v-narrative.blocks.1" data-bid=""><div class="h lvl2" data-path="views.v-narrative.blocks.1.h">Lines to copy</div></div>
         <div class="blk" data-block="views.v-narrative.blocks.2" data-bid=""><div class="copyline"><span data-path="views.v-narrative.blocks.2.copy.0">"Four minutes, not a ticket."</span><button class="cbtn" data-copy="Four minutes, not a ticket.">Copy</button></div></div>
         <div class="blk" data-block="views.v-narrative.blocks.3" data-bid=""><div class="copyline"><span data-path="views.v-narrative.blocks.3.copy.0">Press: "The analytics tool built for the people who actually have the questions."</span><button class="cbtn" data-copy="The analytics tool built for the people who actually have the questions — no SQL, no data-team queue.">Copy</button></div></div>
     </article>
@@ -517,17 +576,17 @@
     </article>
     <article class="view" id="v-coach" data-title="Coach review">
       <div class="vhead"><div class="eyebrow">11 · Pressure-test</div><h1>PMM coach review</h1><p class="sub">Senior-PMM scorecard (bars animate when this view opens) + required revisions.</p></div>
-        <div class="blk" data-block="views.v-coach.blocks.0" data-bid=""><div class="h" data-path="views.v-coach.blocks.0.h">Scorecard</div></div>
+        <div class="blk" data-block="views.v-coach.blocks.0" data-bid=""><div class="h lvl2" data-path="views.v-coach.blocks.0.h">Scorecard</div></div>
         <div class="blk" data-block="views.v-coach.blocks.1" data-bid=""><div data-w="scorecard"></div></div>
-        <div class="blk" data-block="views.v-coach.blocks.2" data-bid=""><div class="h" data-path="views.v-coach.blocks.2.h">Required revisions before launch</div></div>
+        <div class="blk" data-block="views.v-coach.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-coach.blocks.2.h">Required revisions before launch</div></div>
         <div class="blk" data-block="views.v-coach.blocks.3" data-bid=""><div data-w="checklist-rev"></div></div>
         <div class="blk" data-block="views.v-coach.blocks.4" data-bid=""><div class="callout warn" data-path="views.v-coach.blocks.4.callout"><b>Verdict:</b> greenlight — the positioning is specific and honest about where it loses. <b>Close the proof gap</b> (a named customer + a quantified outcome) before the Tier-1 marquee claims go live.</div></div>
     </article>
     <article class="view" id="v-exports" data-title="Exports">
       <div class="vhead"><div class="eyebrow">Appendix</div><h1>Exports & source docs</h1><p class="sub">Generated by the artifact factory. Links resolve when this file sits in the launch folder next to generated-docs/.</p></div>
-        <div class="blk" data-block="views.v-exports.blocks.0" data-bid=""><div class="h" data-path="views.v-exports.blocks.0.h">Export files</div></div>
+        <div class="blk" data-block="views.v-exports.blocks.0" data-bid=""><div class="h lvl2" data-path="views.v-exports.blocks.0.h">Export files</div></div>
         <div class="blk" data-block="views.v-exports.blocks.1" data-bid=""><div class="rows" data-w="exportFiles"></div></div>
-        <div class="blk" data-block="views.v-exports.blocks.2" data-bid=""><div class="h" data-path="views.v-exports.blocks.2.h">Source markdown</div></div>
+        <div class="blk" data-block="views.v-exports.blocks.2" data-bid=""><div class="h lvl2" data-path="views.v-exports.blocks.2.h">Source markdown</div></div>
         <div class="blk" data-block="views.v-exports.blocks.3" data-bid=""><div class="rows" data-w="exportDocs"></div></div>
     </article>
   </main>
@@ -550,33 +609,33 @@
   <div data-id="p-sam" data-eye="Persona · blocker" data-title="Sam — Head of Data"><div class="blk" data-block="details.p-sam.blocks.0" data-bid=""><dl class="kv"><dt>JTBD</dt><dd data-path="details.p-sam.blocks.0.kv.0.1">Stop being the bottleneck for everyone's 'why' question.</dd><dt>Reframe</dt><dd data-path="details.p-sam.blocks.0.kv.1.1">Not a threat — Plotline frees the queue for the modeling only the data team can do.</dd></dl></div>
         <div class="blk" data-block="details.p-sam.blocks.1" data-bid=""><div class="copyline"><span data-path="details.p-sam.blocks.1.copy.0">"Plotline takes the self-serve questions off your queue."</span><button class="cbtn" data-copy="Plotline takes the self-serve 'why' questions off your queue so your team does the modeling only they can.">Copy</button></div></div></div>
   <div data-id="m-0" data-eye="Pillar 1" data-title="Ask in plain English"><div class="blk" data-block="details.m-0.blocks.0" data-bid=""><p data-path="details.m-0.blocks.0.p">Type the question — 'where do trial users drop off before inviting a teammate?' — and get a funnel back. No query language, no report to hunt for.</p></div>
-        <div class="blk" data-block="details.m-0.blocks.1" data-bid=""><div class="h" data-path="details.m-0.blocks.1.h">Proof</div></div>
+        <div class="blk" data-block="details.m-0.blocks.1" data-bid=""><div class="h lvl2" data-path="details.m-0.blocks.1.h">Proof</div></div>
         <div class="blk" data-block="details.m-0.blocks.2" data-bid=""><ul class="list"><li data-path="details.m-0.blocks.2.list.0">4-min median time to first answer</li><li data-path="details.m-0.blocks.2.list.1">71% of weekly active users write no SQL</li><li data-path="details.m-0.blocks.2.list.2">The generated query is shown, not hidden</li></ul></div>
-        <div class="blk" data-block="details.m-0.blocks.3" data-bid=""><div class="h" data-path="details.m-0.blocks.3.h">Features</div></div>
+        <div class="blk" data-block="details.m-0.blocks.3" data-bid=""><div class="h lvl2" data-path="details.m-0.blocks.3.h">Features</div></div>
         <div class="blk" data-block="details.m-0.blocks.4" data-bid=""><div><span class="chip">plain-English Ask</span><span class="chip">auto-funnels</span><span class="chip">cohorts</span><span class="chip">saved dashboards</span></div></div></div>
   <div data-id="m-1" data-eye="Pillar 2" data-title="No tickets, no waiting"><div class="blk" data-block="details.m-1.blocks.0" data-bid=""><p data-path="details.m-1.blocks.0.p">Auto-instrumentation captures events without an engineering ticket; self-serve means no analyst in the loop for the common question.</p></div>
-        <div class="blk" data-block="details.m-1.blocks.1" data-bid=""><div class="h" data-path="details.m-1.blocks.1.h">Proof</div></div>
+        <div class="blk" data-block="details.m-1.blocks.1" data-bid=""><div class="h lvl2" data-path="details.m-1.blocks.1.h">Proof</div></div>
         <div class="blk" data-block="details.m-1.blocks.2" data-bid=""><ul class="list"><li data-path="details.m-1.blocks.2.list.0">No eng ticket to add an event</li><li data-path="details.m-1.blocks.2.list.1">No analyst queue for the common 'why'</li><li data-path="details.m-1.blocks.2.list.2">~2-day queue → minutes</li></ul></div></div>
   <div data-id="m-2" data-eye="Pillar 3" data-title="One set of numbers"><div class="blk" data-block="details.m-2.blocks.0" data-bid=""><p data-path="details.m-2.blocks.0.p">Shared metric definitions — 'active', 'activated', 'MTU' — used across product and marketing, so numbers reconcile across teams.</p></div>
-        <div class="blk" data-block="details.m-2.blocks.1" data-bid=""><div class="h" data-path="details.m-2.blocks.1.h">Proof</div></div>
+        <div class="blk" data-block="details.m-2.blocks.1" data-bid=""><div class="h lvl2" data-path="details.m-2.blocks.1.h">Proof</div></div>
         <div class="blk" data-block="details.m-2.blocks.2" data-bid=""><ul class="list"><li data-path="details.m-2.blocks.2.list.0">Shared metric catalog</li><li data-path="details.m-2.blocks.2.list.1">One definition, every team</li><li data-path="details.m-2.blocks.2.list.2">(proof gap: quantify 'fewer reconciliation arguments' — needs a customer quote)</li></ul></div></div>
-  <div data-id="c-vista" data-eye="Battlecard" data-title="vs Vista Analytics"><div class="blk" data-block="details.c-vista.blocks.0" data-bid=""><div class="h" data-path="details.c-vista.blocks.0.h">When we win</div></div>
+  <div data-id="c-vista" data-eye="Battlecard" data-title="vs Vista Analytics"><div class="blk" data-block="details.c-vista.blocks.0" data-bid=""><div class="h lvl2" data-path="details.c-vista.blocks.0.h">When we win</div></div>
         <div class="blk" data-block="details.c-vista.blocks.1" data-bid=""><p data-path="details.c-vista.blocks.1.p">No/overloaded data team · Vista is already shelfware there · the user is non-technical · the speed of one answer matters.</p></div>
-        <div class="blk" data-block="details.c-vista.blocks.2" data-bid=""><div class="h" data-path="details.c-vista.blocks.2.h">When they win</div></div>
+        <div class="blk" data-block="details.c-vista.blocks.2" data-bid=""><div class="h lvl2" data-path="details.c-vista.blocks.2.h">When they win</div></div>
         <div class="blk" data-block="details.c-vista.blocks.3" data-bid=""><p data-path="details.c-vista.blocks.3.p">A mature data org wanting warehouse-native modeling + governance at enterprise scale. Disqualify, don't oversell.</p></div>
-        <div class="blk" data-block="details.c-vista.blocks.4" data-bid=""><div class="h" data-path="details.c-vista.blocks.4.h">Guidance</div></div>
+        <div class="blk" data-block="details.c-vista.blocks.4" data-bid=""><div class="h lvl2" data-path="details.c-vista.blocks.4.h">Guidance</div></div>
         <div class="blk" data-block="details.c-vista.blocks.5" data-bid=""><p data-path="details.c-vista.blocks.5.p">Don't fight on feature depth (their home field). Reframe to adoption + time-to-value: 'how many seats actually log in weekly?'</p></div></div>
-  <div data-id="c-pulse" data-eye="Battlecard" data-title="vs Pulse"><div class="blk" data-block="details.c-pulse.blocks.0" data-bid=""><div class="h" data-path="details.c-pulse.blocks.0.h">When we win</div></div>
+  <div data-id="c-pulse" data-eye="Battlecard" data-title="vs Pulse"><div class="blk" data-block="details.c-pulse.blocks.0" data-bid=""><div class="h lvl2" data-path="details.c-pulse.blocks.0.h">When we win</div></div>
         <div class="blk" data-block="details.c-pulse.blocks.1" data-bid=""><p data-path="details.c-pulse.blocks.1.p">Pulse shows what happened, then you file a ticket to ask why. Plotline answers the follow-up yourself.</p></div>
-        <div class="blk" data-block="details.c-pulse.blocks.2" data-bid=""><div class="h" data-path="details.c-pulse.blocks.2.h">When they win</div></div>
+        <div class="blk" data-block="details.c-pulse.blocks.2" data-bid=""><div class="h lvl2" data-path="details.c-pulse.blocks.2.h">When they win</div></div>
         <div class="blk" data-block="details.c-pulse.blocks.3" data-bid=""><p data-path="details.c-pulse.blocks.3.p">Buyer only wants dashboards and already has someone to build and maintain them.</p></div>
-        <div class="blk" data-block="details.c-pulse.blocks.4" data-bid=""><div class="h" data-path="details.c-pulse.blocks.4.h">Guidance</div></div>
+        <div class="blk" data-block="details.c-pulse.blocks.4" data-bid=""><div class="h lvl2" data-path="details.c-pulse.blocks.4.h">Guidance</div></div>
         <div class="blk" data-block="details.c-pulse.blocks.5" data-bid=""><p data-path="details.c-pulse.blocks.5.p">'Pulse tells you what. Plotline tells you why — without the next ticket.'</p></div></div>
-  <div data-id="c-queue" data-eye="Battlecard" data-title="vs SQL analyst + data queue"><div class="blk" data-block="details.c-queue.blocks.0" data-bid=""><div class="h" data-path="details.c-queue.blocks.0.h">When we win</div></div>
+  <div data-id="c-queue" data-eye="Battlecard" data-title="vs SQL analyst + data queue"><div class="blk" data-block="details.c-queue.blocks.0" data-bid=""><div class="h lvl2" data-path="details.c-queue.blocks.0.h">When we win</div></div>
         <div class="blk" data-block="details.c-queue.blocks.1" data-bid=""><p data-path="details.c-queue.blocks.1.p">Speed + self-serve: the common 'why' question in minutes, not a multi-day ticket.</p></div>
-        <div class="blk" data-block="details.c-queue.blocks.2" data-bid=""><div class="h" data-path="details.c-queue.blocks.2.h">When they win</div></div>
+        <div class="blk" data-block="details.c-queue.blocks.2" data-bid=""><div class="h lvl2" data-path="details.c-queue.blocks.2.h">When they win</div></div>
         <div class="blk" data-block="details.c-queue.blocks.3" data-bid=""><p data-path="details.c-queue.blocks.3.p">Deep, novel modeling that genuinely needs SQL and the warehouse.</p></div>
-        <div class="blk" data-block="details.c-queue.blocks.4" data-bid=""><div class="h" data-path="details.c-queue.blocks.4.h">Guidance</div></div>
+        <div class="blk" data-block="details.c-queue.blocks.4" data-bid=""><div class="h lvl2" data-path="details.c-queue.blocks.4.h">Guidance</div></div>
         <div class="blk" data-block="details.c-queue.blocks.5" data-bid=""><p data-path="details.c-queue.blocks.5.p">'Keep the analyst for the hard modeling. Plotline clears the queue of the 80% they shouldn't be doing.'</p></div></div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -597,7 +656,7 @@
 <div class="slash" id="slash"></div>
 <div class="cmadd" id="cmAdd">💬 Comment</div>
 <div class="cmpop" id="cmPop"><div class="q" id="cmQuote"></div><textarea id="cmText" placeholder="Add a comment…"></textarea><div class="act"><button class="tbtn" id="cmCancel">Cancel</button><button class="tbtn on" id="cmSave">Comment</button></div></div>
-<script>window.KIT={"stats":[["4 min","median time to first answer",4],["~2 days","the data-queue it replaces",2],["71%","of active users write no SQL",71],["$0","to start · 10k MTU free",0]],"kit":[["01","Product context","v-product"],["02","ICP & personas","v-personas"],["03","Positioning","v-positioning"],["04","Messaging","v-messaging"],["05","Competitive","v-competitive"],["06","Pricing","v-pricing"],["07","Launch plan","v-launch"],["08","PLG & loops","v-plg"],["09","Narrative","v-narrative"],["10","Campaign","v-campaign"],["11","Coach review","v-coach"]],"taglines":["Ask your product a question.","Answers, not a ticket queue.","Product analytics without the SQL.","Four minutes, not four days.","The analytics your whole team actually opens.","Stop arguing about whose number is right."],"msgVariants":[["Priya (PM)","Stop filing tickets to ask why trial users churn. Ask Plotline, get the funnel, ship the fix this week."],["Marcus (PMM)","Measure every campaign against the same definition of 'activated' — no SQL, no data-team queue."],["Dana (Head of Product)","More decisions per week, on numbers everyone trusts, without adding a data hire."],["Sam (Head of Data)","Plotline takes the self-serve 'why' questions off your queue so your team does the modeling only they can."]],"pricing":{"tiers":[["Free","$0","10k MTU"],["Team","usage","to 100k MTU"],["Business","custom","SSO · gov"]],"features":[["Monthly tracked users","10k","to 100k","500k+"],["Seats","unlimited","unlimited","unlimited"],["Plain-English Ask","✓","✓","✓"],["Shared metric catalog","—","✓","✓"],["SSO · roles · audit","—","—","✓"]]},"scorecard":[["Positioning clarity",5],["Differentiation",4],["ICP specificity",5],["Evidence / proof",3],["Pricing logic",5],["Launch readiness",4],["Competitive defense",4]],"launchActs":["Sales enablement: deck, battlecard vs Vista, talk track (T-7)","Demo video + interactive 'ask a question' demo (T-10)","Homepage hero + 'Ask' product page (T-7)","Lifecycle email + in-product first-run tooltip (T-3)","Launch blog + founder POV (T-0)","Product Hunt + r/ProductManagement (T-0)","Accuracy guardrail green in beta (go / no-go)","Paid search on 'Vista alternative' (phase 2)"],"revisions":["Close the proof gap: land one named customer + a quantified outcome for the case study.","Scope the 'Ask' accuracy claim to common question types; publish what it does and doesn't do.","Always show the generated query + metric definition so answers aren't a black box.","Model each beta account's seat→MTU bill; grandfather increases for 2 cycles.","Instrument the metric tree before launch (activation delta, free→Team)."],"palette":[["Priya — the PM","v-personas","p-priya"],["Marcus — the PMM","v-personas","p-marcus"],["Dana — Head of Product","v-personas","p-dana"],["Sam — Head of Data","v-personas","p-sam"],["Pillar: Plain English","v-messaging","m-0"],["Pillar: No waiting","v-messaging","m-1"],["Pillar: One set of numbers","v-messaging","m-2"],["vs Vista","v-competitive","c-vista"],["vs Pulse","v-competitive","c-pulse"],["vs the data queue","v-competitive","c-queue"]],"exportFiles":[["events.csv","CSV · ranked event targets"],["launch-tactics.csv","CSV · ranked launch tactics"],["campaign-brief.docx","Word · campaign brief"],["launch-deck.pptx","PowerPoint · deck"],["social-posts.csv","CSV · social posts"],["battlecard.docx","Word · battlecard"],["pricing-model.xlsx","Excel · pricing model"],["metrics.json","PLG metrics"]],"exportDocs":["01-product-context","02-icp-and-personas","03-positioning","04-messaging-house","05-competitive-intelligence","06-pricing-packaging","07-gtm-launch-plan","08-plg-growth-loops","09-sales-brand-narrative","10-campaign-brief","11-pmm-coach-review"],"intro":[{"kind":"title","eyebrow":"Plotline · launch kit","h":"Ask your product<br/>a question.","s":"Self-serve product analytics — and the strategy to launch it."},{"kind":"stats","eyebrow":"The bottleneck, in numbers"},{"kind":"line","h":"The people with the questions<br/>can't get the answers.","s":"So every question becomes a ticket in the data-team queue. Decisions wait days — or get made on gut."},{"kind":"cta","h":"Plotline answers in four minutes.","s":"Ask in plain English · no SQL · no ticket · one set of numbers."}]};window.KITCOMMENTS=[];window.KITBLOCKMENU=[{"type":"text","label":"Text","icon":"¶","template":{"type":"text","p":"New text"}},{"type":"heading","label":"Heading","icon":"H","template":{"type":"heading","h":"New heading"}},{"type":"todo","label":"To-do list","icon":"☑","template":{"type":"todo","todo":[["New to-do",false]]}},{"type":"list","label":"Bulleted list","icon":"•","template":{"type":"list","list":["New item"]}},{"type":"table","label":"Table","icon":"⊞","template":{"type":"table","table":{"head":["Column A","Column B","Column C"],"rows":[["","",""],["","",""]]}}},{"type":"callout","label":"Callout","icon":"!","template":{"type":"callout","callout":"New callout"}},{"type":"quote","label":"Quote","icon":"❝","template":{"type":"quote","quote":"New quote"}},{"type":"divider","label":"Divider","icon":"—","template":{"type":"divider","divider":true}},{"type":"toggle","label":"Toggle list","icon":"▸","template":{"type":"toggle","title":"Toggle","children":[{"type":"text","p":"Hidden detail — click ▾ to collapse."}]}}];window.KITTRANSFORM={"text":["heading","quote","callout","todo","list"],"heading":["text","quote","callout"],"quote":["text","callout","heading"],"callout":["text","quote","heading"],"list":["todo","text"],"todo":["list","text"]};</script>
+<script>window.KIT={"stats":[["4 min","median time to first answer",4],["~2 days","the data-queue it replaces",2],["71%","of active users write no SQL",71],["$0","to start · 10k MTU free",0]],"kit":[["01","Product context","v-product"],["02","ICP & personas","v-personas"],["03","Positioning","v-positioning"],["04","Messaging","v-messaging"],["05","Competitive","v-competitive"],["06","Pricing","v-pricing"],["07","Launch plan","v-launch"],["08","PLG & loops","v-plg"],["09","Narrative","v-narrative"],["10","Campaign","v-campaign"],["11","Coach review","v-coach"]],"taglines":["Ask your product a question.","Answers, not a ticket queue.","Product analytics without the SQL.","Four minutes, not four days.","The analytics your whole team actually opens.","Stop arguing about whose number is right."],"msgVariants":[["Priya (PM)","Stop filing tickets to ask why trial users churn. Ask Plotline, get the funnel, ship the fix this week."],["Marcus (PMM)","Measure every campaign against the same definition of 'activated' — no SQL, no data-team queue."],["Dana (Head of Product)","More decisions per week, on numbers everyone trusts, without adding a data hire."],["Sam (Head of Data)","Plotline takes the self-serve 'why' questions off your queue so your team does the modeling only they can."]],"pricing":{"tiers":[["Free","$0","10k MTU"],["Team","usage","to 100k MTU"],["Business","custom","SSO · gov"]],"features":[["Monthly tracked users","10k","to 100k","500k+"],["Seats","unlimited","unlimited","unlimited"],["Plain-English Ask","✓","✓","✓"],["Shared metric catalog","—","✓","✓"],["SSO · roles · audit","—","—","✓"]]},"scorecard":[["Positioning clarity",5],["Differentiation",4],["ICP specificity",5],["Evidence / proof",3],["Pricing logic",5],["Launch readiness",4],["Competitive defense",4]],"launchActs":["Sales enablement: deck, battlecard vs Vista, talk track (T-7)","Demo video + interactive 'ask a question' demo (T-10)","Homepage hero + 'Ask' product page (T-7)","Lifecycle email + in-product first-run tooltip (T-3)","Launch blog + founder POV (T-0)","Product Hunt + r/ProductManagement (T-0)","Accuracy guardrail green in beta (go / no-go)","Paid search on 'Vista alternative' (phase 2)"],"revisions":["Close the proof gap: land one named customer + a quantified outcome for the case study.","Scope the 'Ask' accuracy claim to common question types; publish what it does and doesn't do.","Always show the generated query + metric definition so answers aren't a black box.","Model each beta account's seat→MTU bill; grandfather increases for 2 cycles.","Instrument the metric tree before launch (activation delta, free→Team)."],"palette":[["Priya — the PM","v-personas","p-priya"],["Marcus — the PMM","v-personas","p-marcus"],["Dana — Head of Product","v-personas","p-dana"],["Sam — Head of Data","v-personas","p-sam"],["Pillar: Plain English","v-messaging","m-0"],["Pillar: No waiting","v-messaging","m-1"],["Pillar: One set of numbers","v-messaging","m-2"],["vs Vista","v-competitive","c-vista"],["vs Pulse","v-competitive","c-pulse"],["vs the data queue","v-competitive","c-queue"]],"exportFiles":[["events.csv","CSV · ranked event targets"],["launch-tactics.csv","CSV · ranked launch tactics"],["campaign-brief.docx","Word · campaign brief"],["launch-deck.pptx","PowerPoint · deck"],["social-posts.csv","CSV · social posts"],["battlecard.docx","Word · battlecard"],["pricing-model.xlsx","Excel · pricing model"],["metrics.json","PLG metrics"]],"exportDocs":["01-product-context","02-icp-and-personas","03-positioning","04-messaging-house","05-competitive-intelligence","06-pricing-packaging","07-gtm-launch-plan","08-plg-growth-loops","09-sales-brand-narrative","10-campaign-brief","11-pmm-coach-review"],"intro":[{"kind":"title","eyebrow":"Plotline · launch kit","h":"Ask your product<br/>a question.","s":"Self-serve product analytics — and the strategy to launch it."},{"kind":"stats","eyebrow":"The bottleneck, in numbers"},{"kind":"line","h":"The people with the questions<br/>can't get the answers.","s":"So every question becomes a ticket in the data-team queue. Decisions wait days — or get made on gut."},{"kind":"cta","h":"Plotline answers in four minutes.","s":"Ask in plain English · no SQL · no ticket · one set of numbers."}]};window.KITCOMMENTS=[];window.KITBLOCKMENU=[{"type":"text","label":"Text","icon":"¶","template":{"type":"text","p":"New text"}},{"type":"heading","label":"Heading 1","icon":"H1","template":{"type":"heading","h":"Heading 1","level":1}},{"type":"heading","label":"Heading 2","icon":"H2","template":{"type":"heading","h":"Heading 2","level":2}},{"type":"heading","label":"Heading 3","icon":"H3","template":{"type":"heading","h":"Heading 3","level":3}},{"type":"todo","label":"To-do list","icon":"☑","template":{"type":"todo","todo":[["New to-do",false]]}},{"type":"list","label":"Bulleted list","icon":"•","template":{"type":"list","list":["New item"]}},{"type":"table","label":"Table","icon":"⊞","template":{"type":"table","table":{"head":["Column A","Column B","Column C"],"rows":[["","",""],["","",""]]}}},{"type":"callout","label":"Callout","icon":"!","template":{"type":"callout","callout":"New callout"}},{"type":"code","label":"Code","icon":"{}","template":{"type":"code","code":"command --flag"}},{"type":"quote","label":"Quote","icon":"❝","template":{"type":"quote","quote":"New quote"}},{"type":"evidence","label":"Evidence","icon":"“","template":{"type":"evidence","evidence":[{"q":"Verbatim quote","who":"@handle","src":"X"}]}},{"type":"divider","label":"Divider","icon":"—","template":{"type":"divider","divider":true}},{"type":"toggle","label":"Toggle list","icon":"▸","template":{"type":"toggle","title":"Toggle","children":[{"type":"text","p":"Hidden detail — click ▾ to collapse."}]}}];window.KITTRANSFORM={"text":["heading","quote","callout","todo","list","code"],"heading":["text","quote","callout"],"quote":["text","callout","heading"],"callout":["text","quote","heading"],"list":["todo","text"],"todo":["list","text"],"code":["text","quote"]};</script>
 <script>
 (function () {
   "use strict";
@@ -687,6 +746,109 @@
   safe(function () {
     fillEl('exportFiles', (KIT.exportFiles || []).map(function (e) { return '<a class="row sel-able" href="exports/' + e[0] + '" download><div><div class="t">' + e[0] + '</div><div class="d">' + e[1] + '</div></div><div class="meta">⤓</div></a>'; }).join(''));
     fillEl('exportDocs', (KIT.exportDocs || []).map(function (x) { return '<a class="row sel-able" href="' + x + '.md"><div><div class="t">' + x + '.md</div></div><div class="meta">→</div></a>'; }).join(''));
+  });
+
+  /* ---------------- research databases + side peek (record → right inspector) ----------------
+     KIT.research = { findings[], sources[] (deduped, backs[]), events[] } — strings pre-escaped
+     by report-to-kit, so they render as-is (never re-escape). */
+  function peek(eye, title, html) {
+    $('#ins-eye').textContent = eye; $('#ins-title').textContent = title;
+    $('#inspector-body').innerHTML = html; bindCopy();
+    if (window.__showInspectTab) window.__showInspectTab();
+  }
+  function peekSource(s) {
+    var backs = (s.backs || []).map(function (b) { return '<a class="bl-i" href="#" data-peek-go="' + b.view + '">' + b.insight + '</a>'; }).join('');
+    peek('Source · ' + (s.src || 'unlinked'), s.who || s.src || 'Source',
+      '<p class="peek-q">“' + s.q + '”</p><div class="peek-fields">'
+      + (s.who ? '<div class="pf"><span>Author</span><b>' + s.who + '</b></div>' : '')
+      + (s.src ? '<div class="pf"><span>Channel</span><b>' + s.src + '</b></div>' : '')
+      + (s.metric ? '<div class="pf"><span>Engagement</span><b>' + s.metric + '</b></div>' : '')
+      + (s.date ? '<div class="pf"><span>Captured</span><b>' + s.date + '</b></div>' : '')
+      + '</div>'
+      + (backs ? '<div class="peek-h">Backs these findings</div>' + backs : '')
+      + (s.url ? '<div style="margin-top:16px"><a class="peek-open" href="' + s.url + '" target="_blank" rel="noopener noreferrer">Open original ↗</a></div>'
+               : '<p class="small dim" style="margin-top:16px">Captured at channel level — no per-post URL. Re-run the search with URL capture to link it.</p>'));
+  }
+  function peekFinding(f) {
+    var srcs = ((KIT.research || {}).sources || []).filter(function (s) { return (s.backs || []).some(function (b) { return b.id === f.id; }); });
+    peek('Finding · ' + f.deskTitle, f.sourced + '/' + f.evTotal + ' sourced',
+      '<p class="peek-q" style="font-style:normal">' + f.insight + '</p>'
+      + (f.implication ? '<p class="small" style="color:var(--muted)"><b>Implication →</b> ' + f.implication + '</p>' : '')
+      + (srcs.length ? '<div class="peek-h">Evidence</div>' + srcs.map(function (s) { return '<a class="bl-i" href="#" data-peek-src="' + s.id + '">' + s.q.slice(0, 90) + '…</a>'; }).join('') : '<p class="small dim">No captured evidence — flagged as inferred/unsourced.</p>')
+      + '<div style="margin-top:16px"><a class="bl-i" href="#" data-peek-go="' + f.view + '">Open the ' + f.deskTitle + ' →</a></div>');
+  }
+  function peekEvent(ev) {
+    peek('Event · ' + (ev.area || ''), ev.event.replace(/<[^>]+>/g, '').slice(0, 60),
+      '<div class="peek-fields">'
+      + (ev.date ? '<div class="pf"><span>When</span><b>' + ev.date + '</b></div>' : '')
+      + (ev.quarter ? '<div class="pf"><span>Quarter</span><b>' + ev.quarter + '</b></div>' : '')
+      + (ev.area ? '<div class="pf"><span>Area</span><b>' + ev.area + '</b></div>' : '')
+      + '</div>'
+      + (ev.audience ? '<p class="small" style="margin-top:12px">' + ev.audience + '</p>' : '')
+      + (ev.fit ? '<p class="small" style="color:var(--muted)"><b>Why it fits →</b> ' + ev.fit + '</p>' : '')
+      + (ev.url ? '<div style="margin-top:16px"><a class="peek-open" href="' + ev.url + '" target="_blank" rel="noopener noreferrer">Open listing ↗</a></div>' : ''));
+  }
+  document.addEventListener('click', function (e) {
+    var g = e.target.closest && e.target.closest('[data-peek-go]');
+    if (g) { e.preventDefault(); go(g.getAttribute('data-peek-go')); return; }
+    var ps = e.target.closest && e.target.closest('[data-peek-src]');
+    if (ps) { e.preventDefault(); var s0 = ((KIT.research || {}).sources || []).filter(function (x) { return x.id === ps.getAttribute('data-peek-src'); })[0]; if (s0) peekSource(s0); return; }
+    /* a citation pill opens the source record in the peek; "Open original" lives inside it */
+    var pill = e.target.closest && e.target.closest('.evidence .ev-src');
+    if (pill && KIT.research) {
+      var srcs = KIT.research.sources || [], s = null;
+      if (pill.tagName === 'A') { var href = pill.getAttribute('href'); s = srcs.filter(function (x) { var d = document.createElement('div'); d.innerHTML = x.url; return d.textContent === href; })[0]; }
+      if (!s) { var row = pill.closest('.ev'); var qEl = row && $('.ev-q', row); var qt = qEl ? qEl.textContent.slice(0, 40) : ''; s = srcs.filter(function (x) { var d = document.createElement('div'); d.innerHTML = x.q; return d.textContent.slice(0, 40) === qt; })[0]; }
+      if (s) { e.preventDefault(); peekSource(s); }
+    }
+  });
+  safe(function () {
+    var R = KIT.research; if (!R) return;
+    function uniq(a) { return a.filter(function (v, i) { return v && a.indexOf(v) === i; }); }
+    function opts(vals, all) { return '<option value="">' + all + '</option>' + vals.map(function (v) { return '<option>' + v + '</option>'; }).join(''); }
+    $$('.dbv[data-w="db"]').forEach(function (host) {
+      var coll = host.getAttribute('data-coll');
+      var st = { a: '', b: '', si: -1, dir: 1 };
+      function render() {
+        var head, rows, bar, total;
+        if (coll === 'findings') {
+          total = R.findings.length; head = ['Finding', 'Desk', 'Sourced'];
+          rows = R.findings.filter(function (f) { return (!st.a || f.deskTitle === st.a) && (!st.b || (st.b === 'unsourced only' ? f.sourced === 0 : f.sourced > 0)); })
+            .map(function (f) { return { rid: f.id, kind: 'f', cells: [f.insight, f.deskTitle, f.sourced + '/' + f.evTotal + (f.sourced === 0 ? ' <span class="db-flag">unsourced</span>' : '')] }; });
+          bar = '<select data-f="a">' + opts(uniq(R.findings.map(function (f) { return f.deskTitle; })), 'All desks') + '</select>'
+              + '<select data-f="b"><option value="">Sourced: all</option><option>sourced only</option><option>unsourced only</option></select>';
+        } else if (coll === 'sources') {
+          total = R.sources.length; head = ['Quote', 'Who', 'Channel', 'Backs'];
+          rows = R.sources.filter(function (s) { return (!st.a || s.src === st.a) && (!st.b || (st.b === 'unlinked only' ? !s.url : !!s.url)); })
+            .map(function (s) { return { rid: s.id, kind: 's', cells: ['“' + s.q.slice(0, 110) + (s.q.length > 110 ? '…' : '') + '”', s.who || '—', s.src + (s.url ? '' : ' <span class="db-flag">no URL</span>'), String((s.backs || []).length)] }; });
+          bar = '<select data-f="a">' + opts(uniq(R.sources.map(function (s) { return s.src; })), 'All channels') + '</select>'
+              + '<select data-f="b"><option value="">Linked: all</option><option>linked only</option><option>unlinked only</option></select>';
+        } else {
+          total = R.events.length; head = ['Event', 'Area', 'When', 'Audience'];
+          rows = R.events.filter(function (ev) { return (!st.a || ev.area === st.a) && (!st.b || ev.quarter === st.b); })
+            .map(function (ev, i) { return { rid: String(R.events.indexOf(ev)), kind: 'e', cells: [ev.event, ev.area, [ev.date, ev.quarter].filter(Boolean).join(' · '), ev.audience.slice(0, 80)] }; });
+          bar = '<select data-f="a">' + opts(uniq(R.events.map(function (ev) { return ev.area; })), 'All areas') + '</select>'
+              + '<select data-f="b">' + opts(uniq(R.events.map(function (ev) { return ev.quarter; })), 'All quarters') + '</select>';
+        }
+        if (st.si >= 0) rows.sort(function (x, y) { var a = x.cells[st.si].replace(/<[^>]+>/g, ''), b = y.cells[st.si].replace(/<[^>]+>/g, ''); return a < b ? -st.dir : a > b ? st.dir : 0; });
+        var sel = { a: st.a, b: st.b };
+        host.innerHTML = '<div class="db-bar">' + bar + '<span class="db-count">' + rows.length + ' of ' + total + '</span></div>'
+          + (rows.length
+            ? '<table class="db-table"><thead><tr>' + head.map(function (h, i) { return '<th data-si="' + i + '">' + h + (st.si === i ? (st.dir > 0 ? ' ▴' : ' ▾') : '') + '</th>'; }).join('') + '</tr></thead><tbody>'
+              + rows.map(function (r) { return '<tr class="sel-able" data-rid="' + r.rid + '" data-kind="' + r.kind + '">' + r.cells.map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>'
+            : '<div class="db-empty">No rows match these filters. <button class="cbtn" data-db-reset>Reset</button></div>');
+        $$('select[data-f]', host).forEach(function (s) { s.value = sel[s.getAttribute('data-f')] || ''; s.addEventListener('change', function () { st[s.getAttribute('data-f')] = s.value; render(); }); });
+        $$('th[data-si]', host).forEach(function (th) { th.addEventListener('click', function () { var i = +th.dataset.si; if (st.si === i) st.dir = -st.dir; else { st.si = i; st.dir = 1; } render(); }); });
+        var rst = $('[data-db-reset]', host); if (rst) rst.addEventListener('click', function () { st.a = ''; st.b = ''; render(); });
+        $$('tr[data-rid]', host).forEach(function (tr) { tr.addEventListener('click', function () {
+          var k = tr.dataset.kind, id = tr.dataset.rid;
+          if (k === 'f') { var f = R.findings.filter(function (x) { return x.id === id; })[0]; if (f) peekFinding(f); }
+          else if (k === 's') { var s = R.sources.filter(function (x) { return x.id === id; })[0]; if (s) peekSource(s); }
+          else { var ev = R.events[+id]; if (ev) peekEvent(ev); }
+        }); });
+      }
+      render();
+    });
   });
 
   /* ---------------- IA: crumb / status / sidebar ---------------- */
@@ -825,8 +987,22 @@
         window.__nbEditor = nbEditor;
         wireBubble(); wireSlash();
       }).catch(function () {
+        // Rich editing comes from TipTap on a CDN. Offline — or behind a proxy —
+        // that import fails and you drop to plain contenteditable. Editing and
+        // saving still work; the toolbar and slash menu don't. Say so, rather
+        // than leaving someone to wonder why half the editor is missing.
         doc.setAttribute('contenteditable', 'true'); doc.innerHTML = SEED;
         doc.addEventListener('input', function () { save(KEY, doc.innerHTML); });
+        safe(function () {
+          if (load('kit_offline_note_seen', 0)) return;
+          var h = document.createElement('div'); h.className = 'hint';
+          h.innerHTML = 'Offline — using plain text editing. Your edits still save; '
+            + 'the formatting toolbar needs a connection.<button id="offX">got it</button>';
+          document.body.appendChild(h);
+          function dismiss() { if (h.parentNode) h.remove(); save('kit_offline_note_seen', 1); }
+          var x = $('#offX'); if (x) x.addEventListener('click', dismiss);
+          setTimeout(dismiss, 11000);
+        });
       });
     }
 
@@ -990,6 +1166,44 @@
       pushSave(p, el.innerHTML.trim()); delete dirty[p];
     });
 
+    /* paste an image inline → compress to base64 (keeps the file self-contained) → save.
+       ponytail: inline base64 has a size ceiling — we downscale to 1600px + webp/jpeg ~0.8
+       (~50-150KB). For very large libraries the upgrade path is an assets/ sidecar folder. */
+    function compressImagePaste(file, cb) {
+      try {
+        var url = URL.createObjectURL(file), img = new Image();
+        img.onload = function () {
+          var max = 1600, w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+          if (w > max || h > max) { var s = Math.min(max / w, max / h); w = Math.round(w * s); h = Math.round(h * s); }
+          var c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          var out = null; try { out = c.toDataURL('image/webp', 0.82); } catch (er) { out = null; }
+          if (!out || out.indexOf('data:image/webp') !== 0) { try { out = c.toDataURL('image/jpeg', 0.85); } catch (er2) { out = null; } }
+          cb(out);
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+        img.src = url;
+      } catch (er) { cb(null); }
+    }
+    document.addEventListener('paste', function (e) {
+      var el = e.target.closest && e.target.closest('.work [data-path]'); if (!el) return;
+      var items = (e.clipboardData && e.clipboardData.items) || [], imgItem = null;
+      for (var i = 0; i < items.length; i++) { if (items[i].type && items[i].type.indexOf('image') === 0) { imgItem = items[i]; break; } }
+      if (!imgItem) return; /* not an image → let the normal text paste proceed */
+      e.preventDefault();
+      var file = imgItem.getAsFile(); if (!file) return;
+      flashPill('Compressing image…');
+      compressImagePaste(file, function (dataURL) {
+        if (!dataURL) { flashPill('Image paste failed'); return; }
+        el.focus();
+        document.execCommand('insertHTML', false, '<img src="' + dataURL + '" alt="pasted image" style="max-width:100%;height:auto;border-radius:8px;margin:8px 0;display:block"/>');
+        var p = el.getAttribute('data-path');
+        pushSave(p, el.innerHTML.trim()); delete dirty[p];
+        flashPill(underServer ? 'Image saved ✓' : 'Image pasted (local)', underServer);
+      });
+    });
+
     /* bubble format bar on selection (native execCommand) */
     document.addEventListener('selectionchange', function () {
       var sel = document.getSelection();
@@ -1014,31 +1228,148 @@
     /* slash — insert a structural block (needs server) */
     // slash menu is registry-driven: [label, type, icon, template]
     var SLASH = (window.KITBLOCKMENU || []).map(function (m) { return [m.label, m.type, m.icon, m.template]; });
-    var slashHost = null, slashIdx = 0;
-    function renderSlash() { slash.innerHTML = '<div class="sh">Insert block</div>' + SLASH.map(function (s, i) { return '<div class="si ' + (i === slashIdx ? 'cur' : '') + '" data-i="' + i + '"><span class="ic">' + s[2] + '</span>' + s[0] + '</div>'; }).join(''); $$('.si', slash).forEach(function (el) { el.addEventListener('mousedown', function (ev) { ev.preventDefault(); insertBlock(+el.dataset.i); }); }); }
+    SLASH.push(['Generate with AI', '__generate', '✦', null]); /* queues a block for the CC session to write from the evidence */
+    var slashHost = null, slashIdx = 0, slashQuery = '', SLASHF = SLASH.slice();
+    function filterSlash() {
+      var q = slashQuery.toLowerCase().trim();
+      SLASHF = q ? SLASH.filter(function (s) { return s[0].toLowerCase().indexOf(q) > -1 || (s[1] && String(s[1]).toLowerCase().indexOf(q) > -1); }) : SLASH.slice();
+      if (slashIdx >= SLASHF.length) slashIdx = Math.max(0, SLASHF.length - 1);
+    }
+    function renderSlash() {
+      filterSlash();
+      var head = '<div class="sh">Insert block' + (slashQuery ? ' · ' + slashQuery.replace(/[<>&]/g, '') : '') + '</div>';
+      slash.innerHTML = head + (SLASHF.length
+        ? SLASHF.map(function (s, i) { return '<div class="si ' + (i === slashIdx ? 'cur' : '') + '" data-i="' + i + '"><span class="ic">' + s[2] + '</span>' + s[0] + '</div>'; }).join('')
+        : '<div class="si" style="opacity:.55;cursor:default">No blocks match</div>');
+      $$('.si', slash).forEach(function (el) { el.addEventListener('mousedown', function (ev) { ev.preventDefault(); if (el.dataset.i != null) insertBlock(+el.dataset.i); }); });
+    }
     function insertBlock(i) {
-      slash.classList.remove('open'); var l = slashHost && loc(slashHost); if (!l || !SLASH[i]) return;
+      slash.classList.remove('open'); var item = SLASHF[i]; var l = slashHost && loc(slashHost); if (!l || !item) return;
       if (!CONTENT) { flashPill('Insert needs the editor server'); return; }
-      var html = slashHost.innerHTML.replace(/\/(&nbsp;|\s)*$/, '').trim();
+      var html = slashHost.innerHTML.replace(/\/[^<>]*$/, '').trim();
+      if (item[1] === '__generate') {
+        /* queue for AI generation: one server round-trip cleans the slash text, plants the
+           placeholder, rebuilds, reloads. Fulfilled by a CC session ("process the generation queue"). */
+        var instr = prompt('Generate from the research evidence — what should this block say?');
+        if (!instr || !instr.trim()) return;
+        fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ view: l.view, index: l.idx + 1, instruction: instr.trim(), mode: 'generate',
+            clean: { path: slashHost.getAttribute('data-path'), value: html } }) })
+          .then(function (r) { return r.json(); })
+          .then(function (j) { if (!j.ok) throw new Error(j.error || 'queue failed'); flashPill('Generation queued ✓ (' + j.queued + ' pending)', true); })
+          .catch(function (e) { flashPill('Queue failed: ' + e.message); });
+        return;
+      }
       setByPath(CONTENT, slashHost.getAttribute('data-path'), html);
-      var nb = JSON.parse(JSON.stringify(SLASH[i][3])); nb.id = newId();
+      var nb = JSON.parse(JSON.stringify(item[3])); nb.id = newId();
       CONTENT.views[l.view].blocks.splice(l.idx + 1, 0, nb); saveFull();
     }
     document.addEventListener('keydown', function (e) {
       if (slash.classList.contains('open')) {
-        if (e.key === 'ArrowDown') { e.preventDefault(); slashIdx = Math.min(slashIdx + 1, SLASH.length - 1); renderSlash(); }
+        if (e.key === 'ArrowDown') { e.preventDefault(); slashIdx = Math.min(slashIdx + 1, Math.max(0, SLASHF.length - 1)); renderSlash(); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); slashIdx = Math.max(slashIdx - 1, 0); renderSlash(); }
         else if (e.key === 'Enter') { e.preventDefault(); insertBlock(slashIdx); }
-        else if (e.key === 'Escape') slash.classList.remove('open');
+        else if (e.key === 'Escape') { slash.classList.remove('open'); }
         return;
       }
-      if (e.key === '/') { var host = (document.activeElement && document.activeElement.closest) ? document.activeElement.closest('.work [data-path]') : null; if (host && !host.closest('table')) { slashHost = host; slashIdx = 0; setTimeout(function () { renderSlash(); var r = host.getBoundingClientRect(); slash.style.left = Math.max(8, r.left) + 'px'; slash.style.top = (r.bottom + 6) + 'px'; slash.classList.add('open'); }, 0); } }
+      if (e.key === '/') { var host = (document.activeElement && document.activeElement.closest) ? document.activeElement.closest('.work [data-path]') : null; if (host && !host.closest('table')) { slashHost = host; slashIdx = 0; slashQuery = ''; setTimeout(function () { renderSlash(); var r = host.getBoundingClientRect(); slash.style.left = Math.max(8, r.left) + 'px'; slash.style.top = (r.bottom + 6) + 'px'; slash.classList.add('open'); }, 0); } }
+    });
+    /* type-to-filter: read the text typed after the trigger "/" and filter the menu live */
+    document.addEventListener('input', function (e) {
+      if (!slash.classList.contains('open') || !slashHost) return;
+      if (!(e.target.closest && e.target.closest('.work [data-path]') === slashHost)) return;
+      var t = slashHost.textContent || '', k = t.lastIndexOf('/');
+      if (k < 0) { slash.classList.remove('open'); return; }
+      slashQuery = t.slice(k + 1); slashIdx = 0; renderSlash();
     });
     document.addEventListener('click', function (e) { if (!slash.contains(e.target) && !$('#cmAdd').contains(e.target)) slash.classList.remove('open'); });
 
+    /* ---------------- @-mention → link to another page + auto-backlinks ---------------- */
+    var atMenu = document.createElement('div'); atMenu.className = 'slash atmenu'; atMenu.id = 'atMenu'; document.body.appendChild(atMenu);
+    var atHost = null, atIdx = 0, atQuery = '', ATF = [];
+    function mentionTargets() { return $$('.nav a').filter(function (a) { return a.dataset.v; }).map(function (a) { var nl = $('.nl', a); return { id: a.dataset.v, label: (nl ? nl.textContent : a.textContent).trim() }; }); }
+    function filterAt() { var all = mentionTargets(), q = atQuery.toLowerCase().trim(); ATF = q ? all.filter(function (t) { return t.label.toLowerCase().indexOf(q) > -1; }) : all; if (atIdx >= ATF.length) atIdx = Math.max(0, ATF.length - 1); }
+    function renderAt() {
+      filterAt();
+      atMenu.innerHTML = '<div class="sh">Link to page' + (atQuery ? ' · ' + atQuery.replace(/[<>&]/g, '') : '') + '</div>' + (ATF.length
+        ? ATF.map(function (t, i) { return '<div class="si ' + (i === atIdx ? 'cur' : '') + '" data-i="' + i + '"><span class="ic">@</span>' + t.label + '</div>'; }).join('')
+        : '<div class="si" style="opacity:.55;cursor:default">No pages match</div>');
+      $$('.si', atMenu).forEach(function (el) { el.addEventListener('mousedown', function (ev) { ev.preventDefault(); if (el.dataset.i != null) insertMention(+el.dataset.i); }); });
+    }
+    function insertMention(i) {
+      atMenu.classList.remove('open'); var t = ATF[i], host = atHost; if (!t || !host) return;
+      host.focus();
+      var html = host.innerHTML.replace(/@[^<>@]*$/, '');
+      host.innerHTML = html + '<a class="mention" href="#' + t.id + '" data-mention="' + t.id + '" contenteditable="false">@' + t.label + '</a>&nbsp;';
+      var rng = document.createRange(); rng.selectNodeContents(host); rng.collapse(false); var sel = document.getSelection(); sel.removeAllRanges(); sel.addRange(rng);
+      var p = host.getAttribute('data-path'); pushSave(p, host.innerHTML.trim()); delete dirty[p];
+      flashPill('Linked → ' + t.label, true);
+    }
+    document.addEventListener('keydown', function (e) {
+      if (atMenu.classList.contains('open')) {
+        if (e.key === 'ArrowDown') { e.preventDefault(); atIdx = Math.min(atIdx + 1, Math.max(0, ATF.length - 1)); renderAt(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); atIdx = Math.max(atIdx - 1, 0); renderAt(); }
+        else if (e.key === 'Enter') { e.preventDefault(); insertMention(atIdx); }
+        else if (e.key === 'Escape') { atMenu.classList.remove('open'); }
+        return;
+      }
+      if (e.key === '@') { var host = (document.activeElement && document.activeElement.closest) ? document.activeElement.closest('.work [data-path]') : null; if (host && !host.closest('table')) { atHost = host; atIdx = 0; atQuery = ''; setTimeout(function () { renderAt(); var r = host.getBoundingClientRect(); atMenu.style.left = Math.max(8, r.left) + 'px'; atMenu.style.top = (r.bottom + 6) + 'px'; atMenu.classList.add('open'); }, 0); } }
+    });
+    document.addEventListener('input', function (e) {
+      if (!atMenu.classList.contains('open') || !atHost) return;
+      if (!(e.target.closest && e.target.closest('.work [data-path]') === atHost)) return;
+      var t = atHost.textContent || '', k = t.lastIndexOf('@');
+      if (k < 0) { atMenu.classList.remove('open'); return; }
+      atQuery = t.slice(k + 1); atIdx = 0; renderAt();
+    });
+    document.addEventListener('click', function (e) { if (!atMenu.contains(e.target)) atMenu.classList.remove('open'); });
+
+    /* markdown shortcuts — Notion muscle memory: at the START of a text block,
+       "# " → H1 · "## " → H2 · "### " → H3 · "- "/"* " → list · "> " → quote · "``` " → code.
+       Structural (needs the editor server); fires once, keeps the block id. */
+    var MD_RULES = [
+      [/^###\s$/, function (rest, keep) { return Object.assign({ type: 'heading', level: 3 }, keep, { h: rest || 'Heading 3' }); }],
+      [/^##\s$/, function (rest, keep) { return Object.assign({ type: 'heading', level: 2 }, keep, { h: rest || 'Heading 2' }); }],
+      [/^#\s$/, function (rest, keep) { return Object.assign({ type: 'heading', level: 1 }, keep, { h: rest || 'Heading 1' }); }],
+      [/^[-*]\s$/, function (rest, keep) { return Object.assign({ type: 'list' }, keep, { list: [rest || 'New item'] }); }],
+      [/^>\s$/, function (rest, keep) { return Object.assign({ type: 'quote' }, keep, { quote: rest || 'New quote' }); }],
+      [/^```\s?$/, function (rest, keep) { return Object.assign({ type: 'code' }, keep, { code: rest || 'command --flag' }); }]
+    ];
+    document.addEventListener('input', function (e) {
+      if (!CONTENT) return;
+      if (slash.classList.contains('open') || atMenu.classList.contains('open')) return;
+      var host = e.target.closest && e.target.closest('.work [data-path]'); if (!host) return;
+      var l = loc(host); if (!l) return;
+      var b = CONTENT.views[l.view] && CONTENT.views[l.view].blocks[l.idx];
+      if (!b || b.p == null) return; /* only plain text blocks convert */
+      var t = host.textContent || '';
+      for (var i = 0; i < MD_RULES.length; i++) {
+        var m2 = t.match(MD_RULES[i][0]);
+        if (m2) {
+          var keep = b.id ? { id: b.id } : {};
+          CONTENT.views[l.view].blocks[l.idx] = MD_RULES[i][1]('', keep);
+          saveFull();
+          return;
+        }
+      }
+    });
+
+    /* backlinks: "Referenced by" — computed across all views on view activation (not persisted) */
+    function renderBacklinks() {
+      var av = $('.view.active'); if (!av) return;
+      var old = $('.backlinks', av); if (old) old.remove();
+      var id = av.id, src = {};
+      $$('a.mention[data-mention="' + id + '"]').forEach(function (a) { var v = a.closest('.view'); if (v && v.id !== id) src[v.id] = true; });
+      var ids = Object.keys(src); if (!ids.length) return;
+      var labelFor = function (vid) { var a = $('.nav a[data-v="' + vid + '"]'), nl = a && $('.nl', a); return nl ? nl.textContent.trim() : vid; };
+      av.insertAdjacentHTML('beforeend', '<div class="backlinks"><div class="bl-h">Referenced by</div>' + ids.map(function (vid) { return '<a class="bl-i" href="#' + vid + '">' + labelFor(vid) + '</a>'; }).join('') + '</div>');
+    }
+    (window.__viewHooks = window.__viewHooks || []).push(function () { setTimeout(renderBacklinks, 0); });
+    setTimeout(renderBacklinks, 30);
+
     /* block menu (⋯): turn into · duplicate · delete — registry-driven */
     function newId() { return 'blk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
-    function textOf(b) { if (b.h != null) return b.h; if (b.p != null) return b.p; if (b.quote != null) return b.quote; if (b.callout != null) return b.callout; if (Array.isArray(b.list)) return b.list.join('\n'); if (Array.isArray(b.todo)) return b.todo.map(function (t) { return t[0]; }).join('\n'); return ''; }
+    function textOf(b) { if (b.h != null) return b.h; if (b.p != null) return b.p; if (b.quote != null) return b.quote; if (b.callout != null) return b.callout; if (b.code != null) return b.code; if (Array.isArray(b.list)) return b.list.join('\n'); if (Array.isArray(b.todo)) return b.todo.map(function (t) { return t[0]; }).join('\n'); return ''; }
     function listOf(b) { if (Array.isArray(b.list)) return b.list.slice(); if (Array.isArray(b.todo)) return b.todo.map(function (t) { return t[0]; }); var t = textOf(b); return t ? t.split('\n') : ['']; }
     function convertBlock(b, to) {
       var keep = b.id ? { id: b.id } : {};
@@ -1048,6 +1379,7 @@
       if (to === 'callout') return Object.assign({ type: 'callout' }, keep, { callout: textOf(b) });
       if (to === 'list') return Object.assign({ type: 'list' }, keep, { list: listOf(b) });
       if (to === 'todo') return Object.assign({ type: 'todo' }, keep, { todo: listOf(b).map(function (t) { return [t, false]; }) });
+      if (to === 'code') return Object.assign({ type: 'code' }, keep, { code: textOf(b).replace(/<[^>]+>/g, '') });
       return b;
     }
     var TRANSFORM = window.KITTRANSFORM || {};
@@ -1059,6 +1391,7 @@
       var html = tos.length ? '<div class="bm-h">Turn into</div>' + tos.map(function (t) { return '<div class="bm-i" data-act="turn" data-to="' + t + '"><span class="bm-ic">⤳</span>' + t + '</div>'; }).join('') : '';
       var sections = $$('.nav a').filter(function (a) { return a.dataset.v && a.dataset.v !== l.view; }).map(function (a) { var nl = $('.nl', a); return [a.dataset.v, (nl ? nl.textContent : a.textContent).trim()]; });
       if (sections.length) html += '<div class="bm-h">Move to</div>' + sections.map(function (s) { return '<div class="bm-i" data-act="move" data-to="' + s[0] + '"><span class="bm-ic">→</span>' + s[1] + '</div>'; }).join('');
+      html += '<div class="bm-h">AI</div><div class="bm-i" data-act="gen"><span class="bm-ic">✦</span>Regenerate from evidence</div>';
       html += '<div class="bm-h">Block</div><div class="bm-i" data-act="dup"><span class="bm-ic">⧉</span>Duplicate</div><div class="bm-i bm-del" data-act="del"><span class="bm-ic">✕</span>Delete</div>';
       blkMenu.innerHTML = html;
       var r = btn.getBoundingClientRect(); blkMenu.style.left = Math.max(8, Math.min(window.innerWidth - 196, r.left - 150)) + 'px'; blkMenu.style.top = (r.bottom + 4) + 'px';
@@ -1071,6 +1404,18 @@
       var item = e.target.closest && e.target.closest('.blkmenu .bm-i');
       if (item && blkMenu._loc) {
         var l = blkMenu._loc, arr = CONTENT.views[l.view].blocks, b = arr[l.idx], act = item.getAttribute('data-act');
+        if (act === 'gen') {
+          /* regenerate in place: queue only — the fulfiller rewrites this block from the evidence */
+          var gInstr = prompt('Regenerate this block from the evidence — any specific direction? (optional)');
+          if (gInstr === null) { closeBlkMenu(); return; }
+          fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ view: l.view, index: l.idx, blockId: b.id || null, mode: 'regenerate',
+              instruction: (gInstr.trim() || 'Regenerate this block from the evidence, keeping its role in the page') }) })
+            .then(function (r) { return r.json(); })
+            .then(function (j) { if (!j.ok) throw new Error(j.error || 'queue failed'); flashPill('Regeneration queued ✓ (' + j.queued + ' pending)', true); })
+            .catch(function (er) { flashPill('Queue failed: ' + er.message); });
+          closeBlkMenu(); return;
+        }
         if (act === 'turn') arr[l.idx] = convertBlock(b, item.getAttribute('data-to'));
         else if (act === 'dup') { var cl = JSON.parse(JSON.stringify(b)); cl.id = newId(); arr.splice(l.idx + 1, 0, cl); }
         else if (act === 'move') { var to = item.getAttribute('data-to'); if (CONTENT.views[to]) { var mv = arr.splice(l.idx, 1)[0]; CONTENT.views[to].blocks.push(mv); } }
