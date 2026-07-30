@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  /* GitHub social preview: 1280x640, but the card is cropped to ~1200x600
+     in some surfaces — keep everything inside a 64px safe margin. */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 640px; }
+  body {
+    background: #0B0F17;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+    color: #E9EDF3;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 64px 72px;
+    /* one hairline of accent, top edge — restraint over a gradient header */
+    border-top: 6px solid #10A37F;
+  }
+
+  /* ---- top row: mark + wordmark ---- */
+  .top { display: flex; align-items: center; gap: 16px; }
+  .mark { width: 44px; height: 44px; display: block; }
+  .wordmark { font-size: 19px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #8A94A6; }
+
+  /* ---- middle: the message, left-aligned, size does the hierarchy ---- */
+  .mid { align-self: center; }
+  h1 {
+    font-size: 76px; line-height: 1.02; font-weight: 700; letter-spacing: -.032em;
+    max-width: 21ch;
+  }
+  h1 em { font-style: normal; color: #10A37F; }
+  .sub {
+    margin-top: 24px; font-size: 25px; line-height: 1.4; font-weight: 400;
+    color: #A7B0C0; max-width: 46ch;
+  }
+
+  /* ---- bottom: proof + install, separated by weight not color ---- */
+  .bot { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
+  /* #6F7B8E measured ~4.4:1 on this surface — under AA for body. Reuse the
+     wordmark grey (~6:1) rather than inventing another value. */
+  .facts { display: flex; gap: 32px; font-size: 17px; color: #8A94A6; }
+  .facts b { display: block; font-size: 30px; font-weight: 650; color: #E9EDF3; letter-spacing: -.01em; margin-bottom: 4px; }
+  .install {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 21px; color: #10A37F;
+    border: 1px solid #1E2A3A; border-radius: 10px;
+    padding: 14px 22px; background: #101725; white-space: nowrap;
+  }
+</style>
+
+<div class="top">
+  <svg class="mark" viewBox="0 0 128 128" aria-hidden="true">
+    <rect width="128" height="128" rx="28" fill="#151C28"/>
+    <path d="M28 85V43h13l23 26 23-26h13v42H87V61L68 83h-8L41 61v24H28z" fill="#E9EDF3"/>
+    <circle cx="99" cy="29" r="10" fill="#10A37F"/>
+  </svg>
+  <span class="wordmark">PMM OS</span>
+</div>
+
+<div class="mid">
+  <h1>Product marketing that ends in a <em>shippable launch kit</em>.</h1>
+  <p class="sub">Positioning, messaging, personas, pricing, battlecards and GTM plans — grounded in real research, not generic advice.</p>
+</div>
+
+<div class="bot">
+  <div class="facts">
+    <div><b>45</b>skills</div>
+    <div><b>10</b>research desks</div>
+    <div><b>2</b>research engines</div>
+    <div><b>0</b>dependencies</div>
+  </div>
+  <div class="install">npx pmm-os install</div>
+</div>
