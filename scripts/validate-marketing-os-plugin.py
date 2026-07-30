@@ -275,6 +275,20 @@ def check_guard_selftest() -> None:
     check("research guard self-check", [] if r.returncode == 0 else [r.stdout.strip()[:400]])
 
 
+def check_ig_fetch_selftest() -> None:
+    """ig_fetch replaced a path that reported Instagram's 403 as "Profile does not
+    exist" — a block laundered into a fact an agent would write into a brief. These
+    fixtures are what stop that regressing."""
+    t = ROOT / "skills" / "agent-reach" / "scripts" / "test_ig_fetch.py"
+    if not t.is_file():
+        check("Instagram fetch self-check", ["skills/agent-reach/scripts/test_ig_fetch.py is missing"])
+        return
+    r = subprocess.run([sys.executable, str(t)], capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    check("Instagram fetch self-check", [] if r.returncode == 0
+          else [(r.stdout + r.stderr).strip()[:400]])
+
+
 def check_policy_selftest() -> None:
     t = ROOT / "hooks" / "test_pre_tool_use_policy.py"
     if not t.is_file():
@@ -338,6 +352,7 @@ def main() -> None:
     check_policy_selftest()
     check_guard_selftest()
     check_receipt_gate_selftest()
+    check_ig_fetch_selftest()
     check_launch_gate()
     check_official_validator()
 

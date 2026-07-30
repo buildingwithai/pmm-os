@@ -31,6 +31,10 @@ const STORE = join(HOME, '.pmm-os', 'connections.json');
 const L30_ENV = join(HOME, '.config', 'last30days', '.env');
 
 const TTL = { keyless: 21600, key: 900, cookie: 3600, binary: 21600 };
+// Instagram's logged-out web endpoint keys off a browser-shaped UA; a bare fetch UA
+// gets a 302 to the login wall.
+const UA_BROWSER = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
+  + '(KHTML, like Gecko) Chrome/122.0 Safari/537.36';
 
 function readEnvFile(p) {
   const out = {};
@@ -223,13 +227,75 @@ async function probeGrounding() {
   if (keyed) return { grounding: P('live', `web:${keyed.split('_')[0].toLowerCase()}`, { evidence: 'key present', ttlSec: TTL.key }) };
   const r = await timed(async (signal) => {
     const res = await fetch('https://r.jina.ai/https://example.com', { signal });
-    return { ok: res.ok, text: res.ok ? (await res.text()).slice(0, 200) : '' };
+    return { ok: res.ok, len: res.ok ? (await res.text()).length : 0 };
   }, 15000);
-  if (r.ok && /example domain/i.test(r.text)) {
-    return { grounding: P('live', 'web:jina-keyless', { evidence: 'Jina reader returned Example Domain', ttlSec: TTL.keyless }) };
+  // Assert on OUR side of the contract — a 200 and a non-trivial body — never on a
+  // third party's page content. Asserting /example domain/i false-blocked this on a
+  // network that serves a different example.com, dropping web search out of --search
+  // entirely. That is the exact failure the comment above warns about, committed by
+  // the same file that warns about it.
+  if (r.ok && r.len > 80) {
+    return { grounding: P('live', 'web:jina-keyless', { evidence: `Jina reader returned ${r.len} bytes`, ttlSec: TTL.keyless }) };
   }
   return { grounding: P('blocked', 'web:jina-keyless', { reason: r.error || 'Jina unreachable',
     fix: 'set BRAVE_API_KEY or SERPER_API_KEY for a keyed web backend' }) };
+}
+
+/**
+ * The KEYLESS desk lanes (reach.sh), reported separately from the engine lanes.
+ *
+ * These are `free:*` keys on purpose, so `liveSources()` — which filters on engine
+ * source names — can never feed one to `--search`. The engine genuinely cannot reach
+ * them; only the desks can, via reach.sh. Keeping them in the same document is what
+ * stops the wizard from printing "Instagram: blocked" when `reach.sh ig nike` works
+ * perfectly. Both facts are true; they are about different lanes.
+ *
+ * `free:instagram-search` is deliberately absent — there is no keyless path. All five
+ * candidate routes (web tag page, /api/v1/tags/, GraphQL hashtag query, explore, the
+ * i/api tag feed) return 302/401/404 logged-out. That is a wall, not a rate limit.
+ */
+async function probeFree(ytdlpLive) {
+  const out = {};
+  const ig = await timed(async (signal) => {
+    const res = await fetch('https://www.instagram.com/api/v1/feed/user/nasa/username/?count=1',
+      // Referer is load-bearing here, not decoration: without it Node's fetch gets a
+      // deterministic 400 on the same URL curl and urllib get a 200 on. Dropping it
+      // makes the probe report Instagram dead while `reach.sh ig` works.
+      { signal, headers: { 'X-IG-App-ID': '936619743392459', 'User-Agent': UA_BROWSER,
+        Accept: 'application/json', Referer: 'https://www.instagram.com/nasa/' } });
+    if (!res.ok) return { status: res.status };
+    const j = await res.json().catch(() => ({}));
+    return { status: 200, n: (j.items || []).length };
+  }, 15000);
+  out['free:instagram-accounts'] = ig.error
+    ? P('blocked', 'ig-web-logged-out', { reason: ig.error })
+    : ig.status === 200 && ig.n > 0
+      ? P('live', 'ig-web-logged-out', { evidence: 'logged-out feed endpoint returned a post', ttlSec: TTL.keyless })
+      : P('blocked', 'ig-web-logged-out', {
+          reason: `http-${ig.status} — Instagram is walling or throttling this IP`,
+          fix: 'run from a residential IP; datacenter ranges are blocked hardest' });
+
+  const bs = await timed(async (signal) => {
+    // api.bsky.app, NOT public.api.bsky.app — the latter 403s on searchPosts.
+    const res = await fetch('https://api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=ai&limit=1', { signal });
+    if (!res.ok) return { status: res.status };
+    const j = await res.json().catch(() => ({}));
+    return { status: 200, n: (j.posts || []).length };
+  });
+  out['free:bluesky'] = bs.error ? P('blocked', 'bsky-appview', { reason: bs.error })
+    : bs.status === 200 && bs.n > 0
+      ? P('live', 'bsky-appview', { evidence: 'searchPosts returned a post, no auth', ttlSec: TTL.keyless })
+      : P('blocked', 'bsky-appview', { reason: `http-${bs.status}` });
+
+  // Same binary, same YouTube API surface as the transcript lane already probed — so
+  // this is derived, not re-probed. Spawning yt-dlp twice per health check costs ~8s
+  // for a fact we already have.
+  for (const k of ['free:youtube-comments', 'free:tiktok-accounts']) {
+    out[k] = ytdlpLive
+      ? P('live', 'yt-dlp', { evidence: 'yt-dlp present and working', ttlSec: TTL.binary })
+      : P('absent', 'yt-dlp', { reason: 'yt-dlp not installed', fix: 'npx pmm-os setup' });
+  }
+  return out;
 }
 
 /** agent-reach's own doctor, with its optimism corrected. */
@@ -267,11 +333,13 @@ export async function probeAll({ python = null, repoRoot = process.cwd() } = {})
   const [keyless, sc, grounding] = await Promise.all([
     probeKeyless(), probeScrapeCreators(), probeGrounding(),
   ]);
+  const yt = probeYouTube();
+  const free = await probeFree(yt.youtube?.state === 'live');
   const doc = {
     schema: 'pmm-os/connections/v1',
     checkedAt: new Date().toISOString(),
     platforms: { ...keyless, ...sc, ...grounding, ...probeX(python, repoRoot),
-                 ...probeYouTube(), ...probeAgentReach() },
+                 ...yt, ...free, ...probeAgentReach() },
   };
   // jobs rides the same keyless ATS tier as the rest; it is only reachable when named.
   doc.platforms.jobs = P('live', 'keyless-ats', { evidence: 'keyless ATS tier', ttlSec: TTL.keyless });

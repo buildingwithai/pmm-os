@@ -37,10 +37,20 @@ Notes:
   (from x.com → DevTools → Application → Cookies) as env vars.
 - Verify: `scripts/verify-research.sh --smoke` shows live X status.
 
-## Instagram — one-time login (you type your password into instaloader, not into PMM OS)
+## Instagram — accounts need NO login; only hashtag search does
 
-Instagram blocks anonymous search, so you log in once. The password goes to `instaloader`,
-which stores an **encrypted session file** that doesn't expire — you won't be asked again.
+**Skip this section if you only need named accounts.** `reach.sh ig <username>` is keyless,
+cookieless and logged-out — it uses Instagram's own public web endpoint. Verified against
+`@nasa`, `@natgeo` and `@nike`. Nothing to set up:
+
+```bash
+bash skills/agent-reach/scripts/reach.sh ig nike 12
+```
+
+Hashtag/topic **discovery** is the part with no free keyless path — all five logged-out
+routes return 302/401/404. That is a wall, not a rate limit, so it needs either a
+ScrapeCreators key or the one-time login below. The password goes to `instaloader`, which
+stores an **encrypted session file** that doesn't expire — you won't be asked again.
 
 ```bash
 bash skills/agent-reach/scripts/reach.sh ig-login YOUR_IG_USERNAME

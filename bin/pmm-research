@@ -224,10 +224,27 @@ const [, , cmd, ...rest] = process.argv;
 
 if (!cmd || ['-h', '--help', 'help'].includes(cmd)) usage(0);
 
+// `health` must report the SAME document that --search synthesis reads, or the two
+// disagree and the user debugs the wrong thing. It used to shell out to
+// `reach.sh doctor`, which reports agent-reach channel plumbing — a different lane,
+// with different names, and no idea whether the SC key has credit.
 if (cmd === 'health') {
-  const r = spawnSync('bash', [join(ROOT, 'skills', 'agent-reach', 'scripts', 'reach.sh'), 'doctor'],
-    { stdio: 'inherit' });
-  process.exit(r.status ?? 1);
+  const h = await import('./lib/health.mjs');
+  // Soft resolve: a missing 3.12+ must not stop a health report — that report is how
+  // you find out Python is the problem. probeX degrades to `unverifiable` on null.
+  const hpy = resolvePy({ allowInstall: false }).path || null;
+  const doc = rest.includes('--fresh') ? await h.probeAll({ python: hpy, repoRoot: ROOT })
+    : (h.loadCached(900) || await h.probeAll({ python: hpy, repoRoot: ROOT }));
+  if (rest.includes('--json')) { console.log(JSON.stringify(doc, null, 1)); process.exit(0); }
+  const width = Math.max(...Object.keys(doc.platforms).map((k) => k.length));
+  const ICON = { live: '✓', blocked: '✗', unverifiable: '?', absent: '·', broken: '✗' };
+  for (const [n, v] of Object.entries(doc.platforms).sort()) {
+    log(`  ${ICON[v.state] || '?'} ${n.padEnd(width)}  ${v.state.padEnd(12)} ${v.evidence || v.reason || ''}`);
+  }
+  const live = h.liveSources(doc);
+  log(`\n  --search would be: ${live.join(',') || '(none — the run would be refused)'}`);
+  log('  free:* lanes are reach.sh only; the last30days engine cannot reach them.');
+  process.exit(0);
 }
 
 if (cmd === 'reach') {

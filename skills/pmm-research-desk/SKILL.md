@@ -78,11 +78,15 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      xueqiu, exa, rss, youtube, v2ex, github, web). Drive the keyless ones via
      [`reach.sh`](../agent-reach/scripts/reach.sh) (`read`/`gh-search`/`yt`/`v2ex`) and the
      login/key ones per the agent-reach [SKILL.md](../agent-reach/SKILL.md) (`agent-reach configure`
-     + the backends). `reach.sh` covers **free TikTok + Instagram incl. hashtag SEARCH**:
-     `reach.sh tiktok @user` / `tiktok-search <hashtag>` (TikTokApi+webkit) ·
-     `reach.sh ig user` / `ig-search <hashtag>` (instaloader; one-time login, residential IP). So
-     named-account *and* topic-discovery social research are free — ScrapeCreators isn't needed
-     (it only adds Threads/Pinterest + YT comments). **Issue the recipe's full ~15–30 calls** —
+     + the backends).
+     **Free, keyless, no login:** `reach.sh ig <user>` (Instagram accounts) ·
+     `reach.sh tiktok @user` · `reach.sh yt <url>` · `reach.sh yt-comments <url>` ·
+     `reach.sh bsky <query>`. **Free but flaky:** `reach.sh tiktok-search <hashtag>`
+     (TikTokApi+webkit — rerun on empty). **No free keyless path:** Instagram *hashtag*
+     search — either `ig-search` after a one-time `instaloader --login` (residential IP),
+     or ScrapeCreators. SC buys exactly three things: Threads, Pinterest, and reliable
+     hashtag search on IG + TikTok. It does **not** gate YouTube comments.
+     **Issue the recipe's full ~15–30 calls** —
      read each competitor's site + pricing + reviews + socials, search GitHub + the social hashtags.
      Two reads is not a desk run.
      Run `bash ../agent-reach/scripts/setup.sh` once to install the backends.

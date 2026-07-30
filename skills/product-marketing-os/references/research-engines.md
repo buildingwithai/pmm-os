@@ -50,17 +50,29 @@ Needs **Python 3.12+**.
 | **YouTube** (search + transcripts) | **free, keyless** | via **yt-dlp** — *no API key* (only YouTube *comments* need SC) |
 | **X / Twitter** | **free, just log in** | be logged into **x.com in a browser** (Chrome/Brave/Safari/Firefox) → cookies auto-extracted. Fallbacks: `AUTH_TOKEN`+`CT0` env, or `XAI_API_KEY`/`XQUIK_API_KEY` |
 | **TikTok** — creator (reliable) **and hashtag SEARCH** (flaky) | **free** | `reach.sh tiktok @user` (yt-dlp — reliable). `reach.sh tiktok-search <hashtag>` (TikTokApi + Playwright **webkit** — *verified: returned 30 real #jobsearch videos*, but **probabilistic**: TikTok rate-limits per IP, so it intermittently returns empty — it retries 3×, rerun if it fails). Headless **chromium** is always blocked; headless **webkit** sometimes gets through. For heavy/at-scale TikTok discovery, SC is the reliable fallback. |
-| **Instagram** — profile **and hashtag search** | **free, local-IP + login** | `reach.sh ig user` / `reach.sh ig-search <hashtag>` (instaloader). One-time `instaloader --login=YOU`; **residential IP only** (never cloud/Vercel); use a secondary account, low volume. |
-| Threads, Pinterest, YouTube *comments* | paid (SC) | `SCRAPECREATORS_API_KEY` (100 free then PAYG) — the only things left that need SC. |
-| Bluesky, TruthSocial | free, token | app password / token |
+| **Instagram** — **named accounts** | **free, keyless, no login** | `reach.sh ig <username>` — Instagram's own logged-out web endpoint (`/api/v1/feed/user/<u>/username/` with the public `X-IG-App-ID`). Verified 2026-07-30: `@nasa`, `@natgeo`, `@nike` all HTTP 200 with real captions, likes and play counts, no cookies. |
+| **Instagram** — **hashtag search** | **no free path** | Not a rate limit — a wall. All five logged-out routes (web tag page, `/api/v1/tags/`, the GraphQL hashtag query, explore, the `i/api` tag feed) return 302/401/404. Either SC, or `reach.sh ig-search` with a one-time `instaloader --login` (residential IP, secondary account, low volume). |
+| **YouTube comments** | **free, keyless** | `reach.sh yt-comments <url>` — yt-dlp reads the same comment API. Verified 2026-07-30, no key. *(The last30days engine still gates its own comment enrichment on the SC key — `lib/env.py:854`. That is a code gate, not a technical requirement.)* |
+| **Bluesky** | **free, keyless, no account** | `reach.sh bsky <query>` — `api.bsky.app/xrpc/app.bsky.feed.searchPosts`. Note: it must be `api.bsky.app`; `public.api.bsky.app` returns **403** for searchPosts. |
+| Threads, Pinterest, TruthSocial | paid (SC) | `SCRAPECREATORS_API_KEY` (100 free then PAYG) |
 
-**You don't need ScrapeCreators for the core platforms — not even TikTok/IG search.** Free
-now covers Reddit, HN, Polymarket, GitHub, **YouTube**, **X (logged-in browser)**, the open
-web, **TikTok (by creator + hashtag search)**, **Instagram (by profile + hashtag search,
-local IP + login)**, plus agent-reach's web/V2EX/Bilibili/RSS. **SC is reduced to Threads,
-Pinterest, YouTube comments — plus a *reliable fallback* for TikTok/IG hashtag search when the
-free (flaky) path keeps failing.** Run `setup.sh` to install the free search stack
-(`curl_cffi` + `instaloader` + `TikTokApi` + Playwright `webkit`).
+**What ScrapeCreators is actually still for.** The line above this used to say "SC is reduced
+to Threads, Pinterest, YouTube comments" — wrong in *both* directions. YouTube comments are
+free (yt-dlp). Instagram hashtag search is *not* free-and-flaky, it has no keyless path at
+all. Corrected:
+
+| | Free path | SC needed? |
+| --- | --- | --- |
+| IG named accounts | keyless web endpoint | **no** |
+| IG hashtag search | none keyless (login-only) | **yes**, unless you log in |
+| TikTok accounts | yt-dlp | **no** |
+| TikTok hashtag search | TikTokApi+webkit, probabilistic | as a reliable fallback |
+| YouTube search + transcripts + **comments** | yt-dlp | **no** |
+| Threads, Pinterest | none | **yes** |
+
+So SC buys exactly three things: **Threads, Pinterest, and reliable hashtag/keyword search on
+IG + TikTok.** Everything else on this page runs at zero cost. Run `setup.sh` only if you want
+the flaky-but-free TikTok search stack (`curl_cffi` + `TikTokApi` + Playwright `webkit`).
 
 **The TikTok-search trick:** TikTok detects and empties headless *chromium* but not headless
 *webkit* — `tiktok_search.py` uses `browser="webkit"`. If a run returns 0, retry (TikTok is
@@ -72,7 +84,13 @@ Researched from instaloader docs + issues (#1285, #1226, #2501) and TikTokApi. *
 for both: low frequency, one persistent session, and CACHE — never rapid-fire the same query**
 (that's what throttled our test).
 
-**Instagram (instaloader) — a hard number: ~200 requests/hour** (75 for some types), tracked
+**Instagram — two different lanes with two different limits.** `reach.sh ig <user>` (keyless,
+no login) has no published number; treat it as low-volume and cache, and expect HTTP 400/401
+from datacenter IPs — it exits **2** and says BLOCKED rather than claiming the account is
+empty. The numbers below apply only to the **logged-in instaloader** lane, which you now need
+solely for hashtag search.
+
+**instaloader, logged in — a hard number: ~200 requests/hour** (75 for some types), tracked
 over an 11-minute sliding window.
 - **Re-invoking is the #1 cause of bans.** Each new `instaloader` run *resets* its rate
   tracking → 429. Keep ONE instance alive; let its built-in `RateController` pace it.

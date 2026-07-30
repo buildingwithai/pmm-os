@@ -9,6 +9,9 @@
 #   reach.sh gh-search <query>   # search GitHub repos (gh, needs auth)
 #   reach.sh gh-read <owner/repo># repo summary + README (gh)
 #   reach.sh yt <youtube-url>    # video transcript (yt-dlp)
+#   reach.sh yt-comments <url>   # top comments, keyless (yt-dlp — no SC key needed)
+#   reach.sh bsky <query>        # Bluesky search, keyless, no account
+#   reach.sh ig <username>       # Instagram account timeline, keyless, no login
 #   reach.sh v2ex                # V2EX hot topics (public API)
 #   reach.sh doctor              # what's live (delegates to agent-reach if installed)
 #   reach.sh selftest            # runnable check (read + gh, no keys)
@@ -16,6 +19,10 @@ set -uo pipefail
 UA="agent-reach/1.0 (pmm-os)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _py_with(){ local m="$1" p; for p in python3.13 python3.12 python3.11 python3 python; do command -v "$p" >/dev/null 2>&1 && "$p" -c "import $m" 2>/dev/null && { echo "$p"; return 0; }; done; echo python3; return 1; }
+# For stdlib-only helpers (ig_fetch.py): any interpreter will do, including the 3.9 that
+# macOS ships. Deliberately NOT resolve_python.sh — that enforces 3.12+ for the last30days
+# engine, and requiring it here would make a working free fetch look unavailable.
+_py_any(){ local p; for p in python3 python3.13 python3.12 python; do command -v "$p" >/dev/null 2>&1 && { echo "$p"; return 0; }; done; echo python3; return 1; }
 
 # instaloader ships a console script into a per-user bin dir that is often NOT on
 # PATH (verified: module 4.15.1 imports fine while `command -v instaloader` fails).
@@ -66,6 +73,47 @@ yt(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (agent-reach 
   cat "$d"/*.vtt | sed -E '/-->/d;/^WEBVTT/d;/^[0-9]+$/d;/^$/d' | awk '!seen[$0]++'; rm -rf "$d"; }
 v2ex(){ curl -fsS --max-time 15 -A "$UA" "https://www.v2ex.com/api/topics/hot.json"; }
 
+# YouTube COMMENTS — free, keyless. The engine gates comment enrichment behind
+# SCRAPECREATORS_API_KEY (lib/env.py:854), which is not a technical requirement:
+# yt-dlp reads the same comment API. Verified 2026-07-30 (5 comments, no key).
+yt_comments(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (agent-reach install --env=auto)" >&2; return 127; }
+  local n="${2:-20}" d rc; d="$(mktemp -d)"
+  yt-dlp --skip-download --write-comments --write-info-json --no-write-sub \
+    --extractor-args "youtube:comment_sort=top;max_comments=$n,all,$n" \
+    -o "$d/c" "${1:?url required}" >/dev/null 2>"$d/.err"; rc=$?
+  if [ "$rc" -ne 0 ] || [ ! -f "$d/c.info.json" ]; then
+    echo "# YouTube comments: yt-dlp failed (exit $rc) — NOT 'no comments'." >&2
+    tail -3 "$d/.err" >&2; rm -rf "$d"; return "${rc:-1}"
+  fi
+  "$(_py_any)" -c '
+import json,sys
+d=json.load(open(sys.argv[1])); c=d.get("comments") or []
+if not c: print("# YouTube: comments disabled or none on this video (yt-dlp succeeded)."); raise SystemExit(0)
+print("# YouTube comments on %s: %d (free, yt-dlp — no API key)" % (d.get("title","?")[:60], len(c)))
+for x in sorted(c, key=lambda k: k.get("like_count") or 0, reverse=True):
+    print("- %sL: %s" % (x.get("like_count", 0), (x.get("text") or "").replace(chr(10)," ")[:180]))
+' "$d/c.info.json"; rm -rf "$d"; }
+
+# Bluesky — free, keyless, no account. The AppView serves search unauthenticated.
+# NOTE: it must be api.bsky.app; public.api.bsky.app returns 403 for searchPosts.
+bsky(){ local q="${1:?query required}" n="${2:-25}"
+  curl -fsS --max-time 20 -A "$UA" -G "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts" \
+    --data-urlencode "q=$q" --data-urlencode "limit=$n" --data-urlencode "sort=top" \
+  | "$(_py_any)" -c '
+import json,sys
+try: d=json.load(sys.stdin)
+except Exception: print("# Bluesky: no JSON back — endpoint moved or blocked.", file=sys.stderr); raise SystemExit(2)
+p=d.get("posts") or []
+if not p: print("# Bluesky: 0 results — treat as a failed fetch, not an empty topic.", file=sys.stderr); raise SystemExit(2)
+print("# Bluesky: %d posts (free, keyless)" % len(p))
+for x in p:
+    r=x.get("record") or {}
+    print("- %sL %sR @%s: %s  URL: https://bsky.app/profile/%s/post/%s" % (
+        x.get("likeCount",0), x.get("repostCount",0), x["author"]["handle"],
+        (r.get("text") or "").replace(chr(10)," ")[:160],
+        x["author"]["handle"], (x.get("uri") or "").rsplit("/",1)[-1]))
+'; }
+
 # TikTok — FREE via yt-dlp (tiktok:user). Look up a known creator/competitor account.
 # (Hashtag/keyword SEARCH is not free here — yt-dlp's tiktok:tag is broken; that needs SC.)
 tiktok(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (agent-reach install --env=auto)" >&2; return 127; }
@@ -77,16 +125,11 @@ try:
  for e in ents: print('-', (e.get('title') or e.get('id') or '').replace(chr(10),' ')[:120])
 except Exception: print('# TikTok: no data (private/blocked, or install curl_cffi)')"; }
 
-# Instagram — free via instaloader, but IG blocks datacenter IPs + rate-limits, so this
-# only works on a LOCAL/residential IP (never a cloud/Vercel backend), ideally logged in.
-ig(){ local u="${1:?user or url required}"; u="${u#@}"
-  if _has_insta; then
-    echo "# Instagram @$u via instaloader (local residential IP; log in via 'instaloader --login=USER' for reliability)"
-    _insta --no-pictures --no-videos --no-metadata-json --quiet --count "${2:-12}" --post-filter="True" -- "-$u" 2>&1 | head -25 || \
-      _insta --no-pictures --no-videos --quiet --count "${2:-12}" "$u" 2>&1 | head -25
-  else
-    echo "instaloader not installed (the free IG tool): pip install instaloader. NOTE: IG blocks datacenter IPs and rate-limits hard — run on a LOCAL residential IP, not a cloud/Vercel backend, and log in for anything beyond a few requests." >&2; return 127
-  fi; }
+# Instagram accounts — FREE, keyless, no login, no instaloader. See ig_fetch.py for why
+# the instaloader path was deleted: it passed `-- "-$u"`, which instaloader documents as
+# "the post with this shortcode", so it never requested a profile at all; and anonymously
+# it turns IG's 403 into "Profile nasa does not exist" — a block laundered into a fact.
+ig(){ "$(_py_any)" "$SCRIPT_DIR/ig_fetch.py" "$@"; }
 
 # TikTok HASHTAG/keyword SEARCH — FREE via TikTokApi (Playwright webkit). No ScrapeCreators.
 tiktok_search(){ "$(_py_with TikTokApi)" "$SCRIPT_DIR/tiktok_search.py" "$@"; }
@@ -164,7 +207,11 @@ print("  login state is unknown until the first real call.")
 
 selftest(){
   local fail=0
-  read_url "https://example.com" 2>/dev/null | grep -qi "example domain" && echo "✓ read (Jina)" || { echo "✗ read"; fail=1; }
+  # Assert on OUR contract (a 2xx and a non-trivial body), never on a third party's
+  # page text. Grepping "example domain" false-failed on a network that serves a
+  # different example.com — the same bug this repo had in health.mjs:probeGrounding.
+  [ "$(read_url "https://example.com" 2>/dev/null | wc -c)" -gt 80 ] && echo "✓ read (Jina)" || { echo "✗ read"; fail=1; }
+  bsky "product marketing" 3 >/dev/null 2>&1 && echo "✓ bsky (keyless)" || { echo "✗ bsky"; fail=1; }
   if command -v gh >/dev/null 2>&1; then gh_search "claude code" 1 >/dev/null 2>&1 && echo "✓ gh-search" || echo "! gh-search (auth?)"; else echo "! gh not installed"; fi
   return $fail
 }
@@ -174,6 +221,8 @@ case "${1:-}" in
   gh-search) shift; gh_search "$@";;
   gh-read) shift; gh_read "$@";;
   yt) shift; yt "$@";;
+  yt-comments) shift; yt_comments "$@";;
+  bsky|bluesky) shift; bsky "$@";;
   tiktok) shift; tiktok "$@";;
   tiktok-search) shift; tiktok_search "$@";;
   ig|instagram) shift; ig "$@";;
@@ -184,5 +233,5 @@ case "${1:-}" in
   v2ex) v2ex;;
   doctor) shift; doctor "${1:-}";;
   selftest) selftest;;
-  *) echo "usage: reach.sh {read <url>|gh-search <q> [n]|gh-read <owner/repo>|yt <url>|tiktok <@user> [n]|tiktok-search <hashtag> [n]|ig <user> [n]|ig-search <hashtag> [n]|social-status|social-setup [x|ig|tiktok|all]|ig-login <user>|v2ex|doctor|selftest}" >&2; exit 2;;
+  *) echo "usage: reach.sh {read <url>|gh-search <q> [n]|gh-read <owner/repo>|yt <url>|yt-comments <url> [n]|bsky <query> [n]|tiktok <@user> [n]|tiktok-search <hashtag> [n]|ig <user> [n]|ig-search <hashtag> [n]|social-status|social-setup [x|ig|tiktok|all]|ig-login <user>|v2ex|doctor|selftest}" >&2; exit 2;;
 esac

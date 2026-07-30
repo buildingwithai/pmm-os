@@ -75,5 +75,5 @@ if [ "$SMOKE" = "1" ]; then
 fi
 
 echo "────────────────────────────────────────────"
-echo "FREE: Reddit · HN · Polymarket · GitHub · YouTube · X (log into x.com) · web · V2EX · Bilibili · RSS · TikTok (reach.sh tiktok @user reliable; tiktok-search <hashtag> free but FLAKY) · Instagram (reach.sh ig user / ig-search <hashtag>, needs login + local residential IP)."
-echo "SC = reliable FALLBACK for TikTok/IG hashtag search (when the free flaky path fails) + Threads/Pinterest + YT comments. Run agent-reach/scripts/setup.sh to install the free stack (curl_cffi + instaloader + TikTokApi + webkit)."
+echo "FREE + KEYLESS (no login): Reddit · HN · Polymarket · GitHub · YouTube search/transcripts/COMMENTS · web · V2EX · Bilibili · RSS · Bluesky (reach.sh bsky) · TikTok accounts (reach.sh tiktok @user) · Instagram accounts (reach.sh ig <user>). FREE + LOG IN: X (log into x.com). FREE BUT FLAKY: TikTok hashtag search (reach.sh tiktok-search)."
+echo "SC buys exactly three things: Threads, Pinterest, and reliable hashtag search on IG + TikTok. Instagram HASHTAG search has no keyless path (all logged-out routes 302/401/404) — SC, or instaloader --login on a residential IP. SC does NOT gate YouTube comments; reach.sh yt-comments is keyless."

@@ -221,8 +221,13 @@ export async function connect({ repoRoot, json = false } = {}) {
   const fixable = [];
   if (['blocked', 'absent'].includes(doc.platforms.x?.state)) fixable.push(['x', 'X / Twitter']);
   if (['blocked', 'absent'].includes(doc.platforms.tiktok?.state)) fixable.push(['sc', 'ScrapeCreators (TikTok · IG · Threads · Pinterest)']);
+  // Only offered for HASHTAG search. Named-account IG is keyless and needs no login
+  // (`free:instagram-accounts`), so offering a login when that lane is already live
+  // would be asking for a password to fix something that is not broken.
   if (['blocked', 'absent'].includes(doc.platforms.instagram?.state)
-      && doc.platforms.tiktok?.state === 'live') fixable.push(['ig', 'Instagram (instaloader session)']);
+      && doc.platforms.tiktok?.state === 'live') {
+    fixable.push(['ig', 'Instagram HASHTAG search (instaloader login — accounts already work keyless)']);
+  }
 
   if (!fixable.length) {
     log('');
