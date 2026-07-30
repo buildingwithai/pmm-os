@@ -114,6 +114,11 @@ def check_hook_targets() -> None:
                                    capture_output=True, text=True, timeout=30)
                 if r.returncode != 0:
                     bad.append(f"{event}: exit {r.returncode} — {(r.stderr or '').strip()[:120]}")
+                elif "Traceback" in (r.stderr or ""):
+                    # `|| exit 0` makes a crashing hook look healthy by exit code.
+                    # A NameError shipped this way once already.
+                    last = (r.stderr or "").strip().splitlines()[-1]
+                    bad.append(f"{event}: crashed despite exit 0 — {last[:120]}")
                 elif r.stdout.strip():
                     try:
                         json.loads(r.stdout)

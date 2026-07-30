@@ -40,7 +40,7 @@ Default operating sequence for marketing work:
 """.strip()
     if context:
         base += "\n\nExisting product marketing context found. Use this as source of truth when relevant:\n\n" + context
-    base += _maybe_autosetup()
+    base += _research_engine_notice()
     emit_additional("SessionStart", base)
 
 
