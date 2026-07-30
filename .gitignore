@@ -30,4 +30,6 @@ config/mcporter.json
 # demo working copies (generated: editor scripts copied in + built kit output)
 
 # session handoff notes (never commit — may reference private strategy)
-HANDOFF.md
+# Session handoffs — real traction numbers, business decisions, owner-only state.
+# The repo is public; these never ship. Glob, not a literal, so dated ones are covered.
+HANDOFF*.md
