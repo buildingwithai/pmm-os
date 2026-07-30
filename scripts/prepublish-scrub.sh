@@ -75,9 +75,9 @@ for f in HANDOFF.md .env; do
   [ -f "$ROOT/$f" ] && ! git -C "$ROOT" check-ignore -q "$f" 2>/dev/null && bad "$f exists and is NOT gitignored"
 done
 
-# 7. every path npm claims to ship actually exists
+# 7. every path npm claims to ship actually exists ("!" entries are exclusions)
 MISSING=""
-for p in $(node -e 'try{console.log((require("'"$ROOT"'/package.json").files||[]).join(" "))}catch(e){}' 2>/dev/null); do
+for p in $(node -e 'try{console.log((require("'"$ROOT"'/package.json").files||[]).filter(f=>!f.startsWith("!")).join(" "))}catch(e){}' 2>/dev/null); do
   [ -e "$ROOT/${p%/}" ] || MISSING="$MISSING $p"
 done
 if [ -n "$MISSING" ]; then bad "package.json \"files\" references missing paths:$MISSING"; else ok "npm payload paths resolve"; fi
