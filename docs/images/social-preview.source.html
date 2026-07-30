@@ -1,72 +1,109 @@
 <!doctype html>
+<!-- Social preview source. Regenerate after editing:
+       cd docs/images && chrome --headless --force-device-scale-factor=2 \
+         --screenshot=social-preview@2x.png --window-size=1280,640 file://$PWD/social-preview.source.html
+     Palette is lifted from skills/pmm-launch-kit/scripts/.kit-style.css — if the kit
+     is restyled, update both or the card stops matching the product. -->
 <meta charset="utf-8">
 <style>
-  /* GitHub social preview: 1280x640, but the card is cropped to ~1200x600
-     in some surfaces — keep everything inside a 64px safe margin. */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 1280px; height: 640px; }
+  /* Palette lifted verbatim from skills/pmm-launch-kit/scripts/.kit-style.css,
+     so the card and the product are the same surface rather than a lookalike. */
+  :root {
+    --bg:#0c0e11; --side:#0a0b0e; --ink:#f7f8fa; --muted:#c5ccd4; --dim:#9aa3ad;
+    --accent:#8cb8ff; --accent-line:rgba(140,184,255,.40); --line2:rgba(255,255,255,.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1280px; height:640px; overflow:hidden; }
   body {
-    background: #0B0F17;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
-    color: #E9EDF3;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    padding: 64px 72px;
-    /* one hairline of accent, top edge — restraint over a gradient header */
-    border-top: 6px solid #10A37F;
+    background:var(--side);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;
+    color:var(--ink);
+    display:grid; grid-template-columns:468px 1fr;
   }
 
-  /* ---- top row: mark + wordmark ---- */
-  .top { display: flex; align-items: center; gap: 16px; }
-  .mark { width: 44px; height: 44px; display: block; }
-  .wordmark { font-size: 19px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #8A94A6; }
-
-  /* ---- middle: the message, left-aligned, size does the hierarchy ---- */
-  .mid { align-self: center; }
-  h1 {
-    font-size: 76px; line-height: 1.02; font-weight: 700; letter-spacing: -.032em;
-    max-width: 21ch;
+  /* ---------- left rail: the kit's own sidebar ---------- */
+  .rail {
+    background:var(--side); border-right:1px solid var(--line2);
+    padding:44px 40px; display:flex; flex-direction:column; gap:28px;
   }
-  h1 em { font-style: normal; color: #10A37F; }
-  .sub {
-    margin-top: 24px; font-size: 25px; line-height: 1.4; font-weight: 400;
-    color: #A7B0C0; max-width: 46ch;
-  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand svg { width:32px; height:32px; border-radius:8px; display:block; }
+  .brand .n { font-size:15px; font-weight:700; letter-spacing:-.01em; }
+  .brand .n span { color:var(--dim); font-weight:500; letter-spacing:.12em; font-size:11px;
+                   text-transform:uppercase; margin-left:8px; }
 
-  /* ---- bottom: proof + install, separated by weight not color ---- */
-  .bot { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; }
-  /* #6F7B8E measured ~4.4:1 on this surface — under AA for body. Reuse the
-     wordmark grey (~6:1) rather than inventing another value. */
-  .facts { display: flex; gap: 32px; font-size: 17px; color: #8A94A6; }
-  .facts b { display: block; font-size: 30px; font-weight: 650; color: #E9EDF3; letter-spacing: -.01em; margin-bottom: 4px; }
-  .install {
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: 21px; color: #10A37F;
-    border: 1px solid #1E2A3A; border-radius: 10px;
-    padding: 14px 22px; background: #101725; white-space: nowrap;
+  .eyebrow { font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+             color:var(--accent); margin-bottom:14px; }
+  h1 { font-size:39px; line-height:1.11; font-weight:700; letter-spacing:-.028em; }
+  .sub { margin-top:14px; font-size:15px; line-height:1.55; color:var(--muted); max-width:33ch; }
+
+  /* the numbered section list people recognise from the kit */
+  .toc { margin-top:22px; display:grid; gap:8px; padding-top:20px;
+         border-top:1px solid rgba(255,255,255,.07); }
+  .toc div { display:flex; gap:12px; font-size:12.5px; align-items:baseline; }
+  .toc b { color:var(--muted); font-weight:500; }
+  .toc i { font-style:normal; color:#5b636d; font-variant-numeric:tabular-nums;
+           font-size:11px; min-width:22px; }
+  .toc .on b { color:var(--accent); font-weight:600; }
+  .toc .on i { color:var(--accent); }
+
+  .proof { margin-top:auto; padding-top:22px; display:flex; gap:18px; font-size:12px;
+           color:var(--dim); border-top:1px solid rgba(255,255,255,.07); }
+  .proof b { color:var(--muted); font-weight:600; }
+  .cmd { margin-top:16px; font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:15px;
+         color:var(--accent); border:1px solid var(--accent-line); border-radius:8px;
+         padding:11px 14px; background:rgba(140,184,255,.07); align-self:start; }
+
+  /* ---------- right: real UI, native scale, spliced past the disclaimer ---------- */
+  .shot { position:relative; overflow:hidden; background:var(--bg); }
+  .band { position:relative; overflow:hidden; }
+  .band img { position:absolute; width:1440px; height:900px; left:-286px;
+              image-rendering:-webkit-optimize-contrast; }
+  .label { height:52px; display:flex; align-items:center; padding:0 0 0 26px;
+           font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+           color:var(--accent); background:var(--bg); }
+  .band.grid { height:501px; }           /* table + the reasoning, stopping before the first-run toast */
+  .band.grid img { top:-330px; }
+  /* seat it in the card: shadow into the rail, fade out at the bleed */
+  .shot::after {
+    content:""; position:absolute; inset:0; pointer-events:none;
+    box-shadow:inset 30px 0 40px -30px rgba(0,0,0,.9);
+    background:linear-gradient(to bottom, transparent 84%, rgba(12,14,17,.55) 92%, rgba(12,14,17,.9) 100%);
   }
 </style>
 
-<div class="top">
-  <svg class="mark" viewBox="0 0 128 128" aria-hidden="true">
-    <rect width="128" height="128" rx="28" fill="#151C28"/>
-    <path d="M28 85V43h13l23 26 23-26h13v42H87V61L68 83h-8L41 61v24H28z" fill="#E9EDF3"/>
-    <circle cx="99" cy="29" r="10" fill="#10A37F"/>
-  </svg>
-  <span class="wordmark">PMM OS</span>
-</div>
-
-<div class="mid">
-  <h1>Product marketing that ends in a <em>shippable launch kit</em>.</h1>
-  <p class="sub">Positioning, messaging, personas, pricing, battlecards and GTM plans — grounded in real research, not generic advice.</p>
-</div>
-
-<div class="bot">
-  <div class="facts">
-    <div><b>45</b>skills</div>
-    <div><b>10</b>research desks</div>
-    <div><b>2</b>research engines</div>
-    <div><b>0</b>dependencies</div>
+<div class="rail">
+  <div class="brand">
+    <svg viewBox="0 0 128 128" aria-hidden="true">
+      <rect width="128" height="128" rx="28" fill="#15181c"/>
+      <path d="M28 85V43h13l23 26 23-26h13v42H87V61L68 83h-8L41 61v24H28z" fill="#f7f8fa"/>
+      <circle cx="99" cy="29" r="10" fill="#8cb8ff"/>
+    </svg>
+    <div class="n">PMM OS<span>Launch Kit</span></div>
   </div>
-  <div class="install">npx pmm-os install</div>
+
+  <div>
+    <div class="eyebrow">Product Marketing &middot; GTM</div>
+    <h1>Research that comes back as a deliverable.</h1>
+    <p class="sub">Ten specialist desks fan out across two engines, capture sourced
+      evidence, and emit the real artifact &mdash; not a summary.</p>
+    <div class="toc">
+      <div><i>03</i><b>Positioning</b></div>
+      <div><i>05</i><b>Competitive</b></div>
+      <div><i>06</i><b>Pricing</b></div>
+      <div class="on"><i>08b</i><b>Events desk</b></div>
+      <div><i>11</i><b>Coach review</b></div>
+    </div>
+  </div>
+
+  <div class="proof">
+    <span><b>45</b> skills</span><span><b>10</b> desks</span>
+    <span><b>2</b> engines</span><span><b>0</b> deps</span>
+  </div>
+  <div class="cmd">npx pmm-os install</div>
+</div>
+
+<div class="shot">
+  <div class="label">08b &middot; Events desk &nbsp;&middot;&nbsp; ranked targets</div>
+  <div class="band grid"><img src="./events-desk.png" alt=""></div>
 </div>
