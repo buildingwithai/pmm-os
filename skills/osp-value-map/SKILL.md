@@ -30,6 +30,12 @@ Create `osp-value-map-[product].md` with:
 
 No feature should exist without a value case. No value case should exist without a persona need.
 
+## Attribution
+
+Adapts the Open Strategy Partners Product Value Map methodology, licensed
+CC BY-SA 4.0. ShareAlike requires this attribution to travel with the work —
+keep it here and in THIRD_PARTY_NOTICES.md when redistributing.
+
 ## Hand off to
 
 PMM OS is a chain, not a menu — don't dead-end at advice. Pass the work on:

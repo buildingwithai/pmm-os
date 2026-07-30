@@ -6,7 +6,7 @@ This plugin package adapts public marketing, PMM, GTM, campaign, coaching, produ
 
 - coreyhaines31/marketingskills - original repository and base plugin target, MIT.
 - pmalliance/product-marketing-skills - PMM skill taxonomy and shared context pattern, MIT.
-- alirezarezvani/claude-skills - cross-agent skills, marketing, research, orchestration, and hooks patterns.
+- alirezarezvani/claude-skills (MIT) - cross-agent skills, marketing, research, orchestration, and hooks patterns.
 - open-strategy-partners/osp_marketing_tools - OSP MCP tool pattern and technical marketing methodology, Creative Commons Attribution-ShareAlike 4.0 International.
 - Fearofsnakes/pmm-skillset - PMM artifact chain, message-market-fit, launch brief, battlecard, sales narrative, and feature announcement patterns, MIT.
 - KarlRaf/gtm-starter-kit - GTM context repository, signal library, signal-to-sequence, and output organization patterns, MIT.
@@ -42,7 +42,7 @@ Both are MIT-licensed; their upstream LICENSE is preserved in each skill dir
 `scripts/sync-research-engines.sh`.
 
 - **last30days** (`skills/last30days/`) — MIT © Matt Van Horn (mvanhorn),
-  https://github.com/mvanhorn/last30days-skill. Vendored engine snapshot (v3.6.0):
+  https://github.com/mvanhorn/last30days-skill. Vendored engine snapshot (v3.11.1):
   SKILL.md + scripts/ + lib/ + references/ + agents/. Self-contained Python (3.12+,
   zero pip deps). Demo assets, the optional Go MCP, and standalone hooks were not vendored.
 - **Agent-Reach** (`skills/agent-reach/`) — MIT © Neo Reid (Panniantong),

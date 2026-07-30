@@ -4,7 +4,7 @@
 
 **Turn a product brief into positioning, messaging, personas, pricing, competitive intel, and a full launch plan — then package the whole thing into a shippable, interactive launch kit. Without leaving your terminal.**
 
-A Claude Code / Codex plugin: **40+ product-marketing, GTM & PLG skills**, **two built-in research engines**, a deep framework library, and a zero-dependency generator that turns strategy into an app.
+A Claude Code / Codex plugin: **45 product-marketing, GTM & PLG skills**, **two built-in research engines**, a deep framework library, and a zero-dependency generator that turns strategy into an app.
 
 ![PMM OS launch kit — a click-through of the workspace views](docs/images/launch-kit-demo.gif)
 
@@ -16,7 +16,7 @@ A Claude Code / Codex plugin: **40+ product-marketing, GTM & PLG skills**, **two
 
 Most "marketing AI" gives you a wall of generic advice. PMM OS gives you **decisions and artifacts**: it grounds every output in your product context, applies real frameworks (April Dunford positioning, JTBD personas, value-metric pricing, win/loss CI), holds a strict depth bar so nothing comes back as a one-line stub, and ends a launch with something you can actually hand to a team.
 
-It behaves like **one product**, not 40 band-aided prompts: shared context, one depth standard, one framework library, and a chain that always flows to a finished deliverable.
+It behaves like **one product**, not 45 band-aided prompts: shared context, one depth standard, one framework library, and a chain that always flows to a finished deliverable.
 
 ## The launch kit — what you actually ship
 
@@ -38,29 +38,45 @@ Every launch ends with a single **self-contained, offline HTML app** (no depende
 
 ## Quick start
 
+**Claude Code** — one command, which registers the marketplace and installs the plugin for you:
+
 ```bash
-# one command (npm)
 npx pmm-os install
-
-# — or straight from GitHub, inside Claude Code —
-/plugin marketplace add buildingwithai/pmm-os
 ```
 
-Then, in Claude Code:
+Or do it by hand inside Claude Code (both steps — the first only adds the catalog):
+
+```
+/plugin marketplace add buildingwithai/pmm-os
+/plugin install pmm-os@pmm-os
+```
+
+**Codex**:
 
 ```bash
-# run the whole chain (grounding → research → strategy → … → launch kit)
-/product-marketing-os
-
-# or jump straight to a specialist
-/pmm-positioning-exercise
-/pmm-pricing-packaging
-/pmm-launch-kit
+codex plugin marketplace add buildingwithai/pmm-os
+codex plugin add pmm-os@pmm-os
 ```
 
-`npx pmm-os doctor` checks your environment; `npx pmm-os update` upgrades; the first session
-auto-installs the research engines in the background. Ask for a launch and PMM OS produces the
-strategy **and** the clickable kit — markdown alone is never the finish line.
+Then restart, or run `/reload-plugins`. Plugin skills are namespaced, so they're
+`/pmm-os:<skill>`:
+
+```
+/pmm-os:product-marketing-os      run the whole chain: grounding → research → strategy → launch kit
+/pmm-os:pmm-positioning-exercise  or jump straight to a specialist
+/pmm-os:pmm-pricing-packaging
+/pmm-os:pmm-launch-kit
+```
+
+You don't have to use slash commands at all — just say *"take Plotline to market"* and the right
+skills get picked up. Ask for a launch and PMM OS produces the strategy **and** the clickable kit;
+markdown alone is never the finish line.
+
+`npx pmm-os doctor` checks your environment · `npx pmm-os update` upgrades ·
+`npx pmm-os setup` installs the optional research stack.
+
+> Needs Claude Code **2.1.143+** (May 2026) or Codex with plugin support. On Codex, plugin hooks
+> stay inactive until you review and trust them — Codex will prompt you.
 
 ## The quality architecture (v3) — the consulting-grade bar
 
@@ -104,7 +120,7 @@ MBB working canon and field-researched one-pager formats:
 
 Three things make them work as a unit:
 
-- **A deep framework library** — ~76k lines of frameworks, worksheets, templates, checklists and glossaries across 9 domains (positioning, messaging, competitive intelligence, personas, pricing, product launch, rollout, sales enablement, strategic thinking). 39/40 skills cite the exact docs they apply.
+- **A deep framework library** — ~76k lines of frameworks, worksheets, templates, checklists and glossaries across 9 domains (positioning, messaging, competitive intelligence, personas, pricing, product launch, rollout, sales enablement, strategic thinking). 43/45 skills cite the exact docs they apply.
 - **One depth standard** — every section must be *specific, complete, reasoned, and evidenced* — never a generic one-liner. Enforced in the skills, the prompt hook, and a final QA gate. "Depth is not length" — it won't pad, it goes deeper.
 - **Smart routing** — sharpened, disambiguated triggers ("use this, not that") plus a hook that surfaces the right skills and always routes a launch to the interactive kit.
 
@@ -122,8 +138,8 @@ source pools instead of one:
 - **`agent-reach`** — a *breadth-first fetch/read router* across 13 platforms, strong
   exactly where the other is thin: **GitHub/dev, video transcripts, reading any URL,
   and Chinese platforms** (XiaoHongShu, Bilibili, Xueqiu, V2EX, Xiaoyuzhou). Best for
-  *"fetch/read this, search this platform."* First run self-installs via
-  `bash skills/agent-reach/scripts/setup.sh`.
+  *"fetch/read this, search this platform."* Opt-in: `npx pmm-os setup` (it installs
+  Python packages and a headless browser, so it asks first).
 
 Both are vendored into the plugin so research works on a fresh marketplace install
 with **no quality degradation** — same depth as running them standalone. Refresh from
@@ -135,8 +151,8 @@ or any "what do people think" task, PMM OS runs **both** and synthesizes.
 **It starts with a brain-dump.** You rarely have clean parameters — you have *"I've got a
 product called X, it does A/B/C, I want to launch it."* `pmm-research-brief` is the front
 door: it distills that ramble into a **Product Brief** + a **complete, mandatory Research
-Plan across all nine desks** (product, customer, competitive, market, pricing, channels,
-analyst/KOL, events, GTM/launch) — scoped with named competitors, segment, and events —
+Plan across all ten desks** (product, customer, competitive, market, pricing, channels,
+analyst/KOL, events, reviews, GTM/launch) — scoped with named competitors, segment, and events —
 then runs the full sweep. Nothing is optional; a thorough PMM researches all of it. From there:
 
 Research isn't one undifferentiated blob. A **research desk** (`pmm-research-desk`) is a
@@ -148,11 +164,12 @@ ranks the conferences your ICP actually attends, by relevance vs. cost:
 
 ![Events Desk — ranked conference targets](docs/images/events-desk.png)
 
-That artifact is built from a template the skills already carry (the plugin ships 38 of
-them — battlecards, canvases, pricing matrices, RACI…), hydrated by the evidence.
+That artifact is built from a template the skills already carry (22 fill-in templates —
+battlecards, canvases, pricing matrices, RACI… — plus 13 one-pager formats), hydrated by
+the evidence.
 
-**All nine desks ship** — product, customer, competitive, market, pricing, channels,
-analyst/influencer, events, and GTM/launch — each producing its skill's *real* deliverable
+**All ten desks ship** — product, customer, competitive, market, pricing, channels,
+analyst/influencer, events, reviews, and GTM/launch — each producing its skill's *real* deliverable
 in the dashboard (a competitor matrix + battlecard, a persona one-pager + ICP, a pricing
 comparables matrix, a SWOT / Five-Forces / PESTEL category brief, a ranked channel map, a
 KOL list, a ranked events table, a launch-tactics map…):
