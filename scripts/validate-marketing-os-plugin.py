@@ -289,6 +289,19 @@ def check_ig_fetch_selftest() -> None:
           else [(r.stdout + r.stderr).strip()[:400]])
 
 
+def check_health_synthesis() -> None:
+    """--search and INCLUDE_SOURCES are both derived from the health document. If either
+    derivation drifts, a run silently loses sources (--search is a HARD filter) or loses
+    comment text (every *_comments opt-in defaults to off)."""
+    t = ROOT / "bin" / "lib" / "health.selftest.mjs"
+    if not t.is_file():
+        check("health synthesis self-check", ["bin/lib/health.selftest.mjs is missing"])
+        return
+    r = subprocess.run(["node", str(t)], capture_output=True, text=True, cwd=ROOT)
+    check("health synthesis self-check", [] if r.returncode == 0
+          else [(r.stdout + r.stderr).strip()[:400]])
+
+
 def check_ig_reels_window() -> None:
     """Upstream's search_instagram() returned every OUT-OF-WINDOW reel whenever none
     fell inside the window — a Jan-2023 reel presented as last-30-days evidence, with
@@ -368,6 +381,7 @@ def main() -> None:
     check_receipt_gate_selftest()
     check_ig_fetch_selftest()
     check_ig_reels_window()
+    check_health_synthesis()
     check_launch_gate()
     check_official_validator()
 

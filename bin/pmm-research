@@ -187,6 +187,18 @@ function buildReceipt(o, requested, notLive = []) {
            notLive, excluded: o.exclude, why: o.why };
 }
 
+// What a dead source actually costs the brief, in the reader's terms.
+const LOST = {
+  instagram: 'theme→Reels discovery (keyword search with play counts) — the whole IG lane',
+  tiktok: 'TikTok keyword/hashtag discovery + comment text',
+  threads: 'Threads discussion',
+  pinterest: 'Pinterest visual/intent signal',
+  x: 'X/Twitter posts — log into x.com in a browser and cookies are read automatically',
+  youtube: 'YouTube search, transcripts and comments (this one is FREE — yt-dlp is missing)',
+  reddit: 'Reddit threads — usually the densest text-pain source',
+  grounding: 'open-web search results',
+};
+
 function renderReceipt(r) {
   const lines = ['', '=== PMM OS RUN RECEIPT ===', `verdict:   ${r.verdict}`];
   if (r.note) lines.push(`note:      ${r.note}`);
@@ -205,7 +217,13 @@ function renderReceipt(r) {
   if (r.notLive?.length) {
     lines.push('');
     lines.push('not queried (health said not live):');
-    for (const n of r.notLive) lines.push(`  ${n.name.padEnd(14)} ${n.state}  ${n.reason || ''}`);
+    for (const n of r.notLive) {
+      lines.push(`  ${n.name.padEnd(14)} ${n.state}  ${n.reason || ''}`);
+      // Name the CAPABILITY, not just the source. "instagram blocked" reads as one
+      // missing feed; what is actually gone is every theme→Reels result in the brief,
+      // and a reader who does not know that will treat the run as complete.
+      if (LOST[n.name]) lines.push(`  ${''.padEnd(14)} → lost: ${LOST[n.name]}`);
+    }
     for (const n of r.notLive) if (n.fix) { lines.push(`  fix: ${n.fix}`); break; }
   }
   if (r.excluded?.length) lines.push(`excluded by you: ${r.excluded.join(', ')} — ${r.why}`);
@@ -296,9 +314,27 @@ log(`→ ${opts.depth} run over ${live.length} live sources: ${live.join(', ')}`
 if (by.blocked.length) log(`  not live: ${by.blocked.join(', ')}`);
 if (excluded.size) log(`  excluded by you: ${[...excluded].join(', ')} — ${opts.why}`);
 
+// Comment text, Threads and Pinterest are gated behind an INCLUDE_SOURCES opt-in that
+// lives in the user's .env and that nobody hand-edits — so they were off even for
+// people paying for the key that unlocks them. Synthesized from the same health
+// document as --search, for the same reason: one live source of truth, no stale copy.
+const enrich = health.enrichmentSources(doc);
+if (enrich.length) {
+  log(`  enrichment: ${enrich.join(', ')}`);
+  // Comment enrichment spends credits (bounded: top 3 posts x 5 comments per source).
+  // Say so, because it is on by default now and a silent spend is not a default.
+  if (enrich.some((s) => s.endsWith('_comments'))) {
+    log('              comment text costs ~3 credits per source per run');
+  }
+}
+
 const run = spawnSync(PY, [...PYR.args, ...args], {
   stdio: 'inherit',
+  // Only set when non-empty. `os.environ.get(k) or merged_env.get(k, default)`
+  // (env.py:516) treats '' as falsy and falls back to the file, so an empty export
+  // would be a no-op — but passing it anyway invites someone to "fix" that later.
   env: { ...process.env, PMM_OS_LAUNCH: '1',
+         ...(enrich.length ? { INCLUDE_SOURCES: enrich.join(',') } : {}),
          LAST30DAYS_TRANSCRIPT_LIMIT: process.env.LAST30DAYS_TRANSCRIPT_LIMIT || '1000',
          LAST30DAYS_RESULTS_PER_PAGE: process.env.LAST30DAYS_RESULTS_PER_PAGE || '100' },
 });

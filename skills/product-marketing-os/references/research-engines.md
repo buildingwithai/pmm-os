@@ -57,6 +57,53 @@ Needs **Python 3.12+**.
 | **Bluesky** | **free, keyless, no account** | `reach.sh bsky <query>` — `api.bsky.app/xrpc/app.bsky.feed.searchPosts`. Note: it must be `api.bsky.app`; `public.api.bsky.app` returns **403** for searchPosts. |
 | Threads, Pinterest, TruthSocial | paid (SC) | `SCRAPECREATORS_API_KEY` (100 free then PAYG) |
 
+### What a single Instagram Reel yields
+
+**No Instagram login. No cookie. PMM OS never touches your Instagram session for any of
+this** — the SC calls are server-side, and the keyless account lane is logged-out by
+construction. The only thing in the whole stack that ever wanted an IG password is
+`reach.sh ig-search` (instaloader hashtag search), and the keyword lane above supersedes
+it.
+
+Three endpoints, all driven automatically by `search_and_enrich()`:
+
+| Field | Endpoint | Notes |
+| --- | --- | --- |
+| **plays** (`video_play_count`) | reels/search | the ranking metric — Reels rank on plays |
+| **views** (`video_view_count`) | reels/search | a *different* number from plays; both are kept |
+| **likes on the reel** (`like_count`) | reels/search | |
+| **total comment count** (`comment_count`) | reels/search | |
+| **date posted** (`taken_at`) | reels/search | ISO 8601, on 100% of results — this is what makes "last 30 days" enforceable rather than asserted |
+| full caption, hashtags | reels/search | hashtags parsed out of the caption |
+| author username + **follower count** | reels/search | `owner` |
+| duration, audio attribution, location | reels/search | `is_paid_partnership` / `is_ad` also present |
+| **spoken transcript** | `/v2/instagram/media/transcript` | top N by depth (`max_captions`: 3 quick / 5 default / 8 deep). Falls back to the caption when a reel has no speech. 1 credit each |
+| **each comment's text** | `/v2/instagram/post/comments` | attached as `top_comments`, highest-liked first |
+| **likes per comment** (`comment_like_count`) | same | plus `child_comment_count` and `created_at` per comment |
+
+Comment enrichment is bounded — top 3 posts × 5 comments — so it costs about 3 credits
+per source per run. It is **on by default** as of the `enrichmentSources()` change; see
+below for why it used to be off.
+
+### The opt-in that silenced half the paid lane
+
+Comment enrichment for Instagram, TikTok and YouTube, plus Threads and Pinterest as whole
+sources, are each gated on `INCLUDE_SOURCES` naming them
+(`env.py:846-880`, `pipeline.py:218-231`). That value lives in `~/.config/last30days/.env`,
+is written once at setup, and is never revisited — so users **paying for the key that
+unlocks comment text were getting engagement counts and no comments at all.**
+
+`bin/pmm-research` now synthesizes `INCLUDE_SOURCES` from the live health document, the
+same way it synthesizes `--search`, so the capabilities a working key pays for are on
+without anyone hand-editing a config file. `INCLUDE_SOURCES` is purely **additive** in the
+engine — every use is `"x" in include_sources` to enable `x` — so this can only widen a
+run, never narrow one, and anything already in the file is preserved.
+
+Three neighbours are deliberately **not** auto-enabled, and shouldn't be: `linkedin`
+(upstream calls it power-user-only and explicitly must not activate for existing key
+holders), `trustpilot` (can spawn a headless-Chrome WAF cookie harvest — a real side
+effect on your machine), and `perplexity` (needs its own paid key).
+
 **What ScrapeCreators is actually still for.** The line above this used to say "SC is reduced
 to Threads, Pinterest, YouTube comments" — wrong in *both* directions. YouTube comments are
 free (yt-dlp). Instagram hashtag search is *not* free-and-flaky, it has no keyless path at

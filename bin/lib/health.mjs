@@ -127,17 +127,56 @@ async function probeScrapeCreators() {
       out[s] = P('blocked', 'scrapecreators', { reason: `http-${r.status}` });
     }
   }
-  // threads + pinterest additionally need naming in INCLUDE_SOURCES or --search.
-  for (const s of ['threads', 'pinterest']) {
-    const inc = (env.INCLUDE_SOURCES || '').toLowerCase();
-    if (out[s].state === 'live' && !inc.includes(s)) {
-      out[s] = P('absent', 'scrapecreators', {
-        reason: `key works, but ${s} is unreachable unless named in INCLUDE_SOURCES or --search`,
-        fix: `add ${s} to INCLUDE_SOURCES in ~/.config/last30days/.env`,
-      });
+  // threads + pinterest also need naming in INCLUDE_SOURCES. They used to be reported
+  // `absent` whenever the user's .env did not name them — which was circular, because
+  // nobody hand-edits that file, so a working key reported two dead sources forever.
+  // bin/pmm-research now synthesizes INCLUDE_SOURCES from this same document (see
+  // enrichmentSources below), so a live key genuinely means these are reachable.
+  return out;
+}
+
+/**
+ * The INCLUDE_SOURCES value the engine should be launched with.
+ *
+ * Five capabilities are gated behind an opt-in string in ~/.config/last30days/.env:
+ * threads and pinterest as whole sources, and comment enrichment for Instagram, TikTok
+ * and YouTube (env.py:846-880 — each is `key AND name in INCLUDE_SOURCES`). The file is
+ * written once by setup and never revisited, so in practice every one of them was off
+ * even for users paying for the key that unlocks them. A funded run returned Reels with
+ * engagement counts but no comment TEXT, which is most of the qualitative signal.
+ *
+ * Synthesized here rather than written to the user's file: the same reason --search is
+ * synthesized. One live document decides, and there is no stale copy on disk to drift.
+ *
+ * `tiktok` is the honest proxy for "the SC key has credit" — probeScrapeCreators sets
+ * all four shared platforms from one probe, and unlike threads/pinterest it carries no
+ * extra opt-in condition of its own.
+ */
+export function enrichmentSources(doc, existing = null) {
+  const scLive = doc?.platforms?.tiktok?.state === 'live';
+  // `existing` is injectable so the self-check is hermetic — reading the caller's real
+  // .env made two assertions pass vacuously on any machine that already named them.
+  const raw = existing ?? (readEnvFile(L30_ENV).INCLUDE_SOURCES || '');
+  const fromFile = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const out = new Set(fromFile);
+  if (scLive) {
+    // youtube_comments is gated on the SC key too (env.py:854), even though yt-dlp
+    // could read the same comments keylessly. Naming it without a live key is a no-op.
+    for (const s of ['threads', 'pinterest',
+                     'instagram_comments', 'tiktok_comments', 'youtube_comments']) {
+      out.add(s);
     }
   }
-  return out;
+  // DELIBERATELY NOT auto-enabled — three more sources sit behind the same string, and
+  // each has a reason to stay the user's explicit choice. Do not "finish the job" here:
+  //   linkedin    upstream: "power-user-only and must not silently activate for
+  //               existing SCRAPECREATORS_API_KEY holders" (pipeline.py:199-206)
+  //   trustpilot  can spawn a one-time headless-Chrome WAF cookie harvest — a real
+  //               side effect on the user's machine, not just an API call
+  //   perplexity  needs its own paid key, and the pipeline already checks for it
+  // The five above are different: pure API calls against a key the user already chose
+  // to configure, with no side effect beyond spending its credits.
+  return [...out].sort();
 }
 
 /** X has a four-backend chain; the engine already knows how to probe it for real.
