@@ -5,8 +5,7 @@ A complete PMM OS **launch run** for the fictional example company *Plotline*
 [`../../skills/product-marketing-os/references/examples/00-product-context.md`](../../skills/product-marketing-os/references/examples/00-product-context.md).
 
 This is the canonical demonstration that **a full launch ends with an interactive
-launch kit** — and the source for the live demo embedded on the marketing site
-(`website/apps/marketing/public/launch-kit/index.html`).
+launch kit**.
 
 ## What's here
 

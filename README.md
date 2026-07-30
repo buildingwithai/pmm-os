@@ -183,10 +183,6 @@ node skills/pmm-launch-kit/scripts/build-kit.mjs <your-launch-folder>
 
 Everything is one source of truth: `kit-content.json` → HTML app + markdown mirrors + a slide deck, all driven by a uniform block registry, so new block types and new export targets are additive.
 
-## Marketing site
-
-A full marketing site for PMM OS lives in [`website/`](website/) (Next.js) and embeds the live launch kit as its product demo.
-
 ## Credits & license
 
 MIT © Jovanny Tovar. PMM OS adapts and unifies a number of open marketing skill sets — most notably the deep PMM framework library from [`buildingwithai/skills`](https://github.com/buildingwithai/skills) (MIT) — and includes methodology from Open Strategy Partners (CC BY-SA 4.0). All upstream attributions are preserved in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). See [`LICENSE`](LICENSE).

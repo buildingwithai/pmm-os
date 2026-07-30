@@ -1,4 +1,13 @@
 .DS_Store
+
+# The marketing site + PMM OS Cloud live in buildingwithai/pmm-os-web.
+# Guard against a stray working copy being re-added here.
+website/
+
+# Never track local env files anywhere in this tree.
+.env
+.env.*
+!.env.example
 node_modules/
 *.bak
 *.log
