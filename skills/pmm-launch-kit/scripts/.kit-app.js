@@ -327,8 +327,22 @@
         window.__nbEditor = nbEditor;
         wireBubble(); wireSlash();
       }).catch(function () {
+        // Rich editing comes from TipTap on a CDN. Offline — or behind a proxy —
+        // that import fails and you drop to plain contenteditable. Editing and
+        // saving still work; the toolbar and slash menu don't. Say so, rather
+        // than leaving someone to wonder why half the editor is missing.
         doc.setAttribute('contenteditable', 'true'); doc.innerHTML = SEED;
         doc.addEventListener('input', function () { save(KEY, doc.innerHTML); });
+        safe(function () {
+          if (load('kit_offline_note_seen', 0)) return;
+          var h = document.createElement('div'); h.className = 'hint';
+          h.innerHTML = 'Offline — using plain text editing. Your edits still save; '
+            + 'the formatting toolbar needs a connection.<button id="offX">got it</button>';
+          document.body.appendChild(h);
+          function dismiss() { if (h.parentNode) h.remove(); save('kit_offline_note_seen', 1); }
+          var x = $('#offX'); if (x) x.addEventListener('click', dismiss);
+          setTimeout(dismiss, 11000);
+        });
       });
     }
 

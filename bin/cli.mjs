@@ -124,8 +124,25 @@ function uninstall() {
   }
   rmSync(PAYLOAD, { recursive: true, force: true });
   ok('payload removed (' + PAYLOAD + ')');
-  log('\nNote: research-engine state under ~/.pmm-os and ~/.config/last30days is kept;');
-  log('delete those folders yourself if you want a full wipe.');
+
+  // Uninstall used to leave the gateway token sitting in the engine's env file.
+  // A credential should not outlive the thing that issued it.
+  if (existsSync(L30_ENV)) {
+    try {
+      const kept = readEnvFile(L30_ENV).filter(
+        (l) => !GATEWAY_KEYS.some((k) => l.startsWith(k + '='))
+      );
+      const body = kept.join('\n').trim();
+      if (body) { writeFileSync(L30_ENV, body + '\n'); ok('PMM OS token removed from ' + L30_ENV); }
+      else { rmSync(L30_ENV, { force: true }); ok('removed ' + L30_ENV); }
+    } catch { warn('could not clean ' + L30_ENV + ' — delete it by hand'); }
+  }
+
+  log('\nStill on disk (delete for a full wipe):');
+  log('  ' + join(HOME, '.pmm-os') + '   setup marker and logs');
+  log('  ' + L30_CONFIG_DIR + '   research-engine config');
+  log('Packages installed by `npx pmm-os setup` (curl_cffi, instaloader, TikTokApi,');
+  log('browser_cookie3, playwright webkit) are left alone — other tools may use them.');
 }
 
 function setup() {
