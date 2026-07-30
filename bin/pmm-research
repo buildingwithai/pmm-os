@@ -126,6 +126,7 @@ function parseArgs(argv) {
     else if (a === '--no-plan') o.noPlan = true;
     else if (a === '--reason') o.reason = next();
     else if (a === '--json-receipt') o.receiptPath = next();
+    else if (a === '--health-max-age') o.healthMaxAge = Number(next());
     // Accept the wrong spellings explicitly so validateArgs can explain them,
     // rather than dumping them into a generic "unknown flag" list. These are the
     // exact flags that were typed by hand and failed silently.
@@ -180,7 +181,7 @@ function validateArgs(o) {
 }
 
 /** Read the engine's own last-run.json rather than grepping stderr (errors go to stdout). */
-function buildReceipt(o, requested) {
+function buildReceipt(o, requested, notLive = []) {
   const lastRun = join(HOME, '.config', 'last30days', 'last-run.json');
   let run = null;
   try { run = JSON.parse(readFileSync(lastRun, 'utf8')); } catch { /* engine may not have written one */ }
@@ -201,7 +202,8 @@ function buildReceipt(o, requested) {
 
   return { verdict, topic: run.topic || o.topic, depth: o.depth, days: o.days,
            plan: o.planFile ? 'yes' : `no (${o.reason || 'unstated'})`,
-           sources, total, silentZero: silent, excluded: o.exclude, why: o.why };
+           requested, sources, total, silentZero: silent,
+           notLive, excluded: o.exclude, why: o.why };
 }
 
 function renderReceipt(r) {
@@ -219,7 +221,13 @@ function renderReceipt(r) {
     lines.push('The engine\'s "Research quality: N/5 core sources" line does NOT cover these —');
     lines.push('they are scored as bonus, so an unpaid API key reads as a thin topic.');
   }
-  if (r.excluded?.length) lines.push(`excluded:  ${r.excluded.join(', ')} — ${r.why}`);
+  if (r.notLive?.length) {
+    lines.push('');
+    lines.push('not queried (health said not live):');
+    for (const n of r.notLive) lines.push(`  ${n.name.padEnd(14)} ${n.state}  ${n.reason || ''}`);
+    for (const n of r.notLive) if (n.fix) { lines.push(`  fix: ${n.fix}`); break; }
+  }
+  if (r.excluded?.length) lines.push(`excluded by you: ${r.excluded.join(', ')} — ${r.why}`);
   if (r.verdict !== 'CLEAN') {
     lines.push('');
     lines.push('REQUIRED: do not describe this run as complete. State the gap and its cause,');
@@ -260,14 +268,34 @@ if (problems.length) {
 
 const PY = resolvePython();
 const ENGINE = join(ROOT, 'skills', 'last30days', 'scripts', 'last30days.py');
-const args = [ENGINE, opts.topic, `--emit=${opts.emit}`, '--days', String(opts.days)];
+
+// --search is synthesized, never accepted from the caller. It is a hard filter
+// (pipeline.py:385), so a hand-written list silently drops whatever it forgets —
+// which is how the desk doctrine ended up deleting hackernews and polymarket from
+// every text-pain run while the footer still called them healthy.
+const health = await import('./lib/health.mjs');
+let doc = health.loadCached(opts.healthMaxAge ?? 900);
+if (!doc) {
+  log('→ probing source health (no fresh cache)…');
+  doc = await health.probeAll({ python: PY, repoRoot: ROOT });
+}
+const excluded = new Set(opts.exclude.map((s) => ALIAS[s] || s));
+const live = health.liveSources(doc).filter((s) => !excluded.has(s));
+const by = health.summarize(doc);
+
+if (!live.length) {
+  err('✗ no source is live. Run `npx pmm-os connect` before researching.');
+  process.exit(21);
+}
+
+const args = [ENGINE, opts.topic, `--emit=${opts.emit}`, '--days', String(opts.days),
+              '--search', live.join(',')];
 if (opts.depth === 'deep') args.push('--deep');
 if (opts.planFile) args.push('--plan', resolve(opts.planFile));
 
-// Phase 2 replaces this with a live-health-derived --search. Until then we omit it
-// (the engine then uses everything credentials allow) and say so in the receipt.
-log(`→ ${PY} last30days.py "${opts.topic}" --depth ${opts.depth}`
-  + (opts.planFile ? ' --plan ✓' : ' (no plan)'));
+log(`→ ${opts.depth} run over ${live.length} live sources: ${live.join(', ')}`);
+if (by.blocked.length) log(`  not live: ${by.blocked.join(', ')}`);
+if (excluded.size) log(`  excluded by you: ${[...excluded].join(', ')} — ${opts.why}`);
 
 const run = spawnSync(PY, args, {
   stdio: 'inherit',
@@ -276,7 +304,10 @@ const run = spawnSync(PY, args, {
          LAST30DAYS_RESULTS_PER_PAGE: process.env.LAST30DAYS_RESULTS_PER_PAGE || '100' },
 });
 
-const receipt = buildReceipt(opts, []);
+const notLive = Object.entries(doc.platforms)
+  .filter(([n, v]) => !n.startsWith('reach:') && v.state !== 'live' && v.state !== 'unverifiable')
+  .map(([name, v]) => ({ name, state: v.state, reason: v.reason, fix: v.fix }));
+const receipt = buildReceipt(opts, live, notLive);
 log(renderReceipt(receipt));
 try {
   const { writeFileSync, mkdirSync } = await import('node:fs');
