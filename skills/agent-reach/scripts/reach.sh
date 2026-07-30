@@ -11,6 +11,8 @@
 #   reach.sh yt <youtube-url>    # video transcript (yt-dlp)
 #   reach.sh yt-comments <url>   # top comments, keyless (yt-dlp — no SC key needed)
 #   reach.sh bsky <query>        # Bluesky search, keyless, no account
+#   reach.sh tiktok <@user> [n]  # TikTok account's recent videos, keyless
+#   reach.sh tiktok-video <url>  # one video: views/likes/comments/date/transcript
 #   reach.sh ig <username>       # Instagram account timeline, keyless, no login
 #   reach.sh v2ex                # V2EX hot topics (public API)
 #   reach.sh doctor              # what's live (delegates to agent-reach if installed)
@@ -114,16 +116,13 @@ for x in p:
         x["author"]["handle"], (x.get("uri") or "").rsplit("/",1)[-1]))
 '; }
 
-# TikTok — FREE via yt-dlp (tiktok:user). Look up a known creator/competitor account.
-# (Hashtag/keyword SEARCH is not free here — yt-dlp's tiktok:tag is broken; that needs SC.)
-tiktok(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (agent-reach install --env=auto)" >&2; return 127; }
-  local u="${1:?@user or url required}"; case "$u" in http*) ;; @*) u="https://www.tiktok.com/$u";; *) u="https://www.tiktok.com/@$u";; esac
-  yt-dlp --flat-playlist --playlist-end "${2:-15}" -J "$u" 2>/dev/null | python3 -c "import sys,json
-try:
- d=json.load(sys.stdin); ents=d.get('entries') or []
- print(f'# TikTok: {len(ents)} recent posts (free, yt-dlp)')
- for e in ents: print('-', (e.get('title') or e.get('id') or '').replace(chr(10),' ')[:120])
-except Exception: print('# TikTok: no data (private/blocked, or install curl_cffi)')"; }
+# TikTok — FREE, keyless, via yt-dlp. See tt_fetch.py for what the old inline version
+# did: it fetched every engagement number and printed only `title`, which is TikTok's
+# TRUNCATED description — the damaged copy of a field it discarded. Its `except
+# Exception: print('# TikTok: no data')` also turned a block into a benign-looking line.
+tiktok(){ "$(_py_any)" "$SCRIPT_DIR/tt_fetch.py" account "$@"; }
+# One video: views, likes, comments, reposts, date, caption, transcript availability.
+tiktok_video(){ "$(_py_any)" "$SCRIPT_DIR/tt_fetch.py" video "$@"; }
 
 # Instagram accounts — FREE, keyless, no login, no instaloader. See ig_fetch.py for why
 # the instaloader path was deleted: it passed `-- "-$u"`, which instaloader documents as
@@ -131,8 +130,28 @@ except Exception: print('# TikTok: no data (private/blocked, or install curl_cff
 # it turns IG's 403 into "Profile nasa does not exist" — a block laundered into a fact.
 ig(){ "$(_py_any)" "$SCRIPT_DIR/ig_fetch.py" "$@"; }
 
-# TikTok HASHTAG/keyword SEARCH — FREE via TikTokApi (Playwright webkit). No ScrapeCreators.
-tiktok_search(){ "$(_py_with TikTokApi)" "$SCRIPT_DIR/tiktok_search.py" "$@"; }
+# TikTok HASHTAG/keyword SEARCH — measured 0%, and it costs ~90s per attempt to say so.
+# TikTokApi, Playwright and webkit are all installed here and the browser does spawn; the
+# response is empty every time ("They are detecting you're a bot"), 18/18 internal retries
+# across 6 runs. yt-dlp agrees independently — it ships `tiktok:tag` marked CURRENTLY
+# BROKEN, and that route returns {"entries":[null],"playlist_count":0} with EXIT 0, which
+# is how a null result gets counted as a result.
+#
+# So it fails fast instead of burning a minute and a half to fail slow. PMM_OS_TRY_FREE_TT=1
+# runs it anyway — kept because TikTok's detection does change, and the day it starts
+# working again someone should be able to find out cheaply.
+tiktok_search(){
+  if [ "${PMM_OS_TRY_FREE_TT:-}" != "1" ]; then
+    echo "TikTok hashtag/keyword search has no working free path (measured 0/6 runs," >&2
+    echo "18/18 retries: 'TikTok returned an empty response... detecting you're a bot')." >&2
+    echo "  discovery  -> needs SCRAPECREATORS_API_KEY (or: use YouTube/Reddit/Bluesky, all free)" >&2
+    echo "  accounts   -> reach.sh tiktok @user          (free, works)" >&2
+    echo "  one video  -> reach.sh tiktok-video <url>    (free, works)" >&2
+    echo "  re-test it -> PMM_OS_TRY_FREE_TT=1 $0 tiktok-search $*" >&2
+    return 3
+  fi
+  "$(_py_with TikTokApi)" "$SCRIPT_DIR/tiktok_search.py" "$@"
+}
 # Instagram HASHTAG search — FREE via instaloader (needs one-time login, residential IP).
 ig_search(){ "$(_py_with instaloader)" "$SCRIPT_DIR/ig_search.py" "$@"; }
 
@@ -224,6 +243,7 @@ case "${1:-}" in
   yt-comments) shift; yt_comments "$@";;
   bsky|bluesky) shift; bsky "$@";;
   tiktok) shift; tiktok "$@";;
+  tiktok-video) shift; tiktok_video "$@";;
   tiktok-search) shift; tiktok_search "$@";;
   ig|instagram) shift; ig "$@";;
   ig-search) shift; ig_search "$@";;
@@ -233,5 +253,5 @@ case "${1:-}" in
   v2ex) v2ex;;
   doctor) shift; doctor "${1:-}";;
   selftest) selftest;;
-  *) echo "usage: reach.sh {read <url>|gh-search <q> [n]|gh-read <owner/repo>|yt <url>|yt-comments <url> [n]|bsky <query> [n]|tiktok <@user> [n]|tiktok-search <hashtag> [n]|ig <user> [n]|ig-search <hashtag> [n]|social-status|social-setup [x|ig|tiktok|all]|ig-login <user>|v2ex|doctor|selftest}" >&2; exit 2;;
+  *) echo "usage: reach.sh {read <url>|gh-search <q> [n]|gh-read <owner/repo>|yt <url>|yt-comments <url> [n]|bsky <query> [n]|tiktok <@user> [n]|tiktok-video <url>|tiktok-search <hashtag> [n]|ig <user> [n]|ig-search <hashtag> [n]|social-status|social-setup [x|ig|tiktok|all]|ig-login <user>|v2ex|doctor|selftest}" >&2; exit 2;;
 esac

@@ -289,6 +289,20 @@ def check_ig_fetch_selftest() -> None:
           else [(r.stdout + r.stderr).strip()[:400]])
 
 
+def check_tt_fetch_selftest() -> None:
+    """TikTok display-rounds counts above ~10k, so printing them as exact integers
+    invents precision TikTok never measured. Also pins that a failed fetch can never
+    render as an empty account."""
+    t = ROOT / "skills" / "agent-reach" / "scripts" / "test_tt_fetch.py"
+    if not t.is_file():
+        check("TikTok fetch self-check", ["skills/agent-reach/scripts/test_tt_fetch.py is missing"])
+        return
+    r = subprocess.run([sys.executable, str(t)], capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    check("TikTok fetch self-check", [] if r.returncode == 0
+          else [(r.stdout + r.stderr).strip()[:400]])
+
+
 def check_health_synthesis() -> None:
     """--search and INCLUDE_SOURCES are both derived from the health document. If either
     derivation drifts, a run silently loses sources (--search is a HARD filter) or loses
@@ -382,6 +396,7 @@ def main() -> None:
     check_ig_fetch_selftest()
     check_ig_reels_window()
     check_health_synthesis()
+    check_tt_fetch_selftest()
     check_launch_gate()
     check_official_validator()
 

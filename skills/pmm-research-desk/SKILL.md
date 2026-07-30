@@ -80,9 +80,10 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      login/key ones per the agent-reach [SKILL.md](../agent-reach/SKILL.md) (`agent-reach configure`
      + the backends).
      **Free, keyless, no login:** `reach.sh ig <user>` (Instagram accounts) ·
-     `reach.sh tiktok @user` · `reach.sh yt <url>` · `reach.sh yt-comments <url>` ·
-     `reach.sh bsky <query>`. **Free but flaky:** `reach.sh tiktok-search <hashtag>`
-     (TikTokApi+webkit — rerun on empty). **Instagram theme/keyword discovery is the
+     `reach.sh tiktok @user` · `reach.sh tiktok-video <url>` (views/likes/comments/
+     date/transcript) · `reach.sh yt <url>` · `reach.sh yt-comments <url>` ·
+     `reach.sh bsky <query>`. **TikTok hashtag search has no free path** — it exits 3
+     immediately; do not retry it, and do not read that as a thin topic. **Instagram theme/keyword discovery is the
      last30days lane, not reach.sh** — `search_instagram()` hits SC
      `/v2/instagram/reels/search` with a free-text keyword and returns Reels with play
      counts inside the date window. That is the only route with the metric Reels rank

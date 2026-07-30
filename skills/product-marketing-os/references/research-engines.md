@@ -49,7 +49,8 @@ Needs **Python 3.12+**.
 | Reddit, Hacker News, Polymarket, GitHub, web | **free, keyless** | works out of the box |
 | **YouTube** (search + transcripts) | **free, keyless** | via **yt-dlp** — *no API key* (only YouTube *comments* need SC) |
 | **X / Twitter** | **free, just log in** | be logged into **x.com in a browser** (Chrome/Brave/Safari/Firefox) → cookies auto-extracted. Fallbacks: `AUTH_TOKEN`+`CT0` env, or `XAI_API_KEY`/`XQUIK_API_KEY` |
-| **TikTok** — creator (reliable) **and hashtag SEARCH** (flaky) | **free** | `reach.sh tiktok @user` (yt-dlp — reliable). `reach.sh tiktok-search <hashtag>` (TikTokApi + Playwright **webkit** — *verified: returned 30 real #jobsearch videos*, but **probabilistic**: TikTok rate-limits per IP, so it intermittently returns empty — it retries 3×, rerun if it fails). Headless **chromium** is always blocked; headless **webkit** sometimes gets through. For heavy/at-scale TikTok discovery, SC is the reliable fallback. |
+| **TikTok** — accounts + single videos | **free, keyless** | `reach.sh tiktok @user` and `reach.sh tiktok-video <url>` — full engagement, see the table below |
+| **TikTok** — hashtag/keyword SEARCH | **no free path** | `reach.sh tiktok-search` now **fails fast (exit 3)** instead of burning ~90s. Measured 0/6 runs, 18/18 internal retries: `EmptyResponseException — They are detecting you're a bot`, with TikTokApi, Playwright and webkit all correctly installed. yt-dlp agrees independently: it ships **no** TikTok search extractor at all, and `tiktok:tag` is flagged **CURRENTLY BROKEN** upstream. `PMM_OS_TRY_FREE_TT=1` re-tests it, because detection does change. |
 | **Instagram** — **named accounts** | **free, keyless, no login** | `reach.sh ig <username>` — Instagram's own logged-out web endpoint (`/api/v1/feed/user/<u>/username/` with the public `X-IG-App-ID`). Verified 2026-07-30: `@nasa`, `@natgeo`, `@nike` all HTTP 200 with real captions, likes and play counts, no cookies. |
 | **Instagram** — **theme/keyword → Reels** | **paid (SC), and it is the main reason to have the key** | `search_instagram()` in `lib/instagram.py` → SC `GET /v2/instagram/reels/search`. **Free-text keyword**, not just hashtags. Returns `taken_at`, `video_play_count`, `video_view_count`, `like_count`, `comment_count`, caption, `product_type: "clips"`. Server-side `date_posted=last-month`; pages 1–11 (12+ is a documented 400). 1 credit per page. This is the only route in the stack that answers "give me a theme, get the recent Reels" **with play counts** — the metric Reels are actually ranked by. |
 | **Instagram** — **hashtag search, keyless** | **no free path** | Not a rate limit — a wall. All five logged-out routes (web tag page, `/api/v1/tags/`, the GraphQL hashtag query, explore, the `i/api` tag feed) return 302/401/404. Either SC (above), or `reach.sh ig-search` with a one-time `instaloader --login` (residential IP, secondary account, low volume). |
@@ -84,6 +85,34 @@ Three endpoints, all driven automatically by `search_and_enrich()`:
 Comment enrichment is bounded — top 3 posts × 5 comments — so it costs about 3 credits
 per source per run. It is **on by default** as of the `enrichmentSources()` change; see
 below for why it used to be off.
+
+### What a single TikTok video yields
+
+The mirror image of Instagram: **hydration is free, discovery is not.**
+
+| Field | Free (yt-dlp) | Needs SC |
+| --- | --- | --- |
+| view count | ✓ `view_count` | |
+| like count | ✓ `like_count` | |
+| comment **count** | ✓ `comment_count` — exact at all sizes | |
+| repost / share count | ✓ `repost_count` | |
+| post date | ✓ `timestamp` + `upload_date` | |
+| full description | ✓ `description` — **not `title`**, which is TikTok's truncated copy | |
+| spoken transcript | ~ `subtitles` — real timed WEBVTT, but only on videos with an ASR track | for the rest, nobody has it — yt-dlp does no OCR |
+| **comment text** | ✗ | **yes** |
+| **likes per comment** | ✗ | **yes** |
+| author follower count | ✗ (`channel_follower_count` is `None`) | one extra watch-page fetch would get it |
+| **keyword/hashtag discovery** | ✗ | **yes** |
+
+**Counts at or above ~10k are TikTok's own display-rounded values, not telemetry** — 399
+of 400 sampled view counts ended in `00`. `reach.sh tiktok-video` therefore prints
+`~748.0K`, never `747900`; rendering four digits TikTok never measured is invented
+precision. Comment and repost counts are exact at all magnitudes.
+
+Transcripts are **machine ASR** (`isAutoGen=true`) — an NBA clip renders "Shammgod" as
+"Sham God" — so never quote one as verbatim speech. On a non-English video the `eng-US`
+track is a machine **translation** with identical timestamps; `tiktok-video` flags that
+case rather than letting a translation be quoted as a quote.
 
 ### The opt-in that silenced half the paid lane
 
