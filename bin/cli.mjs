@@ -349,6 +349,13 @@ if (cmd === 'install') install();
 else if (cmd === 'update') update();
 else if (cmd === 'uninstall') uninstall();
 else if (cmd === 'setup') setup();
+else if (cmd === 'connect') {
+  const { connect } = await import('./lib/connect.mjs');
+  process.exitCode = await connect({
+    repoRoot: PKG_ROOT,
+    json: process.argv.includes('--json'),
+  });
+}
 else if (cmd === 'doctor') await doctor();
 else if (cmd === 'sync') await cloudSync();
 else if (cmd === 'research-connect') researchConnect();
@@ -360,6 +367,7 @@ else {
   log('  npx pmm-os update      update to this package’s version');
   log('  npx pmm-os uninstall   remove plugin + marketplace + payload');
   log('  npx pmm-os setup       opt-in install of the full research engine stack');
+  log('  npx pmm-os connect     connect + VERIFY your research sources (--json for machines)');
   log('  npx pmm-os doctor      environment + research-engine health (--deep = live smoke test)');
   log('  npx pmm-os sync <url> <token>               push this engagement to PMM OS Cloud');
   log('  npx pmm-os research-connect <url> <token>   connect Pro Research Intelligence (gateway rerank)');

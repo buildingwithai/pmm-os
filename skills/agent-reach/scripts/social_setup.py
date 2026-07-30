@@ -48,7 +48,53 @@ def setup_x():
              if not l.startswith(("AUTH_TOKEN=", "CT0="))]
     lines += [f"AUTH_TOKEN={auth}", f"CT0={ct0}"]
     env.write_text("\n".join(lines) + "\n"); os.chmod(env, 0o600)
-    print(f"  ✓ X: wired from {b} → last30days (token stays local, not printed)."); return True
+    also = _write_agent_reach_x(auth, ct0)
+    where = "last30days" + (" + agent-reach" if also else "")
+    print(f"  ✓ X: wired from {b} → {where} (token stays local, not printed).")
+    return True
+
+
+def _write_agent_reach_x(auth: str, ct0: str) -> bool:
+    """Mirror the X cookies into agent-reach's own config.
+
+    The two lanes read different files: last30days wants AUTH_TOKEN/CT0 in
+    ~/.config/last30days/.env, agent-reach wants twitter_auth_token/twitter_ct0 in
+    ~/.agent-reach/config.yaml. Writing only the first is why X could be live in one
+    lane and 'warn' in the other at the same moment. Load-preserve-merge so nothing
+    else in that file is lost.
+    """
+    p = pathlib.Path.home() / ".agent-reach" / "config.yaml"
+    try:
+        try:
+            import yaml  # noqa
+        except ImportError:
+            return _write_agent_reach_x_plain(p, auth, ct0)
+        import yaml
+        data = {}
+        if p.exists():
+            data = yaml.safe_load(p.read_text()) or {}
+        data["twitter_auth_token"] = auth
+        data["twitter_ct0"] = ct0
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(yaml.safe_dump(data, default_flow_style=False, allow_unicode=True))
+        os.chmod(p, 0o600)
+        return True
+    except Exception:
+        return False
+
+
+def _write_agent_reach_x_plain(p, auth: str, ct0: str) -> bool:
+    """No PyYAML available — keep the other lines and rewrite just our two keys."""
+    try:
+        kept = [l for l in (p.read_text().splitlines() if p.exists() else [])
+                if not l.startswith(("twitter_auth_token:", "twitter_ct0:"))]
+        kept += [f"twitter_auth_token: {auth}", f"twitter_ct0: {ct0}"]
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("\n".join(kept).strip() + "\n")
+        os.chmod(p, 0o600)
+        return True
+    except Exception:
+        return False
 
 
 def setup_ig():
