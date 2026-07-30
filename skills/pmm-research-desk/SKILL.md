@@ -74,7 +74,7 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      The recipe names the entities → flags — always derived from the brief's `{segment}`/`{product}`,
      never a fixed list.
    - **`agent-reach` — use the FULL channel set, not just `reach.sh`'s keyless 4.** The vendored
-     package has **14 channels** (twitter, reddit, linkedin, xiaohongshu, bilibili, xiaoyuzhou,
+     package has **15 channels** (twitter, reddit, facebook, instagram, linkedin, xiaohongshu, bilibili, xiaoyuzhou,
      xueqiu, exa, rss, youtube, v2ex, github, web). Drive the keyless ones via
      [`reach.sh`](../agent-reach/scripts/reach.sh) (`read`/`gh-search`/`yt`/`v2ex`) and the
      login/key ones per the agent-reach [SKILL.md](../agent-reach/SKILL.md) (`agent-reach configure`
@@ -95,10 +95,20 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
    - **Select sources per desk + cap runtime (don't let one source hang the sweep).** Pass
      `--search=<sources>` so each `last30days` run only hits sources that carry signal for
      *that* desk, and wrap every engine call in an outer `timeout`:
-     - **Text-pain desks** (customer, competitive, market, pricing): `--search=reddit,x,github,web`
-       — **exclude `youtube`**. YouTube *transcript* fetching is the slowest + most
-       rate-limited source (yt-dlp hits HTTP 429 / "confirm you're not a bot" and burns the
-       retry budget); it adds little to pain/competitor text research and is what stalls runs.
+     - **`--search` is a HARD FILTER, not a hint.** `pipeline.py:385` intersects the
+       available set with exactly what you name, so *every source you omit is dropped*. It is
+       also the only way to reach `threads`, `pinterest`, `linkedin`, `jobs`, `trustpilot`,
+       `xiaohongshu` and `perplexity`, which are unreachable otherwise regardless of
+       credentials. Enumerate everything you want — never a short list.
+     - **Text-pain desks** (customer, competitive, market, pricing) — exclude only `youtube`:
+       `--search=reddit,x,github,grounding,hackernews,polymarket`.
+       YouTube *transcript* fetching is the slowest + most rate-limited source (yt-dlp hits
+       HTTP 429 / "confirm you're not a bot" and burns the retry budget); it adds little to
+       pain/competitor text research and is what stalls runs.
+       An earlier version of this line read `--search=reddit,x,github,web`, which silently
+       deleted `hackernews` and `polymarket` — two of the five sources the engine's
+       "Research quality: N/5 core sources" footer scores against, and which it reports as
+       healthy regardless. Omission is invisible; be exhaustive.
      - **Saturation is the DEFAULT for every desk's engine calls** — prefix each
        `last30days` run with the PMM-OS env overrides and pass `--deep`:
        `LAST30DAYS_TRANSCRIPT_LIMIT=1000 LAST30DAYS_RESULTS_PER_PAGE=100 python3 … --deep`

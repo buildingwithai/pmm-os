@@ -20,9 +20,25 @@ _py_with(){ local m="$1" p; for p in python3.13 python3.12 python3.11 python3 py
 read_url(){ curl -fsS --max-time 30 -A "$UA" "https://r.jina.ai/${1:?url required}"; }
 gh_search(){ command -v gh >/dev/null || { echo "gh CLI not installed" >&2; return 127; }; gh search repos "${1:?query required}" --sort stars --limit "${2:-10}"; }
 gh_read(){ command -v gh >/dev/null || { echo "gh CLI not installed" >&2; return 127; }; gh repo view "${1:?owner/repo required}" 2>/dev/null; }
+# Distinguishes "this video has no captions" from "yt-dlp failed". Those used to be
+# byte-identical — `|| true` plus discarded stderr meant a 429 rate-limit and a
+# caption-less video both produced empty stdout and exit 0, so a stalled research
+# run looked like a thin topic.
 yt(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (agent-reach install --env=auto)" >&2; return 127; }
-  local d; d="$(mktemp -d)"; yt-dlp --skip-download --write-auto-sub --write-sub --sub-format vtt --sub-langs "en.*,en" -o "$d/%(id)s" "${1:?url required}" >/dev/null 2>&1 || true
-  cat "$d"/*.vtt 2>/dev/null | sed -E '/-->/d;/^WEBVTT/d;/^[0-9]+$/d;/^$/d' | awk '!seen[$0]++'; rm -rf "$d"; }
+  local d err rc; d="$(mktemp -d)"; err="$d/.stderr"
+  yt-dlp --skip-download --write-auto-sub --write-sub --sub-format vtt --sub-langs "en.*,en" \
+    -o "$d/%(id)s" "${1:?url required}" >/dev/null 2>"$err"; rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo "# YouTube: yt-dlp failed (exit $rc) — this is NOT 'no captions'." >&2
+    grep -iE "429|rate.?limit|sign in|bot|unavailable|private|geo" "$err" | head -3 >&2 \
+      || tail -3 "$err" >&2
+    rm -rf "$d"; return "$rc"
+  fi
+  if ! ls "$d"/*.vtt >/dev/null 2>&1; then
+    echo "# YouTube: no captions available for this video (yt-dlp succeeded)."
+    rm -rf "$d"; return 0
+  fi
+  cat "$d"/*.vtt | sed -E '/-->/d;/^WEBVTT/d;/^[0-9]+$/d;/^$/d' | awk '!seen[$0]++'; rm -rf "$d"; }
 v2ex(){ curl -fsS --max-time 15 -A "$UA" "https://www.v2ex.com/api/topics/hot.json"; }
 
 # TikTok — FREE via yt-dlp (tiktok:user). Look up a known creator/competitor account.
@@ -86,8 +102,35 @@ ig_login(){
   instaloader --login="$u"
 }
 
+# ALWAYS --json. Two reasons, both load-bearing:
+#   1. `agent-reach doctor ""` (what `${1:-}` expanded to with no flag) is an argparse
+#      error — exit 2. The command the docs tell agents to run has never worked.
+#   2. Text mode calls _install_skill(), which rewrites ~/.claude/skills/agent-reach/,
+#      ~/.agents/skills/ and ~/.openclaw/skills/ — with the upstream Chinese SKILL.md
+#      unless LANG is English. A health check must not mutate installed skills.
+# --json returns before that side effect. We pretty-print locally instead.
 doctor(){
-  if command -v agent-reach >/dev/null 2>&1; then agent-reach doctor "${1:-}" ; return; fi
+  if command -v agent-reach >/dev/null 2>&1; then
+    local out; out="$(agent-reach doctor --json 2>/dev/null)"
+    if [ -n "$out" ] && command -v python3 >/dev/null 2>&1; then
+      printf '%s' "$out" | python3 -c '
+import json,sys
+try: d=json.load(sys.stdin)
+except Exception: sys.exit(1)
+ICON={"ok":"OK","warn":"! ","off":". ","error":"X "}
+for k,v in sorted(d.items(), key=lambda kv:(kv[1].get("status","z"),kv[0])):
+    st=v.get("status","?")
+    icon=ICON.get(st,"? ")
+    be=v.get("active_backend") or "-"
+    print("  %s %-14s %-6s via %s" % (icon,k,st,be))
+n=sum(1 for v in d.values() if v.get("status")=="ok")
+print("")
+print("  %d/%d channels ok. OpenCLI-backed channels report ok for plumbing only —" % (n,len(d)))
+print("  login state is unknown until the first real call.")
+' && return
+    fi
+    [ -n "$out" ] && { printf '%s\n' "$out"; return; }
+  fi
   echo "agent-reach not installed — keyless probe:"
   command -v gh    >/dev/null && echo "  gh: present"    || echo "  gh: missing"
   command -v yt-dlp>/dev/null && echo "  yt-dlp: present" || echo "  yt-dlp: missing"

@@ -12,7 +12,7 @@ It reports active sources per engine and the free fixes to unlock more.
 ## Full depth = 1:1 parity with the source repos
 
 The engines are vendored **byte-for-byte** (last30days: 66/66 lib modules + engine +
-SKILL.md identical; agent-reach: package identical, all 14 channels). So the depth
+SKILL.md identical; agent-reach: package identical, all 15 channels). So the depth
 *ceiling* equals the original repos. **Parity is a usage discipline, not a code gap** —
 you only reach it by driving the full contract:
 

@@ -79,8 +79,19 @@ def main() -> int:
                 break
             time.sleep(random.uniform(3, 7))  # best practice: 3-7s between requests (on top of RateController)
         out = "\n".join(lines) + "\n"
-        with open(cf, "w", encoding="utf-8") as fh:
-            fh.write(out)
+        # Only cache a result that actually contains posts. `lines` is seeded with a
+        # header, so a throttled call that yields nothing still produced a non-empty
+        # string — which then got served from cache for TTL (6h), poisoning that
+        # hashtag for the rest of the session. A zero-post run is a failure to retry,
+        # not a result to remember.
+        if len(lines) > 1:
+            with open(cf, "w", encoding="utf-8") as fh:
+                fh.write(out)
+        else:
+            sys.stderr.write(
+                "# Instagram #%s: 0 posts — not caching. This is usually throttling or a\n"
+                "# login requirement, not an empty hashtag. Retry, or run `instaloader --login`.\n" % tag
+            )
         sys.stdout.write(out)
         return 0
     except Exception as e:

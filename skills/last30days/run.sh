@@ -24,7 +24,7 @@ if [ -n "$PY" ] && ! ok_py "$PY"; then
 fi
 
 if [ -z "$PY" ]; then
-  for c in python3.14 python3.13 python3.12 python3; do
+  for c in python3.13 python3.12 python3.14 python3; do
     p="$(command -v "$c" 2>/dev/null || true)"
     [ -n "$p" ] && ok_py "$p" && { PY="$p"; break; }
   done
