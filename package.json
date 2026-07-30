@@ -49,7 +49,9 @@
     "LICENSE",
     "PRIVACY.md",
     "THIRD_PARTY_NOTICES.md",
-    "ADAPTED_REPOSITORY_MANIFEST.md"
+    "ADAPTED_REPOSITORY_MANIFEST.md",
+    "!**/__pycache__",
+    "!**/*.pyc"
   ],
   "scripts": {
     "postpack": "echo 'Payload packed. Users install with: npx pmm-os install'",

@@ -174,8 +174,23 @@ def check_skill_count_claims(count: int) -> None:
 def check_npm_payload() -> None:
     bad = [f"package.json files: {p} does not exist"
            for p in load("package.json").get("files", [])
-           if not (ROOT / p.rstrip("/")).exists()]
+           if not p.startswith("!") and not (ROOT / p.rstrip("/")).exists()]
     check("package.json \"files\" paths all exist", bad)
+
+
+def check_tarball_contents() -> None:
+    """`files` overrides .gitignore, so gitignored junk can still ship —
+    65 stale .pyc from the vendored engine went out in 3.0.1 and 3.0.2."""
+    try:
+        r = subprocess.run(["npm", "pack", "--dry-run", "--json", "--ignore-scripts"],
+                           cwd=ROOT, capture_output=True, text=True, timeout=180)
+        entries = [f["path"] for f in json.loads(r.stdout)[0]["files"]]
+    except Exception as exc:
+        print(f"  \033[33m!\033[0m npm payload contents not checked ({type(exc).__name__})")
+        return
+    junk = [e for e in entries
+            if re.search(r"\.pyc$|__pycache__/|\.DS_Store$|(^|/)\.env($|\.)", e)]
+    check(f"npm tarball is clean ({len(entries)} files)", junk[:8])
 
 
 def check_agent_descriptors(skill_names: set[str]) -> None:
@@ -267,6 +282,7 @@ def main() -> None:
     check_routes(names)
     check_skill_count_claims(count)
     check_npm_payload()
+    check_tarball_contents()
     check_agent_descriptors(names)
     check_compiles()
     check_policy_selftest()
