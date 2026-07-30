@@ -11,7 +11,7 @@ You translate customer value, willingness to pay, competitive context, and produ
 1. Read product context and existing pricing notes.
 2. Identify segments, value metric, packaging boundaries, upgrade paths, and objections.
 3. Use `../product-marketing-os/assets/pricing-packaging-brief-template.md` for structured output.
-4. Route monetization execution to `pricing`, `paywalls`, `analytics`, and payment MCPs such as Stripe or Paddle where configured.
+4. Route monetization execution to `pmm-pricing-packaging`, `plg-gtm-strategy`, `post-launch-learning-loop`, and payment MCPs such as Stripe or Paddle where configured.
 5. Include comms and rollout implications for sales, customers, support, and pricing pages.
 
 ## Output
@@ -39,11 +39,11 @@ Apply the [PMM OS output-depth standard](../product-marketing-os/references/outp
 
 Read and apply the deep frameworks below before you produce output — they carry the methodology, templates, and worked examples behind this skill (from the PMM OS framework library). Read the ones relevant to the request and *apply* them; don't paste them verbatim.
 
-- [`pricing-packaging/01-pricing-fundamentals-strategy.md`](../product-marketing-os/references/library/pricing-packaging/references/core/01-pricing-fundamentals-strategy.md) — pricing strategy fundamentals
-- [`pricing-packaging/04-choosing-pricing-model.md`](../product-marketing-os/references/library/pricing-packaging/references/core/04-choosing-pricing-model.md) — pick the pricing model
-- [`pricing-packaging/05-selecting-value-metrics.md`](../product-marketing-os/references/library/pricing-packaging/references/core/05-selecting-value-metrics.md) — choose the value metric
-- [`pricing-packaging/06-packaging-tier-design.md`](../product-marketing-os/references/library/pricing-packaging/references/core/06-packaging-tier-design.md) — design tiers + gating
-- [`pricing-packaging/08-pricing-page-design.md`](../product-marketing-os/references/library/pricing-packaging/references/core/08-pricing-page-design.md) — render it as a pricing page
-- [`pricing-packaging/packaging-decision-framework.md`](../product-marketing-os/references/library/pricing-packaging/templates/packaging-decision-framework.md) — the packaging decision framework
-- [`pricing-packaging/value-metric-selection-worksheet.md`](../product-marketing-os/references/library/pricing-packaging/templates/value-metric-selection-worksheet.md) — value-metric worksheet
+- [`pmm-pricing-packaging-packaging/01-pricing-fundamentals-strategy.md`](../product-marketing-os/references/library/pricing-packaging/references/core/01-pricing-fundamentals-strategy.md) — pricing strategy fundamentals
+- [`pmm-pricing-packaging-packaging/04-choosing-pricing-model.md`](../product-marketing-os/references/library/pricing-packaging/references/core/04-choosing-pricing-model.md) — pick the pricing model
+- [`pmm-pricing-packaging-packaging/05-selecting-value-metrics.md`](../product-marketing-os/references/library/pricing-packaging/references/core/05-selecting-value-metrics.md) — choose the value metric
+- [`pmm-pricing-packaging-packaging/06-packaging-tier-design.md`](../product-marketing-os/references/library/pricing-packaging/references/core/06-packaging-tier-design.md) — design tiers + gating
+- [`pmm-pricing-packaging-packaging/08-pricing-page-design.md`](../product-marketing-os/references/library/pricing-packaging/references/core/08-pricing-page-design.md) — render it as a pricing page
+- [`pmm-pricing-packaging-packaging/packaging-decision-framework.md`](../product-marketing-os/references/library/pricing-packaging/templates/packaging-decision-framework.md) — the packaging decision framework
+- [`pmm-pricing-packaging-packaging/value-metric-selection-worksheet.md`](../product-marketing-os/references/library/pricing-packaging/templates/value-metric-selection-worksheet.md) — value-metric worksheet
 

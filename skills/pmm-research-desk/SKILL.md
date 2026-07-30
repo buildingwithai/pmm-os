@@ -135,7 +135,7 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      triggers a **reformulate-and-retry loop** (up to 3 reformulations per probe, each
      logged with its outcome):
      1. **Quote the buyer's words** — replace your abstraction with verbatims already in
-        the ledger/carry-forward (`"waiting on the data team"`, not `analytics delays`).
+        the ledger/carry-forward (`"waiting on the data team"`, not `post-launch-learning-loop delays`).
      2. **Name entities** — add `--x-handle`/`--x-related` (competitor + creator handles
         harvested from earlier desks), tighten `--subreddits` to the segment's real
         communities, name the product/category exactly.

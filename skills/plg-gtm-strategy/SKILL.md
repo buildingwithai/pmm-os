@@ -178,6 +178,6 @@ Apply the [PMM OS output-depth standard](../product-marketing-os/references/outp
 Read and apply the deep frameworks below before you produce output — they carry the methodology, templates, and worked examples behind this skill (from the PMM OS framework library). Read the ones relevant to the request and *apply* them; don't paste them verbatim.
 
 - [`strategic-thinking/02-strategic-analysis-frameworks.md`](../product-marketing-os/references/library/strategic-thinking/core/02-strategic-analysis-frameworks.md) — analysis frameworks for PLG bets
-- [`pricing-packaging/product-led-growth-monetization.md`](../product-marketing-os/references/library/pricing-packaging/references/advanced/product-led-growth-monetization.md) — PLG monetization
-- [`pricing-packaging/freemium-free-trial-strategies.md`](../product-marketing-os/references/library/pricing-packaging/references/advanced/freemium-free-trial-strategies.md) — freemium/trial model design
+- [`pmm-pricing-packaging-packaging/product-led-growth-monetization.md`](../product-marketing-os/references/library/pricing-packaging/references/advanced/product-led-growth-monetization.md) — PLG monetization
+- [`pmm-pricing-packaging-packaging/freemium-free-trial-strategies.md`](../product-marketing-os/references/library/pricing-packaging/references/advanced/freemium-free-trial-strategies.md) — freemium/trial model design
 

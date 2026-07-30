@@ -152,6 +152,23 @@ def check_skills() -> tuple[int, set[str]]:
     return len(names), names
 
 
+def check_skill_crossrefs(skill_names: set[str]) -> None:
+    """SKILL.md files told the model to use 16 skills that were never in this
+    plugin, and pointed at an MCP server that no longer exists. Both silently
+    degrade every run, so both are assertions now."""
+    bad = []
+    prose_placeholders = {"candidate", "path", "arguments"}
+    for md in sorted((ROOT / "skills").glob("*/SKILL.md")):
+        text = md.read_text(encoding="utf-8")
+        for m in re.finditer(r"\$([a-z][a-z0-9-]{2,})\b", text):
+            name = m.group(1)
+            if name not in skill_names and name not in prose_placeholders:
+                bad.append(f"{md.parent.name}: routes to ${name}, which has no skills/{name}/SKILL.md")
+        if re.search(r"marketing-os` MCP|mcp__marketing-os|the `marketing-os` (server|MCP)", text):
+            bad.append(f"{md.parent.name}: references the removed marketing-os MCP server")
+    check("SKILL.md cross-references resolve", sorted(set(bad)))
+
+
 def check_routes(skill_names: set[str]) -> None:
     src = (ROOT / "hooks" / "user_prompt_submit.py").read_text(encoding="utf-8")
     body = src.split("ROUTES = [", 1)[1].split("\n]", 1)[0]
@@ -280,6 +297,7 @@ def main() -> None:
     check_hook_targets()
     count, names = check_skills()
     check_routes(names)
+    check_skill_crossrefs(names)
     check_skill_count_claims(count)
     check_npm_payload()
     check_tarball_contents()

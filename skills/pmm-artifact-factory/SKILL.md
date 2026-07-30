@@ -86,7 +86,7 @@ If the deliverable is weak, revise it before presenting it as final.
 
 ## v5 expanded deliverables
 
-The artifact factory can now include `battlecard.md`, `positioning.md`, `pricing-analysis.md`, `account-research.md`, and `osp-value-map.md` in addition to campaign briefs, docs, slides, CSVs, image prompts, PRDs, prototypes, PLG metrics, and post-launch readouts.
+The artifact factory can now include `battlecard.md`, `positioning.md`, `pmm-pricing-packaging-analysis.md`, `account-research.md`, and `osp-value-map.md` in addition to campaign briefs, docs, slides, CSVs, image prompts, PRDs, prototypes, PLG metrics, and post-launch readouts.
 
 ## Hand off to
 

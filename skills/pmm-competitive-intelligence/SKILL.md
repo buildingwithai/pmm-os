@@ -12,7 +12,7 @@ You create useful competitive intelligence for marketing and sales.
 2. Separate direct competitors, indirect alternatives, and status quo alternatives.
 3. Identify when each competitor wins and when this product wins.
 4. Create battlecards using `../product-marketing-os/assets/battlecard-template.md`.
-5. Route comparison pages to `competitors` and deeper research to `competitor-profiling`.
+5. Route comparison pages to `pmm-competitive-intelligence` and deeper research to `pmm-competitive-intelligence`.
 
 ## Output
 

@@ -17,7 +17,7 @@ You produce competitive pricing analysis, packaging reviews, value-metric analys
 
 ## Output
 
-Create `pricing-analysis-[market].md` with:
+Create `pmm-pricing-packaging-analysis-[market].md` with:
 
 - Pricing landscape table
 - Value metric distribution
@@ -52,9 +52,9 @@ Apply the [PMM OS output-depth standard](../product-marketing-os/references/outp
 
 Read and apply the deep frameworks below before you produce output — they carry the methodology, templates, and worked examples behind this skill (from the PMM OS framework library). Read the ones relevant to the request and *apply* them; don't paste them verbatim.
 
-- [`pricing-packaging/02-willingness-to-pay-research.md`](../product-marketing-os/references/library/pricing-packaging/references/core/02-willingness-to-pay-research.md) — WTP research methods (VanWestendorp etc.)
-- [`pricing-packaging/03-competitive-market-analysis.md`](../product-marketing-os/references/library/pricing-packaging/references/core/03-competitive-market-analysis.md) — competitive pricing analysis
-- [`pricing-packaging/09-pricing-experimentation-testing.md`](../product-marketing-os/references/library/pricing-packaging/references/core/09-pricing-experimentation-testing.md) — test pricing changes safely
-- [`pricing-packaging/12-monitoring-optimization-metrics.md`](../product-marketing-os/references/library/pricing-packaging/references/core/12-monitoring-optimization-metrics.md) — the metrics to watch
-- [`pricing-packaging/competitive-pricing-audit-template.md`](../product-marketing-os/references/library/pricing-packaging/templates/competitive-pricing-audit-template.md) — competitive audit template
+- [`pmm-pricing-packaging-packaging/02-willingness-to-pay-research.md`](../product-marketing-os/references/library/pricing-packaging/references/core/02-willingness-to-pay-research.md) — WTP research methods (VanWestendorp etc.)
+- [`pmm-pricing-packaging-packaging/03-competitive-market-analysis.md`](../product-marketing-os/references/library/pricing-packaging/references/core/03-competitive-market-analysis.md) — competitive pricing analysis
+- [`pmm-pricing-packaging-packaging/09-pricing-experimentation-testing.md`](../product-marketing-os/references/library/pricing-packaging/references/core/09-pricing-experimentation-testing.md) — test pricing changes safely
+- [`pmm-pricing-packaging-packaging/12-monitoring-optimization-metrics.md`](../product-marketing-os/references/library/pricing-packaging/references/core/12-monitoring-optimization-metrics.md) — the metrics to watch
+- [`pmm-pricing-packaging-packaging/competitive-pricing-audit-template.md`](../product-marketing-os/references/library/pricing-packaging/templates/competitive-pricing-audit-template.md) — competitive audit template
 

@@ -27,8 +27,8 @@ Do not produce an isolated deliverable when the next useful artifact is obvious.
    - Product lifecycle: `product-lifecycle-os`
    - PRD and prototypes: `prd-prototype-factory`
    - Post-launch learning: `post-launch-learning-loop`
-4. Use existing Marketing Skills for execution depth: `copywriting`, `cro`, `analytics`, `ads`, `emails`, `sales-enablement`, `launch`, `pricing`, `competitors`, `customer-research`, and `revops`.
-5. Use the `marketing-os` MCP server to fetch references, templates, launch tiers, naming scorecards, and MCP recommendations.
+4. Use existing skills for execution depth: `pmm-content-writer`, `pmm-message-market-fit`, `post-launch-learning-loop`, `pmm-campaign-brief`, `pmm-feature-announcement`, `sales-enablement`, `pmm-go-to-market`, `pmm-pricing-packaging`, `pmm-competitive-intelligence`, `pmm-customer-research`, and `gtm-signal-campaign`.
+5. Templates, canvases, scorecards, and launch-tier definitions live on disk under `assets/` and `references/` in this skill — read them directly.
 
 ## Core workflow chain
 

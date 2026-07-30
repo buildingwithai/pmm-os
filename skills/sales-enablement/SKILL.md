@@ -34,7 +34,7 @@ Save the artifact the request calls for (one page each, per the deliverable stan
 - `talk-track-[moment].md` — trigger/when to use, opener in buyer language, 2–3 core points mapped to message pillars, one proof per claim, a check question to hand the mic back, objection pivots, the CTA — per the talk-track template
 - `sales-play-[name].md` — objective, trigger conditions (stage, persona, signal), word-for-word script with variants, real call/email examples, red flags, follow-up content
 - `demo-narrative-[product].md` — Tell-Show-Tell segments tied to persona pains and business outcomes
-- `sales-playbook-[segment].md`, `enablement-charter.md`, `enablement-business-case.md`, `onboarding-ramp-plan.md`, `enablement-metrics.md` — per the matching library chapters
+- `sales-playbook-[segment].md`, `enablement-charter.md`, `enablement-business-case.md`, `plg-gtm-strategy-ramp-plan.md`, `enablement-metrics.md` — per the matching library chapters
 - `methodology-rollout-[name].md` — the chosen methodology mapped to this product's fields, questions, and exit criteria, with the adoption plan
 
 Every artifact carries an owner and a last-verified date, and flags every unsourced claim.

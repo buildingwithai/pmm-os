@@ -73,9 +73,9 @@ If actual metrics are unavailable, produce a measurement recovery plan instead o
 ## Escalation rules
 
 - If activation is weak, call `plg-gtm-strategy` for AHA moment, time-to-value, and onboarding work.
-- If conversion is weak, call `pmm-message-market-fit`, `cro`, or `pmm-campaign-brief` depending on the surface.
+- If conversion is weak, call `pmm-message-market-fit`, or `pmm-campaign-brief` depending on the surface.
 - If sales feedback is weak, call `sales-enablement`, `pmm-competitive-intelligence`, or `pmm-coach`.
-- If AI visibility is weak, call `pmm-aeo-geo` and `ai-seo`.
+- If AI visibility is weak, call `pmm-aeo-geo` and `pmm-aeo-geo`.
 - If product adoption is weak because the product is unclear, call `prd-prototype-factory` and `product-lifecycle-os`.
 
 ## MCP usage

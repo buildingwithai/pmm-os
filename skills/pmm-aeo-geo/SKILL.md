@@ -77,8 +77,8 @@ You help PMMs understand and improve how AI assistants describe, cite, compare, 
 
 ## Adjacent skills
 
-- Use `ai-seo` for content optimization.
-- Use `schema` for structured data.
+- Use `pmm-aeo-geo` for content optimization.
+- Use `pmm-aeo-geo` for structured data.
 - Use `pmm-messaging-positioning` if category framing is wrong.
 - Use `pmm-competitive-intelligence` if competitors are over-cited.
 

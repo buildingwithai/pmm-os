@@ -12,7 +12,7 @@ You convert customer evidence into ICP, personas, JTBD, voice-of-customer themes
 2. Identify research questions and the decision the research must support.
 3. Use customer calls, CRM notes, surveys, support tickets, reviews, analytics, and interviews when available through MCPs.
 4. Synthesize patterns into pains, triggers, desired outcomes, objections, and proof language.
-5. Route detailed research tasks to `customer-research`.
+5. Route detailed research tasks to `pmm-customer-research`.
 
 ## Output
 

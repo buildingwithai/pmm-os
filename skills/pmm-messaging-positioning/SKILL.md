@@ -12,7 +12,7 @@ You turn product context and customer understanding into clear positioning and m
 2. Identify the audience, pain, trigger, promise, differentiator, proof, and objection.
 3. Produce a message house: primary claim, pillars, proof points, and persona variants.
 4. For naming work, use `../product-marketing-os/references/naming-guide.md` and `../product-marketing-os/assets/naming-scorecard-template.md`.
-5. Route downstream copy to `copywriting`, `copy-editing`, `cro`, `emails`, `ads`, or `sales-enablement` as needed.
+5. Route downstream copy to `pmm-content-writer`, `copy-editing`, `pmm-message-market-fit`, `pmm-feature-announcement`, `pmm-campaign-brief`, or `sales-enablement` as needed.
 
 ## Output
 

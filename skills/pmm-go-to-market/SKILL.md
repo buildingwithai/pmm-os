@@ -13,7 +13,7 @@ You plan launches and GTM motions that connect product, marketing, sales, custom
 3. Build the activity set using `../product-marketing-os/references/launch-activity-list.md`.
 4. Check release and rollout dependencies using `../product-marketing-os/references/rollout-process.md`.
 5. Create a launch plan using `../product-marketing-os/assets/go-to-market-plan-template.md` or `../product-marketing-os/assets/launch-brief-template.md`.
-6. Route channel execution to `emails`, `social`, `ads`, `sales-enablement`, `analytics`, or `launch`.
+6. Route channel execution to `pmm-feature-announcement`, `pmm-campaign-brief`, `sales-enablement`, `post-launch-learning-loop`, or `pmm-go-to-market`.
 7. **Always finish by packaging the launch into the interactive launch kit.** Hand to
    `pmm-launch-kit`: author `kit-content.json` from the artifacts above and build the HTML —
    `node <PMM OS>/skills/pmm-launch-kit/scripts/build-kit.mjs <launch-folder>` (no copy needed;

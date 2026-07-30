@@ -16,7 +16,7 @@ You scope a release into a tiered launch brief: workstreams, timeline, messaging
 
 ## Output
 
-Create `launch-brief-[product].md` with:
+Create `pmm-go-to-market-brief-[product].md` with:
 
 - Executive summary
 - Strategic context and why now
