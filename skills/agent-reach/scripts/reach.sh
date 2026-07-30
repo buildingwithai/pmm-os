@@ -17,6 +17,31 @@ UA="agent-reach/1.0 (pmm-os)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _py_with(){ local m="$1" p; for p in python3.13 python3.12 python3.11 python3 python; do command -v "$p" >/dev/null 2>&1 && "$p" -c "import $m" 2>/dev/null && { echo "$p"; return 0; }; done; echo python3; return 1; }
 
+# instaloader ships a console script into a per-user bin dir that is often NOT on
+# PATH (verified: module 4.15.1 imports fine while `command -v instaloader` fails).
+# Checking only for the binary reported "not installed" for a working install and
+# sent people to pip for something they already had. Prefer the CLI, fall back to
+# the module entry point, which is the same code.
+_insta() {
+  # Prefer the console script; fall back to the module, which is the same code.
+  if command -v instaloader >/dev/null 2>&1; then instaloader "$@"; return $?; fi
+  local p
+  for p in python3.13 python3.12 python3 python; do
+    if command -v "$p" >/dev/null 2>&1 && "$p" -c 'import instaloader' 2>/dev/null; then
+      "$p" -m instaloader "$@"; return $?
+    fi
+  done
+  return 127
+}
+_has_insta() {
+  command -v instaloader >/dev/null 2>&1 && return 0
+  local p
+  for p in python3.13 python3.12 python3 python; do
+    command -v "$p" >/dev/null 2>&1 && "$p" -c 'import instaloader' 2>/dev/null && return 0
+  done
+  return 1
+}
+
 read_url(){ curl -fsS --max-time 30 -A "$UA" "https://r.jina.ai/${1:?url required}"; }
 gh_search(){ command -v gh >/dev/null || { echo "gh CLI not installed" >&2; return 127; }; gh search repos "${1:?query required}" --sort stars --limit "${2:-10}"; }
 gh_read(){ command -v gh >/dev/null || { echo "gh CLI not installed" >&2; return 127; }; gh repo view "${1:?owner/repo required}" 2>/dev/null; }
@@ -55,10 +80,10 @@ except Exception: print('# TikTok: no data (private/blocked, or install curl_cff
 # Instagram — free via instaloader, but IG blocks datacenter IPs + rate-limits, so this
 # only works on a LOCAL/residential IP (never a cloud/Vercel backend), ideally logged in.
 ig(){ local u="${1:?user or url required}"; u="${u#@}"
-  if command -v instaloader >/dev/null 2>&1; then
+  if _has_insta; then
     echo "# Instagram @$u via instaloader (local residential IP; log in via 'instaloader --login=USER' for reliability)"
-    instaloader --no-pictures --no-videos --no-metadata-json --quiet --count "${2:-12}" --post-filter="True" -- "-$u" 2>&1 | head -25 || \
-      instaloader --no-pictures --no-videos --quiet --count "${2:-12}" "$u" 2>&1 | head -25
+    _insta --no-pictures --no-videos --no-metadata-json --quiet --count "${2:-12}" --post-filter="True" -- "-$u" 2>&1 | head -25 || \
+      _insta --no-pictures --no-videos --quiet --count "${2:-12}" "$u" 2>&1 | head -25
   else
     echo "instaloader not installed (the free IG tool): pip install instaloader. NOTE: IG blocks datacenter IPs and rate-limits hard — run on a LOCAL residential IP, not a cloud/Vercel backend, and log in for anything beyond a few requests." >&2; return 127
   fi; }
@@ -94,12 +119,12 @@ social_status(){
 # One-time Instagram login. instaloader prompts for YOUR password (it goes to instaloader and
 # is stored as an encrypted session — never to PMM OS). The USER runs this in their own terminal.
 ig_login(){
-  command -v instaloader >/dev/null 2>&1 || { echo "instaloader not installed — run setup.sh first." >&2; return 127; }
+  _has_insta || { echo "instaloader not installed — run setup.sh first." >&2; return 127; }
   local u="${1:?Usage: reach.sh ig-login YOUR_IG_USERNAME}"
   echo "Signing into Instagram as @$u. instaloader will prompt for your password (handled by"
   echo "instaloader directly, stored as an encrypted session — PMM OS never sees it)."
   echo "Run this on a residential IP; a secondary account is recommended."
-  instaloader --login="$u"
+  _insta --login="$u"
 }
 
 # ALWAYS --json. Two reasons, both load-bearing:
