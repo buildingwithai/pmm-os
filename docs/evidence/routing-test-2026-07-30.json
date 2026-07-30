@@ -1,0 +1,273 @@
+{
+ "total": 20,
+ "exact": 20,
+ "viaRunnerUp": 0,
+ "accuracy": "100%",
+ "accuracyWithRunnerUp": "100%",
+ "misroutes": [],
+ "lowConfidence": [
+  "who should we be selling to?",
+  "our homepage copy is not converting",
+  "what are people saying about AI note takers on reddit",
+  "what should sales say when they hear \"we already use X\""
+ ],
+ "all": [
+  {
+   "prompt": "take Plotline to market",
+   "chosen": "product-marketing-os",
+   "runnerUp": "pmm-go-to-market",
+   "why": "\"take to market\" maps to the description's \"default PMM/GTM workflow orchestrator... end-to-end marketing work\" with no narrower artifact named, and the request is broad rather than a single launch doc.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "product-marketing-os",
+    "pmm-research-brief",
+    "pmm-go-to-market"
+   ]
+  },
+  {
+   "prompt": "I need a battlecard for Vista Analytics before a call tomorrow",
+   "chosen": "pmm-battlecard",
+   "runnerUp": "pmm-competitive-intelligence",
+   "why": "The word \"battlecard\" plus a named competitor and an imminent sales call match \"sales-ready, one-page competitive battlecard from a competitor name... talk tracks, objection handling\".",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "pmm-battlecard"
+   ]
+  },
+  {
+   "prompt": "who should we be selling to?",
+   "chosen": "pmm-icp-definition",
+   "runnerUp": "pmm-personas",
+   "why": "\"who should we sell to\" is the fit-criteria/target-account question the description covers with \"fit criteria, anti-ICP... account tiers\", rather than a buyer-persona portrait.",
+   "confident": false,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "pmm-icp-definition",
+    "pmm-personas",
+    "pmm-customer-research"
+   ]
+  },
+  {
+   "prompt": "our homepage copy is not converting",
+   "chosen": "pmm-message-market-fit",
+   "runnerUp": "pmm-positioning-audit",
+   "why": "The description explicitly names \"website copy\" and \"test, score, audit, or improve messaging... persona resonance\", which is exactly a non-converting homepage diagnosis.",
+   "confident": false,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "pmm-message-market-fit",
+    "pmm-competitive-landing-page",
+    "pmm-content-writer"
+   ]
+  },
+  {
+   "prompt": "how should we price this?",
+   "chosen": "pmm-pricing-packaging",
+   "runnerUp": "pmm-pricing-analysis",
+   "why": "\"how should we price\" is a design/recommendation ask, matching \"DESIGN pricing and packaging: pricing models, packaging tiers, value metrics\" rather than benchmarking existing pricing.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "pmm-pricing-packaging",
+    "pmm-pricing-analysis"
+   ]
+  },
+  {
+   "prompt": "what are people saying about AI note takers on reddit",
+   "chosen": "agent-reach",
+   "runnerUp": "last30days",
+   "why": "Its description explicitly names both the trigger phrase \"see what people say about X\" and \"MUST USE when user mentions any platform... Reddit\".",
+   "confident": false,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "last30days",
+    "pmm-research-desk",
+    "agent-reach",
+    "pmm-voc-synthesis"
+   ]
+  },
+  {
+   "prompt": "write the launch announcement for our new export feature",
+   "chosen": "pmm-feature-announcement",
+   "runnerUp": "pmm-content-writer",
+   "why": "Description opens with \"When the user wants to announce a feature\" and covers launch announcement copy for a feature.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "pmm-feature-announcement"
+   ]
+  },
+  {
+   "prompt": "competitor just dropped their price 40%, what do we say",
+   "chosen": "pmm-adaptive-messaging",
+   "runnerUp": "pmm-battlecard",
+   "why": "Description names \"a competitor... pricing change... that needs talking points NOW\" \u2014 the urgent reaction case.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "pmm-adaptive-messaging"
+   ]
+  },
+  {
+   "prompt": "review my positioning, be harsh",
+   "chosen": "pmm-positioning-audit",
+   "runnerUp": "pmm-coach",
+   "why": "Description says \"Evaluate and score EXISTING positioning... use this to diagnose positioning you already have\", which is exactly a harsh review of existing positioning.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "pmm-coach",
+    "pmm-positioning-audit"
+   ]
+  },
+  {
+   "prompt": "turn all of this into slides and docs I can send",
+   "chosen": "pmm-artifact-factory",
+   "runnerUp": "pmm-launch-kit",
+   "why": "Description literally lists \"slides, docs... export-ready artifacts\" and the example request \"generate docs and slides\" / \"turn this plan into files\".",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "pmm-artifact-factory",
+    "pmm-launch-kit"
+   ]
+  },
+  {
+   "prompt": "I want to run the April Dunford exercise",
+   "chosen": "pmm-positioning-exercise",
+   "runnerUp": "pmm-positioning-audit",
+   "why": "The description literally says \"Run a structured April Dunford positioning exercise\" \u2014 an exact name-and-verb match.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "pmm-positioning-exercise"
+   ]
+  },
+  {
+   "prompt": "we need to show up when people ask ChatGPT about our category",
+   "chosen": "pmm-aeo-geo",
+   "runnerUp": "osp-content-optimizer",
+   "why": "\"ChatGPT mentions\", \"AI search visibility\", and \"answer-engine optimization\" map directly to showing up in ChatGPT answers.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "pmm-aeo-geo"
+   ]
+  },
+  {
+   "prompt": "our free users never upgrade",
+   "chosen": "plg-gtm-strategy",
+   "runnerUp": "pmm-pricing-packaging",
+   "why": "Free-to-paid conversion is the core of \"product-led growth... activation, time to value, PQL/PQA models, trial strategy, pricing, churn, expansion\".",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "plg-gtm-strategy"
+   ]
+  },
+  {
+   "prompt": "write a cold email to this account",
+   "chosen": "pmm-outreach",
+   "runnerUp": "gtm-account-research",
+   "why": "\"Draft founder-led or PMM-led outreach, cold email... grounded in positioning, persona, and account context\" matches word for word.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "pmm-outreach",
+    "gtm-account-research"
+   ]
+  },
+  {
+   "prompt": "the launch shipped last month, did it work?",
+   "chosen": "post-launch-learning-loop",
+   "runnerUp": "pmm-coach",
+   "why": "\"post-launch analysis, impact analysis... launch retrospective... or to decide what to do after launch\" is exactly the question being asked.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "post-launch-learning-loop"
+   ]
+  },
+  {
+   "prompt": "package everything into one clickable thing I can share",
+   "chosen": "pmm-launch-kit",
+   "runnerUp": "pmm-artifact-factory",
+   "why": "\"clickable\" and \"share\" map directly to \"clickable PMM/GTM dashboard, a shareable strategy hub, or to package launch docs into one app-like file\".",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "pmm-launch-kit",
+    "pmm-artifact-factory"
+   ]
+  },
+  {
+   "prompt": "write a 2000 word guide on usage-based pricing",
+   "chosen": "pmm-content-writer",
+   "runnerUp": "pmm-pricing-analysis",
+   "why": "It is the only skill that names a \"guide\" as long-form content and promises to hit \"an explicit word and depth budget\" rather than an outline.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "pmm-content-writer"
+   ]
+  },
+  {
+   "prompt": "what should sales say when they hear \"we already use X\"",
+   "chosen": "sales-enablement",
+   "runnerUp": "pmm-battlecard",
+   "why": "\"what should sales say\" to an incumbent objection matches \"objection-handling cards (VARS), talk tracks and sales plays\".",
+   "confident": false,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "sales-enablement",
+    "pmm-battlecard",
+    "pmm-competitive-intelligence"
+   ]
+  },
+  {
+   "prompt": "build me a PRD and a clickable prototype",
+   "chosen": "prd-prototype-factory",
+   "runnerUp": "product-lifecycle-os",
+   "why": "The description literally lists \"a PRD\" and \"HTML prototype/prototype brief\" as its triggers.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": true,
+   "accept": [
+    "prd-prototype-factory",
+    "product-lifecycle-os"
+   ]
+  },
+  {
+   "prompt": "score these 200 accounts against our ICP",
+   "chosen": "gtm-icp-scoring",
+   "runnerUp": "pmm-icp-definition",
+   "why": "\"Score accounts against ICP\" is a near-verbatim match, and pmm-icp-definition explicitly redirects scoring here.",
+   "confident": true,
+   "hit": true,
+   "runnerUpHit": false,
+   "accept": [
+    "gtm-icp-scoring"
+   ]
+  }
+ ]
+}

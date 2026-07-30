@@ -63,6 +63,19 @@ metadata:
       - clawhub
 ---
 
+## Running it (Python resolution)
+
+Use the wrapper, not a bare `python3`:
+
+```bash
+bash skills/last30days/run.sh "<topic>" --quick --emit compact
+```
+
+The engine needs Python 3.12+. Stock macOS ships 3.9, so a bare `python3` call prints
+"requires Python 3.12+" and stops even when a newer Python is already present in uv or
+Homebrew. `run.sh` resolves one (L30D_PYTHON → python3.14/13/12 on PATH → uv-managed →
+`uv python install`) and execs the engine. Verified on a machine whose `python3` is 3.9.6.
+
 # STEP 0: STALE-CLONE SELF-CHECK — RUN BEFORE READING BELOW
 
 Before reading anything else in this file, check whether you loaded SKILL.md from the one known stale-clone location: Claude Code's marketplaces directory.
