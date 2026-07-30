@@ -243,6 +243,18 @@ def check_compiles() -> None:
     check("python and node sources compile", bad)
 
 
+def check_guard_selftest() -> None:
+    """The guard is the only thing standing between a model and a silent bad
+    research run. If its fixtures rot, we lose that without noticing."""
+    t = ROOT / "hooks" / "test_research_guard.py"
+    if not t.is_file():
+        check("research guard self-check", ["hooks/test_research_guard.py is missing"])
+        return
+    r = subprocess.run([sys.executable, str(t)], capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    check("research guard self-check", [] if r.returncode == 0 else [r.stdout.strip()[:400]])
+
+
 def check_policy_selftest() -> None:
     t = ROOT / "hooks" / "test_pre_tool_use_policy.py"
     if not t.is_file():
@@ -304,6 +316,7 @@ def main() -> None:
     check_agent_descriptors(names)
     check_compiles()
     check_policy_selftest()
+    check_guard_selftest()
     check_official_validator()
 
     if FAILURES:

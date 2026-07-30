@@ -46,6 +46,12 @@
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks/pre_tool_use_policy.py || exit 0",
             "timeout": 20,
             "statusMessage": "Checking marketing tool policy"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks/research_guard.py || exit 0",
+            "timeout": 20,
+            "statusMessage": "Checking research invocation"
           }
         ]
       }

@@ -1,0 +1,104 @@
+{
+  "$comment": [
+    "The single source of truth for how PMM OS's research engines may be invoked.",
+    "Read by BOTH hooks/research_guard.py (the enforcer) and bin/lib/invocation-contract.mjs",
+    "(the wrapper's validator), so the hook's diagnosis and the wrapper's validation can never",
+    "disagree. hooks/test_engine_contract_parity.py asserts they agree across every fixture.",
+    "",
+    "Every rule here exists because the corresponding mistake was actually made:",
+    "  invented-flags   : `--sources reddit,hackernews --limit 6` -> usage + exit 2, skimmed past",
+    "  quick-on-research: `--quick` returned 5 items from 2 sources; --deep returned 129 from 6",
+    "  missing-plan     : LAW 7 says --plan is mandatory and NOTHING enforces it (exit 0 + a banner)"
+  ],
+  "version": 1,
+  "sanctioned": {
+    "binary": "pmm-research",
+    "usage": "\"$CLAUDE_PLUGIN_ROOT/bin/pmm-research\" last30days \"TOPIC\" --depth deep --plan-file \"$QUERY_PLAN_FILE\""
+  },
+  "$comment_fingerprints": [
+    "pmm-research is fingerprinted too, on purpose. Going through the wrapper must not",
+    "launder a bad flag: `pmm-research last30days x --quick` is still wrong and must still",
+    "be caught. Without this entry the guard skipped wrapper calls entirely."
+  ],
+  "fingerprints": [
+    "last30days\\.py",
+    "skills/last30days/run\\.sh",
+    "agent-reach/scripts/reach\\.sh",
+    "(?<![\\w/-])reach\\.sh(?![\\w-])",
+    "(?<![\\w/-])agent-reach(?![\\w-])",
+    "(?<![\\w/-])pmm-research(?![\\w-])"
+  ],
+  "sanctioned_pattern": "(?<![\\w/-])pmm-research(?![\\w-])",
+  "inert_allow": [
+    "--help",
+    "-h",
+    "--version",
+    "--welcome",
+    "--preflight",
+    "--diagnose",
+    "doctor --json",
+    "social-status",
+    "selftest"
+  ],
+  "escape_hatch_env": "PMM_OS_GUARD=off",
+  "diagnostics": [
+    {
+      "id": "invented-flags",
+      "match": "(?<![\\w-])--(sources|limit|source|max-results|num|count|format|out)(?![\\w-])",
+      "says": "--{1} is not a flag on this engine. Source selection is --search (a comma list of CANONICAL names) and depth is --deep. Run `pmm-research last30days --help` rather than guessing."
+    },
+    {
+      "id": "quick-on-research",
+      "match": "(?<![\\w-])--quick(?![\\w-])",
+      "says": "--quick truncates your plan to ONE subquery (planner.py:273) and caps to 2 sources. Measured on one topic: --quick = 5 items / 2 sources, --deep + --plan = 129 items / 6 sources. Use --depth deep."
+    },
+    {
+      "id": "emit-md",
+      "match": "--emit[= ]md(?![\\w-])",
+      "says": "--emit md is a debugging mode and is disallowed as the primary flow (SKILL.md PRECONDITION GATE). Use compact."
+    },
+    {
+      "id": "bash-lc-wrapper",
+      "match": "(bash|zsh|sh)\\s+-lc\\s+['\"].*last30days",
+      "says": "Do not wrap the engine in `bash -lc '...'` — LAW 7 forbids it because the apostrophes in a heredoc plan break. Run the command directly."
+    },
+    {
+      "id": "raw-engine",
+      "match": "last30days\\.py",
+      "says": "raw engine path. Direct invocation skips Python resolution, live source health, --search synthesis, and the post-run receipt."
+    },
+    {
+      "id": "raw-reach",
+      "match": "reach\\.sh|(?<![\\w/-])agent-reach(?![\\w-])",
+      "says": "raw agent-reach path. Go through the wrapper so the call is health-checked and recorded."
+    }
+  ],
+  "deny_template": [
+    "BLOCKED by PMM OS: the research engines are only invocable through `pmm-research`.",
+    "",
+    "Run this instead (substitute TOPIC; keep every flag):",
+    "",
+    "  \"$CLAUDE_PLUGIN_ROOT/bin/pmm-research\" last30days \"TOPIC\" \\",
+    "    --depth deep \\",
+    "    --plan-file \"$QUERY_PLAN_FILE\"",
+    "",
+    "Write $QUERY_PLAN_FILE first using the Step 0.75 heredoc pattern in",
+    "skills/last30days/SKILL.md. Run the heredoc directly in Bash — never inside `bash -lc`.",
+    "",
+    "Why this command was blocked:",
+    "  {DIAGNOSIS}",
+    "",
+    "What the wrapper does that you cannot do by hand:",
+    "  - picks a Python the engine can run on (it needs 3.12+; stock macOS ships 3.9)",
+    "  - runs a live source health check and synthesizes --search from the sources that are",
+    "    actually working right now. --search is a HARD FILTER: any source you omit is dropped,",
+    "    and threads/pinterest/linkedin/jobs/trustpilot/xiaohongshu/perplexity are unreachable",
+    "    unless named there, whatever credentials you have.",
+    "  - verifies the run AFTER it finishes and prints a RUN RECEIPT. A degraded run exits 0",
+    "    and can print \"Research quality: 5/5 core sources\" while four sources returned nothing.",
+    "    The receipt is the only honest signal.",
+    "",
+    "Do not work around this by calling python directly, writing a helper script, or using a",
+    "subshell — those are blocked too, and the engine refuses to start without the wrapper."
+  ]
+}

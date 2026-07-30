@@ -39,6 +39,7 @@
     "bin/",
     "skills/",
     "hooks/",
+    "config/",
     "scripts/",
     "assets/",
     ".claude-plugin/",
