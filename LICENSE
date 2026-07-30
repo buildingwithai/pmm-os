@@ -19,12 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-This distribution bundles and adapts open-source work from several upstream
-projects. Those works retain their own copyrights and licenses, credited in
-THIRD_PARTY_NOTICES.md. Where an upstream uses a different license (for
-example, Open Strategy Partners material under Creative Commons
-Attribution-ShareAlike 4.0 International), those terms continue to apply to the
-adapted portions and that attribution must be preserved on redistribution.

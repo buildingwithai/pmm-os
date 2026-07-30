@@ -1,6 +1,13 @@
 # Third Party Notices
 
-This plugin package adapts public marketing, PMM, GTM, campaign, coaching, product, PLG, OSP, and MCP patterns into a cohesive Codex plugin structure. Relevant workflows are represented as internal skills, references, templates, command shims, MCP tools, hooks, source adapters, or agent examples.
+PMM OS itself is MIT licensed (see LICENSE). This distribution bundles and adapts
+open-source work from several upstream projects. Those works retain their own
+copyrights and licenses, credited below. Where an upstream uses a different license
+— for example, Open Strategy Partners material under Creative Commons
+Attribution-ShareAlike 4.0 International — those terms continue to apply to the
+adapted portions, and that attribution must be preserved on redistribution.
+
+This plugin package adapts public marketing, PMM, GTM, campaign, coaching, product, PLG, and OSP patterns into a cohesive plugin structure. Relevant workflows are represented as internal skills, references, templates, hooks, source adapters, or agent examples.
 
 ## Source repositories consulted
 
