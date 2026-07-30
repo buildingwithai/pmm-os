@@ -187,16 +187,10 @@ async function doctor() {
   const cv = hasClaude();
   cv ? ok('claude CLI: ' + cv) : fail('claude CLI not found on PATH — install Claude Code first: https://claude.com/claude-code');
   existsSync(PAYLOAD) ? ok('payload present: ' + PAYLOAD) : warn('payload not staged — run: npx pmm-os install');
-  const py = spawnSync(IS_WIN ? 'python' : 'python3', ['--version'], { encoding: 'utf8', shell: IS_WIN });
-  const pyv = py.status === 0 ? (py.stdout || py.stderr).trim() : null;
-  // 3.12, matching verify-research.sh and last30days itself. This said 3.10,
-  // which passed on a machine the engine then refused to run on. Stock macOS
-  // ships 3.9, so most new users land here.
-  const m = pyv ? pyv.match(/(\d+)\.(\d+)/) : null;
-  const pyOk = m && (Number(m[1]) > 3 || (Number(m[1]) === 3 && Number(m[2]) >= 12));
-  pyv
-    ? (pyOk ? ok('python: ' + pyv) : warn('python: ' + pyv + ' — last30days needs 3.12+ (brew install python@3.13, or `uv python install 3.13`; verify-research.sh finds non-PATH installs)'))
-    : warn('python3 not found — last30days needs Python 3.12+');
+  const { resolvePython } = await import('./lib/resolve-python.mjs');
+  const pyr = resolvePython();
+  if (pyr.error) warn('python: ' + pyr.error.split('\n')[0]);
+  else { ok(`python: ${pyr.version} (${pyr.lane})`); if (pyr.warning) warn(pyr.warning); }
   const marker = join(HOME, '.pmm-os', 'research-setup');
   existsSync(marker) ? ok('research engines: set up') : warn('research engines: not set up — last30days works anyway; run `npx pmm-os setup` for the rest');
   const verify = [join(PAYLOAD, 'scripts', 'verify-research.sh'), join(PKG_ROOT, 'scripts', 'verify-research.sh')].find(existsSync);

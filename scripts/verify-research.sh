@@ -12,13 +12,10 @@ bad(){ printf '  \033[31m✗\033[0m %s\n' "$1"; }
 have(){ command -v "$1" >/dev/null 2>&1; }
 
 echo "── Environment ─────────────────────────────"
-# resolve python 3.12+ (last30days requires it). uv-managed installs aren't on PATH.
-PY=""
-for c in python3.14 python3.13 python3.12 python3; do
-  if have "$c" && "$c" -c 'import sys;exit(0 if sys.version_info>=(3,12) else 1)' 2>/dev/null; then PY="$c"; break; fi
-done
-if [ -z "$PY" ] && have uv; then PY="$(uv python find '>=3.12' 2>/dev/null || true)"; fi
-if [ -n "$PY" ]; then ok "Python 3.12+ for last30days: $("$PY" --version 2>&1)"; else bad "Python 3.12+ NOT found — last30days needs it (brew install python@3.13 or 'uv python install 3.13')"; fi
+# Shared resolver — see config/python-policy.json.
+. "$(cd "$(dirname "$0")" && pwd)/lib/resolve_python.sh"
+PY="$(pmm_resolve_python 2>/dev/null || true)"
+if [ -n "$PY" ]; then ok "Python 3.12+ for last30days: $("$PY" --version 2>&1)"; else bad "Python 3.12+ NOT found — last30days needs it (brew install python@3.13, or 'uv python install 3.13')"; fi
 have gh && { gh auth status >/dev/null 2>&1 && ok "gh CLI authed (agent-reach GitHub backend)" || warn "gh installed but not authed (run: gh auth login)"; } || warn "gh CLI missing (agent-reach GitHub backend) — brew install gh"
 have yt-dlp && ok "yt-dlp present (agent-reach YouTube backend)" || warn "yt-dlp missing — agent-reach install --env=auto"
 have curl && ok "curl present (Jina web-read backend)" || bad "curl missing"

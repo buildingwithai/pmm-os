@@ -25,6 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolvePython as resolvePy } from './lib/resolve-python.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HOME = homedir();
@@ -63,32 +64,12 @@ Options for last30days:
   process.exit(code);
 }
 
+// Shared resolver — config/python-policy.json is the single spec.
 function resolvePython() {
-  const want = (p) => {
-    const r = spawnSync(p, ['-c', 'import sys;sys.exit(0 if sys.version_info>=(3,12) else 1)'],
-      { stdio: 'ignore' });
-    return r.status === 0;
-  };
-  if (process.env.L30D_PYTHON) {
-    if (!want(process.env.L30D_PYTHON)) {
-      err(`✗ L30D_PYTHON=${process.env.L30D_PYTHON} is not Python 3.12+`);
-      process.exit(2);
-    }
-    return process.env.L30D_PYTHON;
-  }
-  // 3.13/3.12 first: the engine sets a floor of 3.12 and no ceiling, and nothing
-  // above 3.13 has been tested.
-  for (const c of ['python3.13', 'python3.12', 'python3.14', 'python3', 'python']) {
-    if (want(c)) return c;
-  }
-  const uv = spawnSync('uv', ['python', 'find', '>=3.12'], { encoding: 'utf8' });
-  if (uv.status === 0 && uv.stdout.trim() && want(uv.stdout.trim())) return uv.stdout.trim();
-  err(`✗ No Python 3.12+ found. Install one:
-    brew install python@3.13          (macOS)
-    uv python install 3.13            (any platform)
-    winget install Python.Python.3.13 (Windows)
-  Or point at an existing one: L30D_PYTHON=/path/to/python3.13`);
-  process.exit(2);
+  const r = resolvePy({ allowInstall: process.argv.includes('--allow-install') });
+  if (r.error) { err('✗ ' + r.error); process.exit(2); }
+  if (r.warning) err('! ' + r.warning);
+  return r;
 }
 
 /** planner._sanitize_plan drops malformed subqueries in silence. Catch it here. */
@@ -266,7 +247,8 @@ if (problems.length) {
   process.exit(2);
 }
 
-const PY = resolvePython();
+const PYR = resolvePython();
+const PY = PYR.path;
 const ENGINE = join(ROOT, 'skills', 'last30days', 'scripts', 'last30days.py');
 
 // --search is synthesized, never accepted from the caller. It is a hard filter
@@ -297,7 +279,7 @@ log(`→ ${opts.depth} run over ${live.length} live sources: ${live.join(', ')}`
 if (by.blocked.length) log(`  not live: ${by.blocked.join(', ')}`);
 if (excluded.size) log(`  excluded by you: ${[...excluded].join(', ')} — ${opts.why}`);
 
-const run = spawnSync(PY, args, {
+const run = spawnSync(PY, [...PYR.args, ...args], {
   stdio: 'inherit',
   env: { ...process.env, PMM_OS_LAUNCH: '1',
          LAST30DAYS_TRANSCRIPT_LIMIT: process.env.LAST30DAYS_TRANSCRIPT_LIMIT || '1000',

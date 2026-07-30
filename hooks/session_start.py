@@ -45,4 +45,8 @@ Default operating sequence for marketing work:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        pass          # a hook crash must never block the user
+    raise SystemExit(0)
