@@ -54,4 +54,26 @@ EOF
   exit 1
 fi
 
-exec "$PY" "$ENGINE" "$@"
+# The engine prints "Research quality: 5/5 core sources" even when TikTok,
+# Instagram, Threads and Pinterest all returned nothing because the
+# ScrapeCreators key is out of credit (HTTP 402). Four silent zeros read as a
+# thin topic rather than an unpaid bill, so surface it.
+TMP_ERR="$(mktemp)"
+trap 'rm -f "$TMP_ERR"' EXIT
+set +e
+"$PY" "$ENGINE" "$@" 2> >(tee "$TMP_ERR" >&2)
+CODE=$?
+set -e
+if grep -q "402: Payment Required" "$TMP_ERR" 2>/dev/null; then
+  blocked=$(grep -oE '\[(TikTok|Instagram|Threads|Pinterest|YouTube)\][^:]*: HTTP 402' "$TMP_ERR" \
+            | grep -oE '\[[A-Za-z]+\]' | tr -d '[]' | sort -u | paste -sd', ' -)
+  cat >&2 <<EOF
+
+⚠️  Sources returned nothing because the ScrapeCreators key is out of credit (HTTP 402):
+      ${blocked:-TikTok, Instagram, Threads, Pinterest}
+    The engine still reports "core sources" as healthy — these are counted as bonus,
+    so a zero here looks like a thin topic rather than an unpaid bill.
+    Top up or rotate SCRAPECREATORS_API_KEY in ~/.config/last30days/.env
+EOF
+fi
+exit $CODE
