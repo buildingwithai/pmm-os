@@ -344,6 +344,20 @@ def check_youtube_comments_free() -> None:
           else [(r.stdout + r.stderr).strip()[:400]])
 
 
+def check_tiktok_free_lane() -> None:
+    """A creator's video list and a video's ASR transcript are free via yt-dlp;
+    upstream bought both from ScrapeCreators. Also pins search_tiktok's date window,
+    which used to return every out-of-window video when none fell inside it."""
+    t = ROOT / "scripts" / "test_tiktok_free_lane.py"
+    if not t.is_file():
+        check("TikTok free-lane self-check", ["scripts/test_tiktok_free_lane.py is missing"])
+        return
+    r = subprocess.run([sys.executable, str(t)], capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    check("TikTok free-lane self-check", [] if r.returncode == 0
+          else [(r.stdout + r.stderr).strip()[:400]])
+
+
 def check_policy_selftest() -> None:
     t = ROOT / "hooks" / "test_pre_tool_use_policy.py"
     if not t.is_file():
@@ -412,6 +426,7 @@ def main() -> None:
     check_youtube_comments_free()
     check_health_synthesis()
     check_tt_fetch_selftest()
+    check_tiktok_free_lane()
     check_launch_gate()
     check_official_validator()
 

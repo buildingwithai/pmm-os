@@ -87,6 +87,124 @@ def expand_tiktok_queries(topic: str, depth: str) -> List[str]:
     return queries[:cap]
 
 
+# PMM-OS-TT-FREE-LANE (re-applied by scripts/patch-tiktok-free-lane.py after upstream sync)
+# TikTok hydration is free via yt-dlp; only DISCOVERY and comment TEXT cost credits.
+import json as _json
+import tempfile as _tempfile
+from pathlib import Path as _Path
+
+from . import subproc
+
+_TT_PROFILE_TIMEOUT = 120   # full per-video metadata, ~1.1s/video measured
+_TT_CAPTION_TIMEOUT = 45
+
+
+def _ytdlp_available() -> bool:
+    from shutil import which
+    return which("yt-dlp") is not None
+
+
+def _tt_ytdlp(args: List[str], timeout: int):
+    """Run yt-dlp, or return None if it could not be run to completion."""
+    try:
+        return subproc.run_with_timeout(["yt-dlp", "--ignore-config",
+                                         "--no-warnings", *args], timeout=timeout)
+    except subproc.SubprocTimeout:
+        _log(f"yt-dlp timed out after {timeout}s")
+    except (FileNotFoundError, OSError) as exc:
+        _log(f"yt-dlp could not start: {exc}")
+    return None
+
+
+def _as_aweme(entry: Dict[str, Any], handle: str) -> Dict[str, Any]:
+    """Map one yt-dlp TikTok entry onto the ScrapeCreators aweme shape.
+
+    Emitting the aweme shape rather than a parsed item means `_parse_items` — with
+    its relevance scoring, hashtag boost and URL fallback — stays the single place
+    that decides what a TikTok item is, for both lanes.
+
+    `description` is the FULL caption; `title` is TikTok's truncated copy of it. The
+    old reach.sh printed `title` while discarding `description`, which is how a
+    damaged field ended up being the only one shown.
+    """
+    desc = entry.get("description") or entry.get("title") or ""
+    return {
+        "aweme_id": str(entry.get("id") or ""),
+        "desc": desc,
+        "create_time": entry.get("timestamp"),
+        "share_url": entry.get("webpage_url") or entry.get("url") or "",
+        "author": {"unique_id": entry.get("uploader") or handle},
+        "statistics": {
+            "play_count": entry.get("view_count") or 0,
+            "digg_count": entry.get("like_count") or 0,
+            "comment_count": entry.get("comment_count") or 0,
+            "share_count": entry.get("repost_count") or 0,
+        },
+        # yt-dlp has no structured hashtag list, so recover them from the caption —
+        # `_parse_items` boosts relevance on these and they are otherwise lost.
+        "text_extra": [{"hashtag_name": h} for h in re.findall(r"#(\w+)", desc)],
+        # `video` is deliberately OMITTED, not filled in: SC reports duration in
+        # milliseconds and yt-dlp in seconds. Nothing downstream reads it today, so
+        # a missing value is honest where a 1000x-wrong one would lie in wait.
+    }
+
+
+def _ytdlp_profile_videos(handle: str, count: int) -> Optional[List[Dict[str, Any]]]:
+    """A creator's recent videos, free, via yt-dlp. None means the fetch failed.
+
+    Zero entries is reported as a failure, not an empty account: a creator someone
+    named in a research config having no videos at all is far less likely than a
+    block, and calling a block an empty account is what puts a hole in a brief with
+    nothing marking it. Same call the reach.sh desk makes (see tt_fetch.py).
+    """
+    url = f"https://www.tiktok.com/@{handle.lstrip('@')}"
+    r = _tt_ytdlp(["--playlist-end", str(max(count, 1)), "-J", url],
+                  _TT_PROFILE_TIMEOUT)
+    if r is None or not (r.stdout or "").strip():
+        return None
+    try:
+        entries = _json.loads(r.stdout).get("entries") or []
+    except _json.JSONDecodeError:
+        _log(f"yt-dlp returned unparseable JSON for @{handle} — extractor moved")
+        return None
+    # `tiktok:tag` is known to return [null] with exit 0; guard the profile lane too
+    # so a null can never reach _parse_items.
+    entries = [e for e in entries if isinstance(e, dict) and e.get("id")]
+    if not entries:
+        _log(f"yt-dlp returned 0 videos for @{handle} — treating as a failed fetch")
+        return None
+    return [_as_aweme(e, handle.lstrip("@")) for e in entries[:count]]
+
+
+def _ytdlp_caption(url: str) -> Optional[str]:
+    """One video's ASR transcript, free, via yt-dlp. None if there isn't one.
+
+    `--ignore-no-formats-error` is required, not defensive: ~8% of TikTok videos exit
+    1 with "No video formats found!" while the subtitles are sitting right there.
+    """
+    if not url:
+        return None
+    with _tempfile.TemporaryDirectory() as tmp:
+        r = _tt_ytdlp(["--skip-download", "--ignore-no-formats-error",
+                       "--write-subs", "--sub-langs", "all", "--sub-format", "vtt",
+                       "-o", f"{tmp}/%(id)s", url], _TT_CAPTION_TIMEOUT)
+        if r is None:
+            return None
+        vtts = sorted(_Path(tmp).glob("*.vtt"))
+        if not vtts:
+            return None
+        # On a non-English video TikTok also exposes an `eng-US` track with identical
+        # timestamps — a MACHINE TRANSLATION, not the audio. Prefer the original when
+        # there is a choice, so a translation is never quoted as what someone said.
+        original = [p for p in vtts if ".eng-US." not in p.name]
+        try:
+            raw = (original or vtts)[0].read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            _log(f"could not read the VTT yt-dlp wrote for {url}: {exc}")
+            return None
+    return _clean_webvtt(raw) or None
+
+
 def _log(msg: str):
     log.source_log("TikTok", msg, tty_only=False)
 
@@ -218,17 +336,30 @@ def _profile_videos(
     token: str,
     count: int = 10,
 ) -> List[Dict[str, Any]]:
-    """Fetch a TikTok creator's recent videos via ScrapeCreators.
+    """Fetch a TikTok creator's recent videos — yt-dlp first, ScrapeCreators second.
+
+    PMM-OS-TT-FREE-LANE: upstream went straight to GET /v3/tiktok/profile/videos and spent a
+    credit on data yt-dlp returns free (see scripts/patch-tiktok-free-lane.py).
 
     Args:
         handle: TikTok username (without @)
-        token: ScrapeCreators API key
+        token: ScrapeCreators API key, used only if the keyless fetch failed
         count: Max videos to return
 
     Returns:
-        List of raw TikTok item dicts (aweme_info format).
+        List of raw TikTok item dicts (aweme_info format), empty on total failure.
     """
     _log(f"Profile videos: @{handle}")
+    if _ytdlp_available():
+        free = _ytdlp_profile_videos(handle, count)
+        if free:
+            _log(f"  -> {len(free)} videos from @{handle} (free, yt-dlp — no credit)")
+            return free
+        _log(f"  keyless profile fetch failed for @{handle}"
+             + ("; falling back to ScrapeCreators" if token else ""))
+    if not token:
+        return []
+
     profile_url = "https://api.scrapecreators.com/v3/tiktok/profile/videos"
     try:
         data = http.get(
@@ -243,7 +374,7 @@ def _profile_videos(
         return []
 
     raw_items = data.get("aweme_list") or data.get("data") or []
-    _log(f"  -> {len(raw_items)} videos from @{handle}")
+    _log(f"  -> {len(raw_items)} videos from @{handle} (ScrapeCreators, 1 credit)")
     return raw_items[:count]
 
 
@@ -308,7 +439,14 @@ def search_tiktok(
         if out_of_range:
             _log(f"Filtered {out_of_range} videos outside date range")
     else:
-        _log(f"No videos within date range, keeping all {len(items)}")
+        # PMM-OS-TT-FREE-LANE: upstream kept every OUT-OF-WINDOW video here and returned it with
+        # no error — videos of any age rendered as last-30-days evidence. Identical
+        # in shape to the Instagram Reels defect (see patch-instagram-reels-search.py).
+        # An empty result the receipt can see beats a number nobody can trust.
+        _log(f"Discarded all {len(items)} videos — none inside {from_date}..{to_date}")
+        return {"items": [], "error":
+                f"no TikTok videos in {from_date}..{to_date} "
+                f"({len(items)} returned, all outside the window)"}
 
     # Sort by views descending
     items.sort(key=lambda x: x["engagement"]["views"], reverse=True)
@@ -319,73 +457,93 @@ def search_tiktok(
 
 def fetch_captions(
     video_items: List[Dict[str, Any]],
-    token: str,
+    token: str = "",
     depth: str = "default",
 ) -> Dict[str, str]:
-    """Fetch transcripts for top N TikTok videos via ScrapeCreators.
+    """Fetch transcripts for the top N TikTok videos — keyless first, paid second.
+
+    PMM-OS-TT-FREE-LANE: upstream spent one ScrapeCreators credit per transcript on
+    GET /v1/tiktok/video/transcript. yt-dlp returns the same ASR track free.
 
     Strategy:
-    1. Use the 'text' field (video description) as baseline caption
-    2. For top N, call /video/transcript for spoken-word captions
+      1. the video description as the baseline caption (always free, always there)
+      2. yt-dlp's ASR transcript, which supersedes it
+      3. ScrapeCreators, ONLY for the videos yt-dlp could not answer for
 
     Args:
         video_items: Items from search_tiktok()
-        token: ScrapeCreators API key
-        depth: Depth level for caption limit
+        token: Optional ScrapeCreators API key
+        depth: Depth level for the caption limit
 
     Returns:
-        Dict mapping video_id -> caption text (truncated to 500 words)
+        Dict mapping video_id -> caption text (truncated to CAPTION_MAX_WORDS).
     """
     config = DEPTH_CONFIG.get(depth, DEPTH_CONFIG["default"])
     max_captions = config["max_captions"]
 
-    if not video_items or not token:
+    if not video_items:
         return {}
 
     top_items = video_items[:max_captions]
     _log(f"Enriching captions for {len(top_items)} videos")
 
+    def _trim(text: str) -> str:
+        words = text.split()
+        return ' '.join(words[:CAPTION_MAX_WORDS]) + '...' if len(words) > CAPTION_MAX_WORDS else text
+
     captions = {}
 
-    # First pass: use text field as caption (always available, free)
+    # Pass 1: the description. Free, and the only thing available for the many
+    # short-form videos that are on-screen text over music with no speech at all.
     for item in top_items:
-        vid = item["video_id"]
         text = item.get("text", "")
         if text:
-            words = text.split()
-            if len(words) > CAPTION_MAX_WORDS:
-                text = ' '.join(words[:CAPTION_MAX_WORDS]) + '...'
-            captions[vid] = text
+            captions[item["video_id"]] = _trim(text)
 
-    # Second pass: try to get spoken-word transcripts (1 credit each)
-    for item in top_items:
-        vid = item["video_id"]
-        url = item.get("url", "")
-        if not url:
-            continue
-        try:
-            data = http.get(
-                f"{SCRAPECREATORS_BASE}/video/transcript",
-                params={"url": url},
-                headers=http.scrapecreators_headers(token),
-                timeout=15,
-                retries=1,
-            )
-            transcript = data.get("transcript")
+    # Pass 2: yt-dlp's ASR transcript (free). Machine ASR — never quote as verbatim.
+    spoken = set()
+    if _ytdlp_available():
+        for item in top_items:
+            try:
+                transcript = _ytdlp_caption(item.get("url", ""))
+            except Exception as e:
+                _log(f"Keyless transcript failed for {item['video_id']}: {e}")
+                transcript = None
             if transcript:
-                if isinstance(transcript, list):
-                    transcript = " ".join(str(s) for s in transcript)
-                transcript = _clean_webvtt(transcript)
+                captions[item["video_id"]] = _trim(transcript)
+                spoken.add(item["video_id"])
+
+    # Pass 3: ScrapeCreators, only where the free lane produced nothing.
+    paid = 0
+    if token:
+        for item in top_items:
+            vid = item["video_id"]
+            url = item.get("url", "")
+            if vid in spoken or not url:
+                continue
+            try:
+                data = http.get(
+                    f"{SCRAPECREATORS_BASE}/video/transcript",
+                    params={"url": url},
+                    headers=http.scrapecreators_headers(token),
+                    timeout=15,
+                    retries=1,
+                )
+                transcript = data.get("transcript")
                 if transcript:
-                    words = transcript.split()
-                    if len(words) > CAPTION_MAX_WORDS:
-                        transcript = ' '.join(words[:CAPTION_MAX_WORDS]) + '...'
-                    captions[vid] = transcript
-        except Exception as e:
-            _log(f"Transcript fetch failed for {vid}: {e}")
+                    if isinstance(transcript, list):
+                        transcript = " ".join(str(s) for s in transcript)
+                    transcript = _clean_webvtt(transcript)
+                    if transcript:
+                        captions[vid] = _trim(transcript)
+                        paid += 1
+            except Exception as e:
+                _log(f"Transcript fetch failed for {vid}: {e}")
 
     got = sum(1 for v in captions.values() if v)
-    _log(f"Got captions for {got}/{len(top_items)} videos")
+    # Name the lane: "3/5 captions" hid whether a run spent 0 or 5 credits.
+    _log(f"Got captions for {got}/{len(top_items)} videos "
+         f"({len(spoken)} spoken transcripts free via yt-dlp, {paid} via ScrapeCreators)")
     return captions
 
 
