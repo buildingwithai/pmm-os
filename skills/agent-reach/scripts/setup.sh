@@ -42,8 +42,8 @@ fi
 
 echo "── agent-reach doctor ──"
 agent-reach doctor --json 2>/dev/null || agent-reach doctor || true
-echo "Live keyless now: GitHub, web-read (any URL), V2EX, Bilibili, RSS, YouTube."
-echo "Login/key platforms (Reddit, XiaoHongShu, Exa) unlock via: agent-reach configure"
+echo "Live keyless now: GitHub, web-read (any URL), RSS, YouTube."
+echo "Login/key platforms (Reddit, LinkedIn, Exa) unlock via: agent-reach configure"
 echo "Verify anytime: bash scripts/verify-research.sh --smoke"
 echo
 echo "════ Social research (X + Instagram + TikTok) — no passwords, reads your browser ════"

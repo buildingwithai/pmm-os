@@ -14,7 +14,6 @@
 #   reach.sh tiktok <@user> [n]  # TikTok account's recent videos, keyless
 #   reach.sh tiktok-video <url>  # one video: views/likes/comments/date/transcript
 #   reach.sh ig <username>       # Instagram account timeline, keyless, no login
-#   reach.sh v2ex                # V2EX hot topics (public API)
 #   reach.sh doctor              # what's live (delegates to agent-reach if installed)
 #   reach.sh selftest            # runnable check (read + gh, no keys)
 set -uo pipefail
@@ -73,7 +72,6 @@ yt(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (agent-reach 
     rm -rf "$d"; return 0
   fi
   cat "$d"/*.vtt | sed -E '/-->/d;/^WEBVTT/d;/^[0-9]+$/d;/^$/d' | awk '!seen[$0]++'; rm -rf "$d"; }
-v2ex(){ curl -fsS --max-time 15 -A "$UA" "https://www.v2ex.com/api/topics/hot.json"; }
 
 # YouTube COMMENTS — free, keyless. yt-dlp reads the same comment API ScrapeCreators
 # resells; the engine's own gate on that key was never a technical requirement and is
@@ -259,8 +257,7 @@ case "${1:-}" in
   social-status) social_status;;
   social-setup) shift; social_setup "${1:-all}";;
   ig-login) shift; ig_login "$@";;
-  v2ex) v2ex;;
   doctor) shift; doctor "${1:-}";;
   selftest) selftest;;
-  *) echo "usage: reach.sh {read <url>|gh-search <q> [n]|gh-read <owner/repo>|yt <url>|yt-comments <url> [n]|bsky <query> [n]|tiktok <@user> [n]|tiktok-video <url>|tiktok-search <hashtag> [n]|ig <user> [n]|ig-search <hashtag> [n]|social-status|social-setup [x|ig|tiktok|all]|ig-login <user>|v2ex|doctor|selftest}" >&2; exit 2;;
+  *) echo "usage: reach.sh {read <url>|gh-search <q> [n]|gh-read <owner/repo>|yt <url>|yt-comments <url> [n]|bsky <query> [n]|tiktok <@user> [n]|tiktok-video <url>|tiktok-search <hashtag> [n]|ig <user> [n]|ig-search <hashtag> [n]|social-status|social-setup [x|ig|tiktok|all]|ig-login <user>|doctor|selftest}" >&2; exit 2;;
 esac

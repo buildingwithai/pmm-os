@@ -55,7 +55,6 @@ def normalize_source_items(
         "techmeme": _normalize_techmeme,
         "trustpilot": _normalize_trustpilot,
         "grounding": _normalize_grounding,
-        "xiaohongshu": _normalize_grounding,
         "github": _normalize_github,
         "perplexity": _normalize_grounding,
         "jobs": _normalize_jobs,

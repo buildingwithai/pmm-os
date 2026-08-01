@@ -97,7 +97,6 @@ SOURCE_ORDER = (
     "perplexity",
     "linkedin",
     "pinterest",
-    "xiaohongshu",
     "jobs",
 )
 
@@ -404,20 +403,6 @@ def _pinterest_record(config):
     )
 
 
-def _xiaohongshu_record(config):
-    requires = "xiaohongshu-mcp service (XIAOHONGSHU_API_BASE); requested-only"
-    entry = prescriptions.get("xiaohongshu", "service_unreachable")
-    if config.get("XIAOHONGSHU_API_BASE"):
-        return _record(
-            status=health.OK, requires=requires,
-            note=(
-                "XIAOHONGSHU_API_BASE configured; service reachability is not "
-                "probed (doctor makes no network calls)"
-            ),
-        )
-    return _record(status="opt-in", requires=requires, fix=_fix_text(entry))
-
-
 def _jobs_record(config):
     return _record(
         status="opt-in",
@@ -443,7 +428,6 @@ _SOURCE_BUILDERS: Dict[str, Callable[[Dict[str, Any]], Dict[str, Any]]] = {
     "perplexity": _perplexity_record,
     "linkedin": _linkedin_record,
     "pinterest": _pinterest_record,
-    "xiaohongshu": _xiaohongshu_record,
     "jobs": _jobs_record,
 }
 

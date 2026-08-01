@@ -368,6 +368,36 @@ def check_agent_reach_trim() -> None:
     check("agent-reach trim applied", [] if r.returncode == 0 else [r.stdout.strip()[:200]])
 
 
+def check_no_china() -> None:
+    """The five China-market channels were removed from both engines and from the
+    vendored package that ships 51 files to npm. Sync re-clones both, so this asserts
+    the purge is currently applied — a single surviving dict entry would point at a
+    module that no longer exists."""
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "patch-drop-china.py"), "--check"],
+                       capture_output=True, text=True)
+    check("China-market channels absent", [] if r.returncode == 0 else [r.stdout.strip()[:300]])
+
+
+def check_reach_dispatch() -> None:
+    """reach.sh is the thing that actually fetches. Its usage line names every verb, so
+    a doc/channel edit that touches that line can delete it — and the case statement
+    then falls through, exiting 0 on an unknown verb. A dispatcher that succeeds at
+    doing nothing is the same class of bug as a block reported as an empty result.
+    (This happened: the China purge swept the line because it contained `v2ex`.)"""
+    sh = ROOT / "skills" / "agent-reach" / "scripts" / "reach.sh"
+    if not sh.is_file():
+        check("reach.sh rejects an unknown verb", ["skills/agent-reach/scripts/reach.sh is missing"])
+        return
+    r = subprocess.run(["bash", str(sh), "definitely-not-a-verb"],
+                       capture_output=True, text=True, timeout=60)
+    problems = []
+    if r.returncode == 0:
+        problems.append(f"exit 0 on an unknown verb — it should be non-zero")
+    if "usage: reach.sh" not in (r.stderr or "") + (r.stdout or ""):
+        problems.append("no usage line printed")
+    check("reach.sh rejects an unknown verb", problems)
+
+
 def check_policy_selftest() -> None:
     t = ROOT / "hooks" / "test_pre_tool_use_policy.py"
     if not t.is_file():
@@ -438,6 +468,8 @@ def main() -> None:
     check_tt_fetch_selftest()
     check_tiktok_free_lane()
     check_agent_reach_trim()
+    check_no_china()
+    check_reach_dispatch()
     check_launch_gate()
     check_official_validator()
 

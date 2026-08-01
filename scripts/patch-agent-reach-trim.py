@@ -29,9 +29,9 @@ frontmatter, the header, two standing rules, the routing table, the quick comman
 the login-backed section and the reference index, and eight anchors would rot on the
 first upstream reword. The `<!-- PMM-OS-SETUP` block that sync appends is preserved.
 
-NOT REMOVED, deliberately: `reach.sh v2ex` stays. It is our own verb over a public
-keyless API, it works, and it costs nothing to keep — this trim is about what the
-routing table PROMISES, not about deleting working code.
+SCOPE. This patcher owns the ROUTING TABLE and the DOCS. `patch-drop-china.py` owns the
+CODE — the vendored channel modules, the engine's own China source, and the reach.sh
+verb. Both are needed and they run in that order.
 """
 import pathlib
 import re
@@ -178,8 +178,8 @@ The user only provides cookies / one extension click; the agent does the rest.
 '''
 
 SOCIAL_MD = f'''<!-- {MARK}: trimmed by scripts/patch-agent-reach-trim.py. Upstream's version was
-     275 lines covering XiaoHongShu (three backends), Bilibili and V2EX as well —
-     China-market channels this plugin does not route. See that script for why. -->
+     275 lines, most of it three backends for one China-market platform plus two more
+     this plugin does not route. See that script for why. -->
 
 # Social & community
 
@@ -282,8 +282,8 @@ opencli instagram explore --limit 20 -f yaml
 '''
 
 VIDEO_MD = f'''<!-- {MARK}: trimmed by scripts/patch-agent-reach-trim.py. Upstream's version also
-     covered Bilibili and Xiaoyuzhou podcasts — China-market channels this plugin does
-     not route. See that script for why. -->
+     covered two China-market video/podcast channels this plugin does not route.
+     See that script for why. -->
 
 # Video & audio
 
@@ -550,9 +550,17 @@ def main() -> int:
         print(f"skip (missing): {skill}")
         return 0
 
+    # The reference files are fully generated from REPLACEMENTS, so rewriting them is
+    # idempotent by construction. Do it BEFORE the MARK early-return, or editing their
+    # text here never reaches a tree that was trimmed by an older version of this file.
+    refs = SKILL_DIR / "references"
+    refs.mkdir(parents=True, exist_ok=True)
+    for name, body in REPLACEMENTS.items():
+        (refs / name).write_text(body, encoding="utf-8")
+
     text = skill.read_text(encoding="utf-8")
     if MARK in text:
-        print("already trimmed: agent-reach")
+        print("already trimmed: agent-reach (references rewritten)")
         return 0
 
     # Keep the setup block sync appends before this patcher runs; replace the rest.
@@ -564,11 +572,6 @@ def main() -> int:
         print("ANCHOR NOT FOUND (agent-reach frontmatter) — upstream changed, update patcher")
         return 1
     skill.write_text(SKILL_BODY + tail, encoding="utf-8")
-
-    refs = SKILL_DIR / "references"
-    refs.mkdir(parents=True, exist_ok=True)
-    for name, body in REPLACEMENTS.items():
-        (refs / name).write_text(body, encoding="utf-8")
 
     # Every reference is now PMM OS-authored English. Upstream's were Chinese, which
     # made the four channels that justify this skill unreadable to its target user,

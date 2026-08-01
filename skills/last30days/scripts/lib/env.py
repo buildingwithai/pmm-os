@@ -59,7 +59,6 @@ KEYCHAIN_KEYS = (
     "AUTH_TOKEN", "CT0", "BSKY_HANDLE", "BSKY_APP_PASSWORD",
     "TRUTHSOCIAL_TOKEN", "BRAVE_API_KEY", "EXA_API_KEY", "SERPER_API_KEY",
     "OPENROUTER_API_KEY", "PERPLEXITY_API_KEY", "PARALLEL_API_KEY", "XQUIK_API_KEY",
-    "XIAOHONGSHU_API_BASE",
 )
 
 # pass(1) integration: Linux/Unix analog of the Keychain source. Each key in
@@ -445,7 +444,6 @@ def get_config(policy: ConfigLoadPolicy | None = None) -> dict[str, Any]:
         ('GOOGLE_API_KEY', None),
         ('GEMINI_API_KEY', None),
         ('GOOGLE_GENAI_API_KEY', None),
-        ('XIAOHONGSHU_API_BASE', None),
         ('LAST30DAYS_REASONING_PROVIDER', 'auto'),
         ('LAST30DAYS_PLANNER_MODEL', None),
         ('LAST30DAYS_RERANK_MODEL', None),
@@ -1039,47 +1037,6 @@ def is_instagram_available(config: dict[str, Any]) -> bool:
 def get_instagram_token(config: dict[str, Any]) -> str:
     """Get Instagram API token (same ScrapeCreators key as TikTok)."""
     return config.get('SCRAPECREATORS_API_KEY') or ''
-
-
-def get_xiaohongshu_api_base(config: dict[str, Any]) -> str:
-    """Get Xiaohongshu HTTP API base URL.
-
-    Defaults to host.docker.internal so OpenClaw Docker can reach host service.
-    """
-    return (config.get('XIAOHONGSHU_API_BASE') or "http://host.docker.internal:18060").rstrip("/")
-
-
-def is_xiaohongshu_available(config: dict[str, Any]) -> bool:
-    """Check whether Xiaohongshu HTTP API is reachable and logged in."""
-    # Import here to avoid heavy imports at module load.
-    from . import http
-
-    base = get_xiaohongshu_api_base(config)
-    try:
-        # Keep health probe snappy, but allow one retry for transient hiccups.
-        health = http.get(f"{base}/health", timeout=3, retries=2)
-        if not isinstance(health, dict):
-            return False
-        if not health.get("success"):
-            return False
-
-        # Login probe can be slower on some deployments (browser/session checks),
-        # so use a slightly longer timeout to avoid false negatives.
-        login = http.get(f"{base}/api/v1/login/status", timeout=8, retries=2)
-        is_logged_in = (
-            login.get("data", {}).get("is_logged_in")
-            if isinstance(login, dict) else False
-        )
-        return bool(is_logged_in)
-    except (OSError, http.HTTPError):
-        return False
-    except Exception as exc:
-        sys.stderr.write(
-            f"[last30days] WARNING: unexpected error checking Xiaohongshu: "
-            f"{type(exc).__name__}: {exc}\n"
-        )
-        sys.stderr.flush()
-        return False
 
 
 # Backward compat alias

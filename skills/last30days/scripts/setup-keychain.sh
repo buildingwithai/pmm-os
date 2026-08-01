@@ -39,7 +39,6 @@ ALL_KEYS=(
   PERPLEXITY_API_KEY
   PARALLEL_API_KEY
   XQUIK_API_KEY
-  XIAOHONGSHU_API_BASE
 )
 
 if [[ "${OSTYPE:-}" != darwin* ]]; then

@@ -42,4 +42,5 @@ python3 "$ROOT/scripts/patch-instagram-reels-search.py"     # IG reels: send the
 python3 "$ROOT/scripts/patch-youtube-comments-free.py"      # YouTube comments are free (yt-dlp); stop charging for them
 python3 "$ROOT/scripts/patch-tiktok-free-lane.py"          # TikTok profiles + transcripts are free; and a window is a window
 python3 "$ROOT/scripts/patch-agent-reach-trim.py"          # agent-reach: 10 routed channels, not the 15 it advertises
+python3 "$ROOT/scripts/patch-drop-china.py"                # and the China-market channel CODE goes too, in both engines
 echo "✓ synced. Review the diff, re-run the plugin validator, and commit."

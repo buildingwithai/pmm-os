@@ -1,6 +1,6 @@
 <!-- PMM-OS-REACH-TRIM: trimmed by scripts/patch-agent-reach-trim.py. Upstream's version was
-     275 lines covering XiaoHongShu (three backends), Bilibili and V2EX as well —
-     China-market channels this plugin does not route. See that script for why. -->
+     275 lines, most of it three backends for one China-market platform plus two more
+     this plugin does not route. See that script for why. -->
 
 # Social & community
 

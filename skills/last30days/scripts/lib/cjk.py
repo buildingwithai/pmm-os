@@ -4,8 +4,10 @@ The skill ships with zero hard dependencies (pyproject ``dependencies = []``)
 so it installs across 50+ Agent Skills hosts as plain Python. Chinese text has
 no whitespace word boundaries, so the original ``str.split()`` tokenizers in
 relevance.py / dedupe.py collapse a whole sentence into a single token and
-break token-overlap scoring and Jaccard de-duplication for Chinese sources
-(Xiaohongshu, Bilibili).
+break token-overlap scoring and Jaccard de-duplication for any CJK text that
+arrives through the sources we do keep -- a Japanese reply on Reddit, a Korean
+TikTok caption, a Chinese product name inside an English review. This module is
+text handling, not a platform integration.
 
 ``segment(text)`` fixes that. It splits text into maximal CJK and non-CJK runs:
 

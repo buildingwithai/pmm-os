@@ -125,7 +125,6 @@ SOURCE_COMPLETION_ORDER = [
     "truthsocial",
     "polymarket",
     "grounding",
-    "xiaohongshu",
     "digg",
     "arxiv",
     "techmeme",
@@ -143,7 +142,6 @@ SOURCE_COMPLETION_META = {
     "truthsocial": ("Truth Social", "post", "posts", Colors.CYAN),
     "polymarket": ("Polymarket", "market", "markets", Colors.GREEN),
     "grounding": ("Web", "result", "results", Colors.GREEN),
-    "xiaohongshu": ("Xiaohongshu", "post", "posts", Colors.RED),
     "digg": ("Digg", "cluster", "clusters", Colors.YELLOW),
     "arxiv": ("arXiv", "paper", "papers", Colors.RED),
     "techmeme": ("Techmeme", "headline", "headlines", Colors.CYAN),
@@ -509,7 +507,6 @@ def show_diagnostic_banner(diag: dict):
     has_x = "x" in available_sources
     has_youtube = "youtube" in available_sources
     has_web = "grounding" in available_sources
-    has_xiaohongshu = "xiaohongshu" in available_sources
     x_backend = diag.get("x_backend")
     native_web_backend = diag.get("native_web_backend")
 
@@ -552,10 +549,6 @@ def show_diagnostic_banner(diag: dict):
             lines.append(f"{Colors.DIM}│{Colors.RESET}  {Colors.RED}❌ YouTube{Colors.RESET}   — yt-dlp not installed                {Colors.DIM}│{Colors.RESET}")
             lines.append(f"{Colors.DIM}│{Colors.RESET}     └─ Fix: brew install yt-dlp (free)                {Colors.DIM}│{Colors.RESET}")
 
-        # Xiaohongshu (only show when configured)
-        if has_xiaohongshu:
-            lines.append(f"{Colors.DIM}│{Colors.RESET}  {Colors.GREEN}✅ Xiaohongshu{Colors.RESET} — API connected + logged in         {Colors.DIM}│{Colors.RESET}")
-
         # Web
         if has_web:
             backend = native_web_backend or "native"
@@ -594,9 +587,6 @@ def show_diagnostic_banner(diag: dict):
         else:
             lines.append("│  ❌ YouTube   — yt-dlp not installed                │")
             lines.append("│     └─ Fix: brew install yt-dlp (free)                │")
-
-        if has_xiaohongshu:
-            lines.append("│  ✅ Xiaohongshu — API connected + logged in         │")
 
         if has_web:
             backend = native_web_backend or "native"

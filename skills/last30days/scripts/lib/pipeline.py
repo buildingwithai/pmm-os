@@ -49,7 +49,6 @@ from . import (
     truthsocial,
     trustpilot,
     xai_x,
-    xiaohongshu_api,
     xquik,
     xurl_x,
     youtube_yt,
@@ -68,7 +67,6 @@ SEARCH_ALIAS = {
     "bsky": "bluesky",
     "truth": "truthsocial",
     "web": "grounding",
-    "xhs": "xiaohongshu",
     "xquik": "x",  # xquik is a backend of the single "x" source, not its own source
 }
 
@@ -100,7 +98,6 @@ MOCK_AVAILABLE_SOURCES = [
     "truthsocial",
     "polymarket",
     "grounding",
-    "xiaohongshu",
     "github",
     "perplexity",
     "threads",
@@ -213,8 +210,6 @@ def available_sources(
         "trustpilot" in include_sources or (requested_sources and "trustpilot" in requested_sources)
     ):
         available.append("trustpilot")
-    if requested_sources and "xiaohongshu" in requested_sources and env.is_xiaohongshu_available(config):
-        available.append("xiaohongshu")
     # Threads: opt-in via INCLUDE_SOURCES (same pattern as perplexity/linkedin).
     # Was auto-on with the key; gated so the onboarding "Everything" tier is a
     # real choice vs the "Recommended" (TikTok/Instagram) tier.
@@ -1607,14 +1602,6 @@ def _retrieve_stream(
             token=env.get_pinterest_token(config),
         )
         return pinterest.parse_pinterest_response(result), {}
-    if source == "xiaohongshu":
-        return xiaohongshu_api.search_feeds(
-            subquery.search_query,
-            from_date,
-            to_date,
-            env.get_xiaohongshu_api_base(config),
-            depth=depth,
-        ), {}
     if source == "perplexity":
         return perplexity.search(subquery.search_query, date_range, config, deep=config.get("_deep_research", False))
     raise RuntimeError(f"Unsupported source: {source}")

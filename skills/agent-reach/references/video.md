@@ -1,6 +1,6 @@
 <!-- PMM-OS-REACH-TRIM: trimmed by scripts/patch-agent-reach-trim.py. Upstream's version also
-     covered Bilibili and Xiaoyuzhou podcasts — China-market channels this plugin does
-     not route. See that script for why. -->
+     covered two China-market video/podcast channels this plugin does not route.
+     See that script for why. -->
 
 # Video & audio
 
