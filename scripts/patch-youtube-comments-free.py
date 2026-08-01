@@ -43,6 +43,7 @@ each with a real `like_count` (the pinned one at 280000) and a unix `timestamp`.
 
 Runnable check: scripts/test_youtube_comments_free.py (wired into the validator).
 """
+import hashlib
 import pathlib
 import py_compile
 import re
@@ -54,9 +55,36 @@ MARK = "PMM-OS-YT-COMMENTS-FREE"
 
 # ------------------------------------------------------------------ youtube_yt.py
 
-YT_REPLACEMENT = f'''# {MARK} (re-applied by scripts/patch-youtube-comments-free.py after upstream sync)
+YT_REPLACEMENT = f'''# {MARK}/@STAMP@ (re-applied by scripts/patch-youtube-comments-free.py after upstream sync)
 _COMMENT_TIMEOUT = 45      # seconds; comment pagination is slower than a caption fetch
 _COMMENT_OVERFETCH = 2     # some roots are blank/deleted; ask for more than we keep
+
+# HOW MANY VIDEOS AND COMMENTS, and why these are env-driven rather than constants.
+# Upstream's 3-videos x 5-comments was sized for a lane where every video cost a
+# ScrapeCreators credit. The free lane costs wall-clock instead, so the ceiling belongs
+# with the caller: bin/pmm-research already saturates transcripts and results the same
+# way (LAST30DAYS_TRANSCRIPT_LIMIT=1000, LAST30DAYS_RESULTS_PER_PAGE=100) and this is
+# the third knob it was missing. Comments ARE the market sentiment for a video, and 3x5
+# on a 100-video run is a rounding error of it.
+#
+# The paid cap is SEPARATE and stays small on purpose. Without that, a keyed run where
+# yt-dlp is rate-limited would fail over to ScrapeCreators for every video and spend
+# a credit each. Free saturates; paid stays a backstop.
+def _envint(name: str, default: int) -> int:
+    raw = os.environ.get(name, "")
+    return int(raw) if raw.isdigit() else default
+
+
+def _comment_budget():
+    return (_envint("LAST30DAYS_COMMENT_VIDEOS", 25),
+            _envint("LAST30DAYS_COMMENT_LIMIT", 20),
+            _envint("LAST30DAYS_PAID_COMMENT_VIDEOS", 3),
+            # 25 videos x ~2.5s serial is a minute of dead time. yt-dlp against the
+            # comment API tolerates this fan-out; 429s show up as `None` and simply
+            # leave that video un-enriched rather than failing the run.
+            _envint("LAST30DAYS_COMMENT_WORKERS", 8))
+
+
 # yt-dlp's max_comments is `total,max_parents,max_replies,max_replies_per_thread`, and
 # the shape everyone copies — `N,all,N` — is a trap. Measured 2026-07-31 on
 # dQw4w9WgXcQ: `20,all,20` returned 20 comments of which exactly ONE was top-level,
@@ -173,8 +201,8 @@ def _fetch_comments_ytdlp(
 def enrich_with_comments(
     items: List[Dict[str, Any]],
     token: str = "",
-    max_videos: int = 3,
-    max_comments: int = 5,
+    max_videos: Optional[int] = None,
+    max_comments: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """Enrich top YouTube videos with comment data — keyless first, paid as fallback.
 
@@ -191,12 +219,20 @@ def enrich_with_comments(
     Returns:
         Items list (mutated in place) with top_comments added to enriched items.
     """
+    free_cap, comment_cap, paid_cap, workers = _comment_budget()
+    if max_videos is None:
+        max_videos = free_cap
+    if max_comments is None:
+        max_comments = comment_cap
     if not items or max_videos <= 0:
         return items
 
+    # Highest engagement first, so a cap that bites drops the quietest videos — and so
+    # the paid backstop, if it runs at all, spends its credits on the loudest ones.
     ranked = sorted(items, key=_total_engagement, reverse=True)
     top_items = ranked[:max_videos]
-    _log(f"Enriching comments for {{len(top_items)}} YouTube videos")
+    _log(f"Enriching comments for {{len(top_items)}} YouTube videos "
+         f"(free lane; up to {{max_comments}} top comments each)")
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -215,7 +251,7 @@ def enrich_with_comments(
         if free == []:
             # Known-empty. Spending a credit here buys a second empty list.
             return None
-        if not token:
+        if not token or item.get("_no_paid"):
             return None
         try:
             paid = _fetch_video_comments(video_id, token, max_comments)
@@ -226,14 +262,21 @@ def enrich_with_comments(
             _log(f"Comment enrichment failed for {{video_id}}: {{exc}}")
         return None
 
+    # Only the top `paid_cap` videos may fall through to the paid endpoint. Marked
+    # before the fan-out so the decision does not depend on which thread finishes first.
+    for item in top_items[paid_cap:]:
+        item["_no_paid"] = True
+
     lanes = []
-    with ThreadPoolExecutor(max_workers=min(4, len(top_items))) as executor:
+    with ThreadPoolExecutor(max_workers=max(1, min(workers, len(top_items)))) as executor:
         futures = {{executor.submit(_enrich_one, item): item for item in top_items}}
         for future in as_completed(futures):
             lane = future.result()
             if lane:
                 lanes.append(lane)
 
+    for item in top_items:
+        item.pop("_no_paid", None)
     free_n = lanes.count("free")
     paid_n = lanes.count("paid")
     # Name the lane in the log: "3/3 enriched" hid whether the run spent 0 or 3
@@ -282,6 +325,13 @@ OLD_DOC = ("(default-on once a ScrapeCreators key is set; "
 NEW_DOC = ("(default-on and FREE — read with yt-dlp, no key; falls back to "
            "ScrapeCreators only where the keyless fetch failed; "
            "suppress via `EXCLUDE_SOURCES=youtube_comments`)")
+
+
+# Short hash of everything this patcher writes. Bumps itself whenever the payload
+# changes, so no one has to remember to bump a version number by hand.
+STAMP = (f"{MARK}/"
+         + hashlib.sha256("".join([YT_REPLACEMENT, ENV_REPLACEMENT, NEW_DOC])
+                          .encode()).hexdigest()[:8])
 
 
 def replace_function(src: str, name: str, replacement: str, what: str):
@@ -334,10 +384,24 @@ def main() -> int:
 
     yt_src, env_src = yt.read_text(), env.read_text()
     if MARK in yt_src and MARK in env_src:
-        print("already patched: youtube_yt.py, env.py")
-        return 0
+        # A bare "is the mark present" check makes editing this patcher a silent no-op
+        # on a tree that was patched by an older version of it — the code stays stale
+        # while the patcher reports success. That happened, and only the runnable check
+        # caught it. The stamp is a hash of what we would write, so a changed payload
+        # is a changed stamp, and a stale tree fails loudly with the command to fix it.
+        if STAMP in yt_src:
+            print("already patched: youtube_yt.py, env.py")
+            return 0
+        root = LIB.parents[3]
+        print(f"STALE: {yt.name} carries an older version of this patch.\n"
+              f"  git checkout HEAD -- {yt.relative_to(root)} {env.relative_to(root)} && \\\n"
+              f"  python3 scripts/patch-transcript-env-overrides.py && \\\n"
+              f"  python3 scripts/patch-youtube-comments-free.py")
+        return 1
 
-    yt_src, err = replace_function(yt_src, "enrich_with_comments", YT_REPLACEMENT, "youtube_yt.py")
+    yt_src, err = replace_function(yt_src, "enrich_with_comments",
+                                   YT_REPLACEMENT.replace("@STAMP@", STAMP.split("/")[1]),
+                                   "youtube_yt.py")
     if err:
         print(err)
         return 1

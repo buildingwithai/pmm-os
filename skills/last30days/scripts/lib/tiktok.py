@@ -87,9 +87,10 @@ def expand_tiktok_queries(topic: str, depth: str) -> List[str]:
     return queries[:cap]
 
 
-# PMM-OS-TT-FREE-LANE (re-applied by scripts/patch-tiktok-free-lane.py after upstream sync)
+# PMM-OS-TT-FREE-LANE/3e1b33b7 (re-applied by scripts/patch-tiktok-free-lane.py after upstream sync)
 # TikTok hydration is free via yt-dlp; only DISCOVERY and comment TEXT cost credits.
 import json as _json
+import os as _tt_os
 import tempfile as _tempfile
 from pathlib import Path as _Path
 
@@ -97,6 +98,7 @@ from . import subproc
 
 _TT_PROFILE_TIMEOUT = 120   # full per-video metadata, ~1.1s/video measured
 _TT_CAPTION_TIMEOUT = 45
+_TT_CAPTION_WORKERS = int(_tt_os.environ.get("LAST30DAYS_TRANSCRIPT_WORKERS") or 6)
 
 
 def _ytdlp_available() -> bool:
@@ -501,17 +503,27 @@ def fetch_captions(
             captions[item["video_id"]] = _trim(text)
 
     # Pass 2: yt-dlp's ASR transcript (free). Machine ASR — never quote as verbatim.
+    # Concurrent because this cap is now the saturating one: bin/pmm-research sets
+    # LAST30DAYS_TRANSCRIPT_LIMIT=1000, and a serial loop at ~1.2s per video would
+    # spend twenty minutes on a hundred-video run.
     spoken = set()
     if _ytdlp_available():
-        for item in top_items:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _one(item):
             try:
-                transcript = _ytdlp_caption(item.get("url", ""))
+                return item, _ytdlp_caption(item.get("url", ""))
             except Exception as e:
                 _log(f"Keyless transcript failed for {item['video_id']}: {e}")
-                transcript = None
-            if transcript:
-                captions[item["video_id"]] = _trim(transcript)
-                spoken.add(item["video_id"])
+                return item, None
+
+        workers = max(1, min(_TT_CAPTION_WORKERS, len(top_items)))
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            for fut in as_completed([ex.submit(_one, i) for i in top_items]):
+                item, transcript = fut.result()
+                if transcript:
+                    captions[item["video_id"]] = _trim(transcript)
+                    spoken.add(item["video_id"])
 
     # Pass 3: ScrapeCreators, only where the free lane produced nothing.
     paid = 0
@@ -590,8 +602,11 @@ def search_and_enrich(
                     items.append(item)
 
     # Step 0b: Creator profile videos (high-signal)
-    if creators and token:
+    if creators:
         for creator in creators:
+            # PMM-OS-TT-FREE-LANE: no `and token`. _profile_videos() reaches for
+            # yt-dlp first now, so --tiktok-creators is a ZERO-CREDIT discovery lane.
+            # Keyword and hashtag search below still require the key.
             raw_items = _profile_videos(creator, token)
             parsed = _parse_items(raw_items, core_topic)
             for item in parsed:

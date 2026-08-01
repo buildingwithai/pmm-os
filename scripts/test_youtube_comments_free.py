@@ -56,6 +56,20 @@ assert gate(False, INCLUDE_SOURCES="youtube_comments") is False
 assert gate(False) is False
 ok("no yt-dlp -> the old key+INCLUDE_SOURCES rule still holds, unchanged")
 
+# --- the budget: free saturates, paid stays a backstop -------------------------
+import os as _o
+for k in ("LAST30DAYS_COMMENT_VIDEOS", "LAST30DAYS_COMMENT_LIMIT",
+          "LAST30DAYS_PAID_COMMENT_VIDEOS", "LAST30DAYS_COMMENT_WORKERS"):
+    _o.environ.pop(k, None)
+assert yt._comment_budget() == (25, 20, 3, 8), yt._comment_budget()
+_o.environ.update({"LAST30DAYS_COMMENT_VIDEOS": "40", "LAST30DAYS_COMMENT_LIMIT": "25",
+                   "LAST30DAYS_PAID_COMMENT_VIDEOS": "2", "LAST30DAYS_COMMENT_WORKERS": "8"})
+assert yt._comment_budget() == (40, 25, 2, 8), yt._comment_budget()
+_o.environ["LAST30DAYS_COMMENT_VIDEOS"] = "not-a-number"
+assert yt._comment_budget()[0] == 25, "a junk env value must fall back, not crash"
+_o.environ["LAST30DAYS_COMMENT_VIDEOS"] = "40"
+ok("comment caps are env-driven, with a separate paid cap and a junk-value fallback")
+
 # --- the shape normalize expects ------------------------------------------------
 def c(text, likes, parent="root", ts=1785169549):
     return {"text": text, "like_count": likes, "parent": parent,
@@ -168,6 +182,31 @@ calls = fake_ytdlp([c("free comment", 5)])
 yt.enrich_with_comments(items(6), token="k", max_videos=2)
 assert len(calls) == 2, f"max_videos must bound the fetches, got {len(calls)}"
 ok("max_videos bounds how many videos are fetched")
+
+# The default is now the env budget, not upstream's 3 — this is the whole point.
+calls = fake_ytdlp([c("free comment", 5)])
+out = yt.enrich_with_comments(items(40))
+assert len(calls) == 40, f"the free lane must saturate to the budget, got {len(calls)}"
+assert all("top_comments" in i for i in out), "every video in budget gets comments"
+ok("with no explicit cap the free lane enriches all 40 videos, not 3")
+
+# A rate-limited yt-dlp on a keyed run must not turn into 40 paid calls.
+fake_ytdlp(None, rc=1, write=False)
+paid_calls.clear()
+yt.enrich_with_comments(items(40), token="k")
+assert len(paid_calls) == 2, f"paid fallback must stay capped, got {len(paid_calls)}"
+ok("a fully failed free lane spends only the PAID cap — 2 credits, not 40")
+
+# Highest-engagement first, so a cap that bites drops the quietest videos and the
+# paid backstop spends its credits on the loudest.
+fake_ytdlp(None, rc=1, write=False)
+paid_calls.clear()
+noisy = [{"video_id": f"v{i}", "engagement": {"views": i}} for i in range(10)]
+yt.enrich_with_comments(noisy, token="k", max_videos=10)
+# Set, not sequence: the fallbacks run in a thread pool, so completion ORDER is not
+# deterministic. Asserting the order made this test flaky, which is worse than absent.
+assert sorted(paid_calls) == ["v8", "v9"], paid_calls
+ok("the paid backstop is spent on the two highest-engagement videos, not the first two")
 
 assert yt.enrich_with_comments([], token="k") == []
 assert yt.enrich_with_comments(items(1), max_videos=0)[0].get("top_comments") is None

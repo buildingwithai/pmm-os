@@ -195,6 +195,16 @@ ok(f"captions are trimmed to {tt.CAPTION_MAX_WORDS} words")
 assert tt.fetch_captions([], token="k") == {}
 ok("no items is an empty dict, not a crash")
 
+# --- creator-seeded discovery is now a zero-credit lane --------------------------
+fake_ytdlp(json.dumps({"entries": [entry("c1"), entry("c2")]}))
+paid.clear()
+tt.http.get = lambda url, params=None, **kw: (paid.append(url) or {"search_item_list": []})
+r = tt.search_and_enrich("nasa", *W, depth="quick", token="", creators=["nasa"])
+got = [i["video_id"] for i in r["items"]]
+assert got == ["c1", "c2"], got
+assert not paid, "a creator lane with no token must not touch ScrapeCreators at all"
+ok("--tiktok-creators works with NO key and spends nothing — free discovery")
+
 # --- the window defect ---------------------------------------------------------
 tt._ytdlp_available = lambda: False
 def sc_search(payload):

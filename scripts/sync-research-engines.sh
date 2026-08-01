@@ -40,6 +40,7 @@ python3 "$ROOT/scripts/patch-gateway-base-url.py"           # gateway base-URL c
 python3 "$ROOT/scripts/patch-engine-launch-gate.py"         # refuse launches outside bin/pmm-research
 python3 "$ROOT/scripts/patch-instagram-reels-search.py"     # IG reels: send the date window, page it, never return stale
 python3 "$ROOT/scripts/patch-youtube-comments-free.py"      # YouTube comments are free (yt-dlp); stop charging for them
+python3 "$ROOT/scripts/patch-youtube-recency.py"           # ask YouTube for the window; a window with two walls
 python3 "$ROOT/scripts/patch-tiktok-free-lane.py"          # TikTok profiles + transcripts are free; and a window is a window
 python3 "$ROOT/scripts/patch-agent-reach-trim.py"          # agent-reach: 10 routed channels, not the 15 it advertises
 python3 "$ROOT/scripts/patch-drop-china.py"                # and the China-market channel CODE goes too, in both engines

@@ -336,7 +336,21 @@ const run = spawnSync(PY, [...PYR.args, ...args], {
   env: { ...process.env, PMM_OS_LAUNCH: '1',
          ...(enrich.length ? { INCLUDE_SOURCES: enrich.join(',') } : {}),
          LAST30DAYS_TRANSCRIPT_LIMIT: process.env.LAST30DAYS_TRANSCRIPT_LIMIT || '1000',
-         LAST30DAYS_RESULTS_PER_PAGE: process.env.LAST30DAYS_RESULTS_PER_PAGE || '100' },
+         LAST30DAYS_RESULTS_PER_PAGE: process.env.LAST30DAYS_RESULTS_PER_PAGE || '100',
+         // Comments are the market's voice on a video, and they were the one thing
+         // this wrapper never saturated: results and transcripts were already at 100
+         // and 1000 while comment enrichment stayed at upstream's 3 videos x 5
+         // comments — sized for a lane where every video cost a ScrapeCreators credit.
+         // yt-dlp made that lane free (patch-youtube-comments-free.py), so the cap now
+         // costs wall-clock, not money, and 8 workers spend it concurrently.
+         LAST30DAYS_COMMENT_VIDEOS: process.env.LAST30DAYS_COMMENT_VIDEOS || '40',
+         LAST30DAYS_COMMENT_LIMIT: process.env.LAST30DAYS_COMMENT_LIMIT || '25',
+         LAST30DAYS_COMMENT_WORKERS: process.env.LAST30DAYS_COMMENT_WORKERS || '8',
+         // The PAID fallback stays a backstop, not a lane. Without a separate cap, a
+         // run where yt-dlp is rate-limited would fail over to ScrapeCreators for all
+         // 40 videos and spend 40 credits without anyone asking for it.
+         LAST30DAYS_PAID_COMMENT_VIDEOS: process.env.LAST30DAYS_PAID_COMMENT_VIDEOS || '3',
+         LAST30DAYS_TRANSCRIPT_WORKERS: process.env.LAST30DAYS_TRANSCRIPT_WORKERS || '6' },
 });
 
 const notLive = Object.entries(doc.platforms)

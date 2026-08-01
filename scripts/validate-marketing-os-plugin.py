@@ -398,6 +398,20 @@ def check_reach_dispatch() -> None:
     check("reach.sh rejects an unknown verb", problems)
 
 
+def check_youtube_recency() -> None:
+    """A 30-day brief filled with 2024 videos is not a 30-day brief. Upstream searched
+    all time and soft-filtered after, with the window compared at ONE end. Measured:
+    the upload-date facet takes in-window yield from 1-in-10 to 7-in-10."""
+    t = ROOT / "scripts" / "test_youtube_recency.py"
+    if not t.is_file():
+        check("YouTube recency self-check", ["scripts/test_youtube_recency.py is missing"])
+        return
+    r = subprocess.run([sys.executable, str(t)], capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    check("YouTube recency self-check", [] if r.returncode == 0
+          else [(r.stdout + r.stderr).strip()[:400]])
+
+
 def check_policy_selftest() -> None:
     t = ROOT / "hooks" / "test_pre_tool_use_policy.py"
     if not t.is_file():
@@ -464,6 +478,7 @@ def main() -> None:
     check_ig_fetch_selftest()
     check_ig_reels_window()
     check_youtube_comments_free()
+    check_youtube_recency()
     check_health_synthesis()
     check_tt_fetch_selftest()
     check_tiktok_free_lane()

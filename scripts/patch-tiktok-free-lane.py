@@ -44,6 +44,7 @@ this patch changes nothing about accuracy. See skills/agent-reach/scripts/tt_fet
 
 Runnable check: scripts/test_tiktok_free_lane.py (wired into the validator).
 """
+import hashlib
 import pathlib
 import py_compile
 import re
@@ -54,9 +55,10 @@ LIB = pathlib.Path(__file__).resolve().parent.parent / "skills/last30days/script
 MARK = "PMM-OS-TT-FREE-LANE"
 
 PREAMBLE = f'''
-# {MARK} (re-applied by scripts/patch-tiktok-free-lane.py after upstream sync)
+# {MARK}/@STAMP@ (re-applied by scripts/patch-tiktok-free-lane.py after upstream sync)
 # TikTok hydration is free via yt-dlp; only DISCOVERY and comment TEXT cost credits.
 import json as _json
+import os as _tt_os
 import tempfile as _tempfile
 from pathlib import Path as _Path
 
@@ -64,6 +66,7 @@ from . import subproc
 
 _TT_PROFILE_TIMEOUT = 120   # full per-video metadata, ~1.1s/video measured
 _TT_CAPTION_TIMEOUT = 45
+_TT_CAPTION_WORKERS = int(_tt_os.environ.get("LAST30DAYS_TRANSCRIPT_WORKERS") or 6)
 
 
 def _ytdlp_available() -> bool:
@@ -269,17 +272,27 @@ CAPTIONS_REPLACEMENT = f'''def fetch_captions(
             captions[item["video_id"]] = _trim(text)
 
     # Pass 2: yt-dlp's ASR transcript (free). Machine ASR — never quote as verbatim.
+    # Concurrent because this cap is now the saturating one: bin/pmm-research sets
+    # LAST30DAYS_TRANSCRIPT_LIMIT=1000, and a serial loop at ~1.2s per video would
+    # spend twenty minutes on a hundred-video run.
     spoken = set()
     if _ytdlp_available():
-        for item in top_items:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _one(item):
             try:
-                transcript = _ytdlp_caption(item.get("url", ""))
+                return item, _ytdlp_caption(item.get("url", ""))
             except Exception as e:
                 _log(f"Keyless transcript failed for {{item['video_id']}}: {{e}}")
-                transcript = None
-            if transcript:
-                captions[item["video_id"]] = _trim(transcript)
-                spoken.add(item["video_id"])
+                return item, None
+
+        workers = max(1, min(_TT_CAPTION_WORKERS, len(top_items)))
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            for fut in as_completed([ex.submit(_one, i) for i in top_items]):
+                item, transcript = fut.result()
+                if transcript:
+                    captions[item["video_id"]] = _trim(transcript)
+                    spoken.add(item["video_id"])
 
     # Pass 3: ScrapeCreators, only where the free lane produced nothing.
     paid = 0
@@ -317,6 +330,19 @@ CAPTIONS_REPLACEMENT = f'''def fetch_captions(
 
 # ---- the stale-window defect, identical in shape to the IG Reels one -------------
 
+# TikTok keyword/hashtag DISCOVERY still needs the key. Pulling a named creator's
+# videos does not, as of this patch — so the `and token` on that branch is now the only
+# thing standing between a keyless run and a real TikTok lane.
+OLD_CREATORS = """    if creators and token:
+        for creator in creators:
+            raw_items = _profile_videos(creator, token)"""
+NEW_CREATORS = """    if creators:
+        for creator in creators:
+            # PMM-OS-TT-FREE-LANE: no `and token`. _profile_videos() reaches for
+            # yt-dlp first now, so --tiktok-creators is a ZERO-CREDIT discovery lane.
+            # Keyword and hashtag search below still require the key.
+            raw_items = _profile_videos(creator, token)"""
+
 OLD_WINDOW = '''    else:
         _log(f"No videos within date range, keeping all {len(items)}")
 
@@ -343,6 +369,15 @@ NEW_WINDOW = f'''    else:
     return {{"items": items}}'''
 
 
+# Same self-bumping stamp as patch-youtube-comments-free.py: a bare mark check makes
+# editing this file a silent no-op on an already-patched tree. Unlike that patcher this
+# one CANNOT re-apply in place (PREAMBLE would double up and the OLD_* literals are
+# gone), so a stale tree is a hard stop with the reset command, not a re-run.
+STAMP = (f"{MARK}/" + hashlib.sha256(
+    "".join([PREAMBLE, PROFILE_REPLACEMENT, CAPTIONS_REPLACEMENT,
+             NEW_CREATORS, NEW_WINDOW]).encode()).hexdigest()[:8])
+
+
 def replace_function(src: str, name: str, replacement: str):
     start = re.search(rf"^def {name}\(", src, re.M)
     if not start:
@@ -367,8 +402,14 @@ def main() -> int:
         return 0
     s = p.read_text()
     if MARK in s:
-        print("already patched: tiktok.py")
-        return 0
+        if STAMP in s:
+            print("already patched: tiktok.py")
+            return 0
+        print("STALE: tiktok.py carries an older version of this patch.\n"
+              "  git checkout HEAD -- skills/last30days/scripts/lib/tiktok.py && \\\n"
+              "  python3 scripts/patch-transcript-env-overrides.py && \\\n"
+              "  python3 scripts/patch-tiktok-free-lane.py")
+        return 1
 
     for name, repl in (("_profile_videos", PROFILE_REPLACEMENT),
                        ("fetch_captions", CAPTIONS_REPLACEMENT)):
@@ -376,6 +417,12 @@ def main() -> int:
         if err:
             print(err)
             return 1
+
+    if s.count(OLD_CREATORS) != 1:
+        print(f"ANCHOR NOT UNIQUE ({s.count(OLD_CREATORS)}x) — update patcher: "
+              f"search_and_enrich's creator branch")
+        return 1
+    s = s.replace(OLD_CREATORS, NEW_CREATORS)
 
     if s.count(OLD_WINDOW) != 1:
         print(f"ANCHOR NOT UNIQUE ({s.count(OLD_WINDOW)}x) — update patcher: "
@@ -390,7 +437,9 @@ def main() -> int:
     if not anchor:
         print("ANCHOR NOT FOUND (def _log) — update patcher")
         return 1
-    s = s[:anchor.start()] + PREAMBLE.lstrip("\n") + "\n\n" + s[anchor.start():]
+    s = (s[:anchor.start()]
+         + PREAMBLE.replace("@STAMP@", STAMP.split("/")[1]).lstrip("\n")
+         + "\n\n" + s[anchor.start():])
 
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as t:
         t.write(s)

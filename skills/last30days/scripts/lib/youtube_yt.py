@@ -149,6 +149,91 @@ def _log(msg: str):
     log.source_log("YouTube", msg, tty_only=False)
 
 
+# PMM-OS-YT-RECENCY/ac47aeab (re-applied by scripts/patch-youtube-recency.py after upstream sync)
+# YouTube's "Upload date" search facet, as the base64 protobuf `sp` values its own
+# results page uses. yt-dlp consumes a results URL, so this costs one parameter.
+_YT_SP = {
+    "week":  "EgIIAw%3D%3D",
+    "month": "EgIIBA%3D%3D",
+    "year":  "EgIIBQ%3D%3D",
+}
+
+
+def _yt_search_url(topic: str, from_date: str, to_date: str) -> str:
+    """A YouTube results URL filtered to roughly the requested window.
+
+    Falls back to a plain `ytsearch:` term when the dates will not parse — a bad
+    window must not take the whole search down with it.
+    """
+    from urllib.parse import quote_plus
+    try:
+        span = (dates.parse_date(to_date) - dates.parse_date(from_date)).days
+    except Exception:
+        span = 30
+    bucket = "week" if span <= 8 else "month" if span <= 45 else "year"
+    return (f"https://www.youtube.com/results?search_query={quote_plus(topic)}"
+            f"&sp={_YT_SP[bucket]}")
+
+
+def _drop_offtopic(items, core_topic: str, floor: float = 0.02):
+    """Hard relevance floor. A search that returns the WRONG RESULT SET must not reach
+    a brief, however it got there.
+
+    Observed 2026-07-31 while building this patch: a run for "ai note taker" came back
+    with Avengers trailers, Dhar Mann and House of the Dragon — YouTube's TRENDING
+    FEED. A results URL that fails can fall through to a generic playlist, and yt-dlp
+    reports that as a successful search. It is the fabricated-fact failure again, in
+    its worst form: not stale evidence, but evidence about a different topic entirely.
+
+    Token-overlap separation is total on the measured sample (1.000 for on-topic
+    titles, 0.000 for trending ones), so the floor only has to be above zero. It is
+    deliberately NOT tuned tighter than that — this is a guard against garbage, not a
+    second relevance ranker, and the reranker downstream is the thing that sorts.
+    """
+    kept = [i for i in items if (i.get("relevance") or 0) > floor]
+    dropped = len(items) - len(kept)
+    if dropped and not kept:
+        # Everything scored zero: the result set is about something else. Say so.
+        _log(f"DISCARDED all {dropped} results — none mention '{core_topic}'. "
+             f"A search that returns the wrong topic is a FAILED search, not evidence.")
+    elif dropped:
+        _log(f"Dropped {dropped} off-topic results (relevance <= {floor})")
+    return kept
+
+
+def _apply_window(items, from_date: str, to_date: str, log_prefix: str = ""):
+    """Keep in-window videos first, and MARK the rest instead of hiding them.
+
+    Upstream kept every out-of-window video whenever fewer than three fell inside,
+    logged as "keeping all", with nothing on the items to say which was which — the
+    same shape as the Instagram Reels and TikTok defects. Unlike those two this does
+    not return empty: an evergreen YouTube video is often the best evidence a topic
+    has, and dropping it would cost more than it protects. It labels instead.
+
+    Also adds the UPPER bound. Upstream compared `>= from_date` only, so a video
+    dated after `to_date` passed a filter that was supposed to be a window.
+    """
+    inside, outside = [], []
+    for i in items:
+        d = i.get("date")
+        (inside if (d and from_date <= d <= to_date) else outside).append(i)
+    for i in outside:
+        # normalize._date_confidence reads this before computing its own, and render
+        # surfaces it. An out-of-window item can still be quoted — it just can never
+        # be quoted as something that happened in the window.
+        i["date_confidence"] = "low"
+        i["out_of_window"] = True
+    if inside:
+        _log(f"{log_prefix}{len(inside)} videos inside {from_date}..{to_date}"
+             + (f"; {len(outside)} older kept and marked out-of-window" if outside else ""))
+    else:
+        _log(f"{log_prefix}NO videos inside {from_date}..{to_date} — "
+             f"returning {len(outside)} older ones, all marked out-of-window")
+    # In-window first so any downstream cap (transcripts, comments, rendering) spends
+    # its budget on fresh videos before back-catalogue.
+    return inside + outside
+
+
 def is_ytdlp_installed() -> bool:
     """Check if yt-dlp is available locally, or if SSH routing is configured.
 
@@ -388,13 +473,8 @@ def search_youtube(
             "description": description,
         })
 
-    # Soft date filter: prefer recent items but fall back to all if too few
-    recent = [i for i in items if i["date"] and i["date"] >= from_date]
-    if len(recent) >= 3:
-        items = recent
-        _log(f"Found {len(items)} videos within date range")
-    else:
-        _log(f"Found {len(items)} videos ({len(recent)} within date range, keeping all)")
+    # PMM-OS-YT-RECENCY: window both ends, mark what falls outside, fresh first.
+    items = _apply_window(_drop_offtopic(items, core_topic), from_date, to_date, "yt-dlp: ")
 
     # Sort by views descending
     items.sort(key=lambda x: x["engagement"]["views"], reverse=True)
@@ -1044,9 +1124,36 @@ def _total_engagement(item: Dict[str, Any]) -> int:
     return views + likes + comments
 
 
-# PMM-OS-YT-COMMENTS-FREE (re-applied by scripts/patch-youtube-comments-free.py after upstream sync)
+# PMM-OS-YT-COMMENTS-FREE/17f9ff59 (re-applied by scripts/patch-youtube-comments-free.py after upstream sync)
 _COMMENT_TIMEOUT = 45      # seconds; comment pagination is slower than a caption fetch
 _COMMENT_OVERFETCH = 2     # some roots are blank/deleted; ask for more than we keep
+
+# HOW MANY VIDEOS AND COMMENTS, and why these are env-driven rather than constants.
+# Upstream's 3-videos x 5-comments was sized for a lane where every video cost a
+# ScrapeCreators credit. The free lane costs wall-clock instead, so the ceiling belongs
+# with the caller: bin/pmm-research already saturates transcripts and results the same
+# way (LAST30DAYS_TRANSCRIPT_LIMIT=1000, LAST30DAYS_RESULTS_PER_PAGE=100) and this is
+# the third knob it was missing. Comments ARE the market sentiment for a video, and 3x5
+# on a 100-video run is a rounding error of it.
+#
+# The paid cap is SEPARATE and stays small on purpose. Without that, a keyed run where
+# yt-dlp is rate-limited would fail over to ScrapeCreators for every video and spend
+# a credit each. Free saturates; paid stays a backstop.
+def _envint(name: str, default: int) -> int:
+    raw = os.environ.get(name, "")
+    return int(raw) if raw.isdigit() else default
+
+
+def _comment_budget():
+    return (_envint("LAST30DAYS_COMMENT_VIDEOS", 25),
+            _envint("LAST30DAYS_COMMENT_LIMIT", 20),
+            _envint("LAST30DAYS_PAID_COMMENT_VIDEOS", 3),
+            # 25 videos x ~2.5s serial is a minute of dead time. yt-dlp against the
+            # comment API tolerates this fan-out; 429s show up as `None` and simply
+            # leave that video un-enriched rather than failing the run.
+            _envint("LAST30DAYS_COMMENT_WORKERS", 8))
+
+
 # yt-dlp's max_comments is `total,max_parents,max_replies,max_replies_per_thread`, and
 # the shape everyone copies — `N,all,N` — is a trap. Measured 2026-07-31 on
 # dQw4w9WgXcQ: `20,all,20` returned 20 comments of which exactly ONE was top-level,
@@ -1163,8 +1270,8 @@ def _fetch_comments_ytdlp(
 def enrich_with_comments(
     items: List[Dict[str, Any]],
     token: str = "",
-    max_videos: int = 3,
-    max_comments: int = 5,
+    max_videos: Optional[int] = None,
+    max_comments: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """Enrich top YouTube videos with comment data — keyless first, paid as fallback.
 
@@ -1181,12 +1288,20 @@ def enrich_with_comments(
     Returns:
         Items list (mutated in place) with top_comments added to enriched items.
     """
+    free_cap, comment_cap, paid_cap, workers = _comment_budget()
+    if max_videos is None:
+        max_videos = free_cap
+    if max_comments is None:
+        max_comments = comment_cap
     if not items or max_videos <= 0:
         return items
 
+    # Highest engagement first, so a cap that bites drops the quietest videos — and so
+    # the paid backstop, if it runs at all, spends its credits on the loudest ones.
     ranked = sorted(items, key=_total_engagement, reverse=True)
     top_items = ranked[:max_videos]
-    _log(f"Enriching comments for {len(top_items)} YouTube videos")
+    _log(f"Enriching comments for {len(top_items)} YouTube videos "
+         f"(free lane; up to {max_comments} top comments each)")
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -1205,7 +1320,7 @@ def enrich_with_comments(
         if free == []:
             # Known-empty. Spending a credit here buys a second empty list.
             return None
-        if not token:
+        if not token or item.get("_no_paid"):
             return None
         try:
             paid = _fetch_video_comments(video_id, token, max_comments)
@@ -1216,14 +1331,21 @@ def enrich_with_comments(
             _log(f"Comment enrichment failed for {video_id}: {exc}")
         return None
 
+    # Only the top `paid_cap` videos may fall through to the paid endpoint. Marked
+    # before the fan-out so the decision does not depend on which thread finishes first.
+    for item in top_items[paid_cap:]:
+        item["_no_paid"] = True
+
     lanes = []
-    with ThreadPoolExecutor(max_workers=min(4, len(top_items))) as executor:
+    with ThreadPoolExecutor(max_workers=max(1, min(workers, len(top_items)))) as executor:
         futures = {executor.submit(_enrich_one, item): item for item in top_items}
         for future in as_completed(futures):
             lane = future.result()
             if lane:
                 lanes.append(lane)
 
+    for item in top_items:
+        item.pop("_no_paid", None)
     free_n = lanes.count("free")
     paid_n = lanes.count("paid")
     # Name the lane in the log: "3/3 enriched" hid whether the run spent 0 or 3
@@ -1374,13 +1496,9 @@ def search_youtube_sc(
             "description": description,
         })
 
-    # Soft date filter
-    recent = [i for i in items if i["date"] and i["date"] >= from_date]
-    if len(recent) >= 3:
-        items = recent
-        _log(f"Found {len(items)} videos within date range")
-    else:
-        _log(f"Found {len(items)} videos ({len(recent)} within date range, keeping all)")
+    # PMM-OS-YT-RECENCY: window both ends, mark what falls outside, fresh first.
+    items = _apply_window(_drop_offtopic(items, core_topic), from_date, to_date,
+                          "ScrapeCreators: ")
 
     # Sort by views
     items.sort(key=lambda x: x["engagement"]["views"], reverse=True)
