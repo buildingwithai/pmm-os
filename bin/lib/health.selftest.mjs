@@ -13,7 +13,7 @@
  *
  * Run: node bin/lib/health.selftest.mjs
  */
-import { liveSources, enrichmentSources, reachChannels } from './health.mjs';
+import { liveSources, enrichmentSources, reachChannels, CJK } from './health.mjs';
 
 let failed = 0;
 const ok = (m) => console.log(`  ok  ${m}`);
@@ -82,15 +82,23 @@ const S = (state) => ({ state });
 
 // --- reachChannels: only what PMM OS actually routes ---------------------------
 {
-  // Shaped like a real `agent-reach doctor --json`, Chinese strings and all.
+  // COPIED FROM A REAL `agent-reach doctor --json` on 2026-07-31. The messages on
+  // twitter/youtube/reddit are verbatim: agent-reach writes Chinese for EVERY channel,
+  // not only the China-market ones. A fixture with tidy English messages here made the
+  // CJK assertion below pass while the property failed in production — the first cut
+  // of this filter dropped the five channels and shipped believing that was enough.
   const doctor = {
     xiaohongshu: { status: 'warn', active_backend: 'OpenCLI', message: '小红书未登录，请在 Chrome 中登录' },
     bilibili: { status: 'error', message: 'bili-cli 未安装' },
     xueqiu: { status: 'error', message: '雪球需要登录' },
     xiaoyuzhou: { status: 'error', message: '缺少 ffmpeg' },
     v2ex: { status: 'ok', active_backend: 'HTTP' },
+    twitter: { status: 'warn', message: 'Twitter CLI 未安装。安装方式：\npipx install twitter-cli' },
+    youtube: { status: 'warn', message: 'yt-dlp 已安装但未配置 JS runtime。运行：' },
+    reddit: { status: 'error', message: '未安装任何 Reddit 后端。推荐：' },
     exa_search: { status: 'ok', active_backend: 'MCP' },
     linkedin: { status: 'warn', active_backend: 'OpenCLI', message: 'not logged in' },
+    rss: { status: 'warn', active_backend: 'feedparser', message: 'feedparser not installed' },
     web: { status: 'ok' },
     github: { status: 'ok', active_backend: 'gh' },
   };
@@ -100,10 +108,21 @@ const S = (state) => ({ state });
   check('the five China-market channels never reach the health document',
         !names.some((n) => ['xiaohongshu', 'bilibili', 'xueqiu', 'xiaoyuzhou', 'v2ex']
           .includes(n.replace('reach:', ''))), `got ${names}`);
-  // The concrete harm: `npx pmm-os doctor` printed these to a user who never asked
-  // for Xueqiu and cannot read the message telling them what went wrong.
-  check('no CJK text survives into the health document',
-        !/[一-鿿]/.test(JSON.stringify(got)), JSON.stringify(got));
+  // The concrete harm: `npx pmm-os doctor` printed these at a user who cannot read
+  // the sentence telling them how to fix it. A fix instruction nobody can read is not
+  // a fix instruction, whichever channel it came from.
+  check('no CJK text survives into the health document, on ANY channel',
+        !CJK.test(JSON.stringify(got)), JSON.stringify(got));
+  check('a channel whose only message is Chinese still gets a readable reason and fix',
+        /not usable|no reddit backend/i.test(got['reach:twitter'].reason + got['reach:reddit'].reason)
+        && got['reach:twitter'].fix.includes('setup.sh'),
+        JSON.stringify([got['reach:twitter'], got['reach:reddit']]));
+  // An OpenCLI-backed channel never reaches this branch — it is `unverifiable` on the
+  // login-state argument above, message or no message. `rss` is the honest fixture.
+  check('an English upstream message is still passed through verbatim',
+        got['reach:rss'].reason === 'feedparser not installed', JSON.stringify(got['reach:rss']));
+  check('an OpenCLI channel stays unverifiable regardless of its message',
+        got['reach:linkedin'].state === 'unverifiable', JSON.stringify(got['reach:linkedin']));
   check('the channels PMM OS does route are kept',
         ['reach:exa_search', 'reach:linkedin', 'reach:web', 'reach:github']
           .every((n) => names.includes(n)), `got ${names}`);

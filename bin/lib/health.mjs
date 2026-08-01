@@ -350,6 +350,27 @@ async function probeFree(ytdlpLive) {
 const REACH_DROP = new Set(['xiaohongshu', 'bilibili', 'xueqiu', 'xiaoyuzhou', 'v2ex']);
 
 /**
+ * Dropping the five China-market channels was NOT enough, and the first version of
+ * this shipped thinking it was. agent-reach writes its status messages in Chinese for
+ * every channel, so `npx pmm-os doctor` still printed, verbatim:
+ *
+ *   reach:twitter | blocked | Twitter CLI 未安装。安装方式：
+ *   reach:youtube | blocked | yt-dlp 已安装但未配置 JS runtime。运行：
+ *
+ * — for twitter, youtube and reddit, which we DO route. A fix instruction the reader
+ * cannot read is not a fix instruction. So upstream's message is passed through only
+ * when it is actually readable here; otherwise we say what we know in English and
+ * point at the one command that explains the rest.
+ */
+export const CJK = /[　-〿぀-ヿ一-鿿＀-￯]/;
+
+function reachReason(ch, v, fallback) {
+  const first = (v.message || '').split('\n')[0].trim();
+  if (first && !CJK.test(first)) return first.slice(0, 120);
+  return `${fallback} — agent-reach explains it in Chinese; run \`agent-reach doctor\` for its own output`;
+}
+
+/**
  * agent-reach's own doctor output, with its optimism corrected and its untrodden
  * channels dropped. Pure so the self-check can feed it a real doctor payload —
  * including the Chinese error strings — without a 45-second subprocess.
@@ -383,9 +404,15 @@ export function reachChannels(d) {
         fix: `make one real call through ${backend || 'the backend'} before relying on it`,
       });
     } else if (v.status === 'warn') {
-      out[key] = P('blocked', backend || 'none', { reason: (v.message || '').split('\n')[0].slice(0, 120) });
+      out[key] = P('blocked', backend || 'none', {
+        reason: reachReason(ch, v, `${ch} backend present but not usable`),
+        fix: `bash skills/agent-reach/scripts/setup.sh`,
+      });
     } else {
-      out[key] = P('absent', 'none', { reason: (v.message || '').split('\n')[0].slice(0, 120) });
+      out[key] = P('absent', 'none', {
+        reason: reachReason(ch, v, `no ${ch} backend installed`),
+        fix: `bash skills/agent-reach/scripts/setup.sh`,
+      });
     }
   }
   return out;

@@ -36,12 +36,19 @@ fi
 echo "── agent-reach (router) ────────────────────"
 if have agent-reach; then
   ok "agent-reach CLI installed"
+  # The five China-market channels are filtered out to match bin/lib/health.mjs
+  # (REACH_DROP). PMM OS does not route them, and their status messages are Chinese
+  # error strings — printing them here told a user to go set up Xueqiu.
+  # `ok` from this doctor means the backend is INSTALLED, never that a query returns
+  # data (measured: exa_search reported ok while the call 429'd), hence "installed".
   agent-reach doctor --json 2>/dev/null | "$PY" -c 'import sys,json
+DROP={"xiaohongshu","bilibili","xueqiu","xiaoyuzhou","v2ex"}
 try:
- d=json.load(sys.stdin)
+ d={k:v for k,v in json.load(sys.stdin).items() if k not in DROP}
  live=[k for k,v in d.items() if isinstance(v,dict) and v.get("status")=="ok"]
  need=[k for k,v in d.items() if isinstance(v,dict) and v.get("status")!="ok"]
- print("  live now:   "+", ".join(live)); print("  needs setup:"+", ".join(need))
+ print("  installed:  "+", ".join(live)+"  (backend present, NOT proof a query returns data)")
+ print("  needs setup:"+", ".join(need))
 except Exception as e: print("  (doctor unavailable)")' 2>/dev/null || warn "doctor failed"
 else
   warn "agent-reach not installed — run: bash skills/agent-reach/scripts/setup.sh"
