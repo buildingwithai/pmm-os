@@ -340,14 +340,24 @@ async function probeFree(ytdlpLive) {
   return out;
 }
 
-/** agent-reach's own doctor, with its optimism corrected. */
-function probeAgentReach() {
-  const r = spawnSync('agent-reach', ['doctor', '--json'], { encoding: 'utf8', timeout: 45000 });
-  if (r.status !== 0 || !r.stdout) return {};
-  let d = {};
-  try { d = JSON.parse(r.stdout); } catch { return {}; }
+/**
+ * The five China-market channels agent-reach ships. PMM OS does not route them
+ * (scripts/patch-agent-reach-trim.py took them out of the skill), and reporting them
+ * here was worse than useless: their status messages are Chinese error strings, which
+ * surfaced verbatim in `npx pmm-os doctor` for a user who never asked for Xueqiu.
+ * A channel the plugin will not call has no business in the plugin's health table.
+ */
+const REACH_DROP = new Set(['xiaohongshu', 'bilibili', 'xueqiu', 'xiaoyuzhou', 'v2ex']);
+
+/**
+ * agent-reach's own doctor output, with its optimism corrected and its untrodden
+ * channels dropped. Pure so the self-check can feed it a real doctor payload —
+ * including the Chinese error strings — without a 45-second subprocess.
+ */
+export function reachChannels(d) {
   const out = {};
-  for (const [ch, v] of Object.entries(d)) {
+  for (const [ch, v = {}] of Object.entries(d || {})) {
+    if (REACH_DROP.has(ch)) continue;
     const backend = v.active_backend || null;
     const key = `reach:${ch}`;
     if (ch === 'web') {
@@ -379,6 +389,12 @@ function probeAgentReach() {
     }
   }
   return out;
+}
+
+function probeAgentReach() {
+  const r = spawnSync('agent-reach', ['doctor', '--json'], { encoding: 'utf8', timeout: 45000 });
+  if (r.status !== 0 || !r.stdout) return {};
+  try { return reachChannels(JSON.parse(r.stdout)); } catch { return {}; }
 }
 
 // ---------------------------------------------------------------- api

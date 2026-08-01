@@ -1,33 +1,32 @@
-# 搜索工具
+<!-- PMM-OS-REACH-TRIM: translated and trimmed by scripts/patch-agent-reach-trim.py.
+     The upstream file also compared Exa against a Chinese search MCP that this plugin
+     does not ship — pointing the model at tooling that is not installed. -->
 
-Exa AI 搜索引擎。
+# Search — Exa
 
-## Exa AI 搜索
-
-高质量 AI 搜索引擎，擅长技术和代码搜索。
+**This is one of the four things agent-reach uniquely adds.** Strong on English
+technical content and code.
 
 ```bash
 mcporter call 'exa.web_search_exa(query: "query", numResults: 5)'
 mcporter call 'exa.get_code_context_exa(query: "code question", tokensNum: 3000)'
 ```
 
-### 使用场景
-
-| 场景 | 参数 |
+| Use | Call |
 |-----|------|
-| 网页搜索 | `web_search_exa(query: "...", numResults: 5)` |
-| 代码搜索 | `get_code_context_exa(query: "...", tokensNum: 3000)` |
+| Web search | `web_search_exa(query: "...", numResults: 5)` |
+| Code / repo context | `get_code_context_exa(query: "...", tokensNum: 3000)` |
 
-### 特点
+> **The free MCP tier rate-limits, and `agent-reach doctor` cannot see it.** Measured
+> 2026-07-30: doctor reported `exa_search: ok` while the exact call above returned
+> HTTP 429, "You've hit Exa's free MCP rate limit". Doctor proves the backend is
+> INSTALLED, never that a query returns data. Set `EXA_API_KEY` for a real quota, and
+> treat a 429 as a failed fetch — never as "nothing found on this topic".
 
-- 擅长英文内容和技术文档
-- 支持代码上下文搜索
-- 结果质量高
+## When to use something else
 
-## 与其他搜索工具对比
-
-| 工具 | 来源 | 适用场景 |
-|-----|------|---------|
-| Exa | agent-reach | 英文/技术/代码搜索 |
-| 智谱搜索 | my-mcp-tools | 中文搜索 |
-| GitHub 搜索 | agent-reach (dev.md) | 仓库/代码搜索 |
+| Need | Better lane |
+|-----|---------|
+| Read one known URL | `curl -s https://r.jina.ai/URL` (free, keyless) |
+| What people are SAYING about X | `last30days` — engagement-ranked, not relevance-ranked |
+| Repositories and code | `gh search` — see [dev.md](dev.md) |

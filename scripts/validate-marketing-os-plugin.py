@@ -358,6 +358,16 @@ def check_tiktok_free_lane() -> None:
           else [(r.stdout + r.stderr).strip()[:400]])
 
 
+def check_agent_reach_trim() -> None:
+    """sync-research-engines.sh overwrites agent-reach's SKILL.md and rm -rf's its
+    references/, so the trim has to be re-applied by a patcher. Assert it currently is
+    — an untrimmed skill re-advertises 15 platforms, five of them China-market, and
+    puts Chinese error strings back into PMM OS's own health output."""
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "patch-agent-reach-trim.py"), "--check"],
+                       capture_output=True, text=True)
+    check("agent-reach trim applied", [] if r.returncode == 0 else [r.stdout.strip()[:200]])
+
+
 def check_policy_selftest() -> None:
     t = ROOT / "hooks" / "test_pre_tool_use_policy.py"
     if not t.is_file():
@@ -427,6 +437,7 @@ def main() -> None:
     check_health_synthesis()
     check_tt_fetch_selftest()
     check_tiktok_free_lane()
+    check_agent_reach_trim()
     check_launch_gate()
     check_official_validator()
 

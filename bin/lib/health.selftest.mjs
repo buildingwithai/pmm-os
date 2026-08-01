@@ -13,7 +13,7 @@
  *
  * Run: node bin/lib/health.selftest.mjs
  */
-import { liveSources, enrichmentSources } from './health.mjs';
+import { liveSources, enrichmentSources, reachChannels } from './health.mjs';
 
 let failed = 0;
 const ok = (m) => console.log(`  ok  ${m}`);
@@ -78,6 +78,44 @@ const S = (state) => ({ state });
         && new Set(twice).size === twice.length, `got ${twice}`);
   check('the result is sorted (so the receipt line is diffable)',
         JSON.stringify(twice) === JSON.stringify([...twice].sort()), `got ${twice}`);
+}
+
+// --- reachChannels: only what PMM OS actually routes ---------------------------
+{
+  // Shaped like a real `agent-reach doctor --json`, Chinese strings and all.
+  const doctor = {
+    xiaohongshu: { status: 'warn', active_backend: 'OpenCLI', message: '小红书未登录，请在 Chrome 中登录' },
+    bilibili: { status: 'error', message: 'bili-cli 未安装' },
+    xueqiu: { status: 'error', message: '雪球需要登录' },
+    xiaoyuzhou: { status: 'error', message: '缺少 ffmpeg' },
+    v2ex: { status: 'ok', active_backend: 'HTTP' },
+    exa_search: { status: 'ok', active_backend: 'MCP' },
+    linkedin: { status: 'warn', active_backend: 'OpenCLI', message: 'not logged in' },
+    web: { status: 'ok' },
+    github: { status: 'ok', active_backend: 'gh' },
+  };
+  const got = reachChannels(doctor);
+  const names = Object.keys(got);
+
+  check('the five China-market channels never reach the health document',
+        !names.some((n) => ['xiaohongshu', 'bilibili', 'xueqiu', 'xiaoyuzhou', 'v2ex']
+          .includes(n.replace('reach:', ''))), `got ${names}`);
+  // The concrete harm: `npx pmm-os doctor` printed these to a user who never asked
+  // for Xueqiu and cannot read the message telling them what went wrong.
+  check('no CJK text survives into the health document',
+        !/[一-鿿]/.test(JSON.stringify(got)), JSON.stringify(got));
+  check('the channels PMM OS does route are kept',
+        ['reach:exa_search', 'reach:linkedin', 'reach:web', 'reach:github']
+          .every((n) => names.includes(n)), `got ${names}`);
+  // Unchanged by the trim, and the reason reach:* is safe to keep in the document
+  // at all: doctor proves a backend is INSTALLED, never that a query returns data.
+  check('a doctor `ok` is still only `unverifiable`, never `live`',
+        got['reach:exa_search'].state === 'unverifiable', JSON.stringify(got['reach:exa_search']));
+  check('an empty or missing doctor payload does not throw',
+        Object.keys(reachChannels(undefined)).length === 0
+        && Object.keys(reachChannels({})).length === 0);
+  check('reach:* still never enters --search',
+        liveSources({ platforms: got }).length === 0, JSON.stringify(liveSources({ platforms: got })));
 }
 
 if (failed) {

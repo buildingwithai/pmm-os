@@ -135,11 +135,12 @@ source pools instead of one:
   and real money**, and synthesizes a brief with verbatim community quotes. Best for
   *"what are people actually saying / sentiment / what's trending."* Self-contained
   Python (3.12+); Reddit/HN/Polymarket/GitHub work zero-config.
-- **`agent-reach`** — a *breadth-first fetch/read router* across 13 platforms, strong
-  exactly where the other is thin: **GitHub/dev, video transcripts, reading any URL,
-  and Chinese platforms** (XiaoHongShu, Bilibili, Xueqiu, V2EX, Xiaoyuzhou). Best for
-  *"fetch/read this, search this platform."* Opt-in: `npx pmm-os setup` (it installs
-  Python packages and a headless browser, so it asks first).
+- **`agent-reach`** — a *breadth-first fetch/read router* across 10 channels, strong
+  exactly where the other is thin: **LinkedIn, RSS, Exa search, reading any URL, and
+  Whisper transcription** for audio and video with no captions. Best for *"fetch/read
+  this, search this platform."* Opt-in: `npx pmm-os setup` (it installs Python
+  packages and a headless browser, so it asks first). Its five China-market channels
+  are deliberately not routed — see `scripts/patch-agent-reach-trim.py`.
 
 Both are vendored into the plugin so research works on a fresh marketplace install
 with **no quality degradation** — same depth as running them standalone. Refresh from

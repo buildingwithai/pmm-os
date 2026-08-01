@@ -1,3 +1,3 @@
 interface:
   display_name: "Agent Reach"
-  short_description: "Fetch and read across 15 platforms, from GitHub to video transcripts"
+  short_description: "Fetch and read across 10 channels: LinkedIn, RSS, Exa, GitHub, transcripts"

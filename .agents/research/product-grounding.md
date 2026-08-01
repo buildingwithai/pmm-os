@@ -24,7 +24,7 @@ server. v3.0.3.
 | Kit server with SSE live-reload on content save | **shipped** | `kit-server.mjs:79` |
 | 6 lifecycle hooks (routing, policy, quality gate) | **shipped** | `hooks/hooks.json`, all six verified exit 0 from an installed path |
 | `last30days` research engine — zero-config | **shipped** | `skills/last30days/`, vendored v3.11.1, needs Python 3.12+ |
-| `agent-reach` — 13 platforms | **shipped, opt-in** | `skills/agent-reach/`; requires `npx pmm-os setup` (installs pip packages + headless browser) |
+| `agent-reach` — 10 routed channels (of 15 shipped) | **shipped, opt-in** | `skills/agent-reach/`; requires `npx pmm-os setup` (installs pip packages + headless browser) |
 | Evidence ledger — research hydrates other skills | **shipped, convention** | `.agents/research/evidence.md`; enforced by prose + Stop hook, not by code |
 | Research gate before strategy | **WIP** | `hooks/stop_quality_gate.py:57` — advisory `systemMessage`, was a hard block until this week |
 | PMM OS Cloud (hosted workspace) | **aspirational for this repo** | split out to private `buildingwithai/pmm-os-web`; not installable, not referenced |

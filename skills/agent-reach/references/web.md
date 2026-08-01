@@ -1,33 +1,28 @@
-# 网页阅读
+<!-- PMM-OS-REACH-TRIM: translated and trimmed by scripts/patch-agent-reach-trim.py.
+     The upstream file's tool-comparison table named MCP servers this plugin does not
+     ship. -->
 
-通用网页、RSS。
+# Web pages and RSS
 
-## 通用网页 (Jina Reader)
+RSS is one of the four things agent-reach uniquely adds. Page reading is free and
+keyless via Jina.
+
+## Any web page (Jina Reader)
 
 ```bash
-# 读取任意网页内容
 curl -s "https://r.jina.ai/URL"
-
-# 示例
 curl -s "https://r.jina.ai/https://example.com/article"
 ```
 
-**适用场景**: 大多数网页可以直接用 Jina Reader 读取。
+Free, keyless, and the default for most pages. `reach.sh read <url>` wraps this.
 
-## Web Reader (MCP)
+## Web Reader (MCP) — when output format matters
 
 ```bash
-# 读取网页内容 (Markdown 格式)
 mcporter call 'web-reader.webReader(url: "https://example.com")'
-
-# 保留图片
 mcporter call 'web-reader.webReader(url: "https://example.com", retain_images: true)'
-
-# 纯文本格式
 mcporter call 'web-reader.webReader(url: "https://example.com", return_format: "text")'
 ```
-
-**适用场景**: 需要更精确控制输出格式时使用。
 
 ## RSS (feedparser)
 
@@ -39,12 +34,14 @@ for e in feedparser.parse('FEED_URL').entries[:5]:
 "
 ```
 
-**适用场景**: 订阅博客、新闻源、播客等 RSS feed。
+For blogs, newsrooms, changelogs and podcasts. This is the lane nothing else here has.
 
-## 选择指南
-
-| 场景 | 推荐工具 |
+| Need | Tool |
 |-----|---------|
-| 通用网页 | Jina Reader (`curl r.jina.ai`) |
-| 需要图片/格式控制 | web-reader MCP |
-| RSS 订阅 | feedparser |
+| A normal page | Jina Reader (`curl r.jina.ai`) |
+| Images or an exact output format | web-reader MCP |
+| A feed | feedparser |
+
+> A paywall, a 403 or a Cloudflare challenge is a BLOCK. Jina returns a short body or
+> an error page rather than the article; check the length before quoting it, and say
+> the page was unreachable rather than summarising the interstitial.

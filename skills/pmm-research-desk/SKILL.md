@@ -73,12 +73,17 @@ Recipes live in `../product-marketing-os/references/research-desks/<domain>.md`
      (measured: an untargeted consumer-domain topic → horror-movie reviews + Kubernetes docs).
      The recipe names the entities → flags — always derived from the brief's `{segment}`/`{product}`,
      never a fixed list.
-   - **`agent-reach` — use the FULL channel set, not just `reach.sh`'s keyless 4.** The vendored
-     package has **15 channels** (twitter, reddit, facebook, instagram, linkedin, xiaohongshu, bilibili, xiaoyuzhou,
-     xueqiu, exa, rss, youtube, v2ex, github, web). Drive the keyless ones via
-     [`reach.sh`](../agent-reach/scripts/reach.sh) (`read`/`gh-search`/`yt`/`v2ex`) and the
-     login/key ones per the agent-reach [SKILL.md](../agent-reach/SKILL.md) (`agent-reach configure`
-     + the backends).
+   - **`agent-reach` — use the FULL channel set, not just `reach.sh`'s keyless 4.** PMM OS
+     routes **10 channels** (twitter, reddit, facebook, instagram, linkedin, exa, rss,
+     youtube, github, web). The package ships five more — xiaohongshu, bilibili, xiaoyuzhou,
+     xueqiu, v2ex — which are **deliberately not routed**: China-market, irrelevant to this
+     user, and their Chinese error strings used to surface in PMM OS's own health output.
+     Drive the keyless channels via [`reach.sh`](../agent-reach/scripts/reach.sh)
+     (`read`/`gh-search`/`yt`/`yt-comments`) and the login/key ones per the agent-reach
+     [SKILL.md](../agent-reach/SKILL.md) (`agent-reach configure` + the backends).
+     **What agent-reach uniquely adds is four things** — LinkedIn, RSS, Exa (key) and
+     `transcribe` (Whisper, key). Its Twitter/Reddit/YouTube/Instagram lanes overlap
+     `last30days` and `reach.sh` and measure weaker; reach for those two first.
      **Free, keyless, no login:** `reach.sh ig <user>` (Instagram accounts) ·
      `reach.sh tiktok @user` · `reach.sh tiktok-video <url>` (views/likes/comments/
      date/transcript) · `reach.sh yt <url>` · `reach.sh yt-comments <url>` ·
