@@ -843,14 +843,25 @@ def is_ytdlp_available() -> bool:
 def is_youtube_comments_available(config: dict[str, Any]) -> bool:
     """Check if YouTube comment enrichment is available.
 
-    Requires SCRAPECREATORS_API_KEY AND ``youtube_comments`` in
-    ``INCLUDE_SOURCES`` (mirrors ``is_tiktok_comments_available``). Cost is
-    bounded by ``enrich_with_comments(max_videos=3)`` (~3 credits per run).
+    PMM-OS-YT-COMMENTS-FREE (re-applied by scripts/patch-youtube-comments-free.py after upstream
+    sync — see that file for what upstream got wrong).
 
-    In the default onboarding tier: the Recommended tier now enables comments
-    (posts on -> comments on for TikTok/Instagram/YouTube), writing
-    ``youtube_comments`` into INCLUDE_SOURCES.
+    Upstream required ``SCRAPECREATORS_API_KEY`` AND ``youtube_comments`` in
+    ``INCLUDE_SOURCES``. Both were code gates on a capability yt-dlp serves free:
+    ``reach.sh yt-comments`` in this same plugin reads the identical comments with
+    no key at all. And ``INCLUDE_SOURCES`` lives in a file written once at setup and
+    never revisited, so in practice the feature was off even for people paying for it.
+
+    The order matters:
+      1. EXCLUDE_SOURCES wins outright — it is the documented off switch (SKILL.md),
+         and it never actually worked before because nothing read it here.
+      2. yt-dlp installed -> free lane, no key, no opt-in string.
+      3. Otherwise the old rule, for a keyed machine with no yt-dlp.
     """
+    if 'youtube_comments' in _parse_exclude_sources(config):
+        return False
+    if is_ytdlp_available():
+        return True
     if not config.get('SCRAPECREATORS_API_KEY'):
         return False
     return 'youtube_comments' in _parse_include_sources(config)

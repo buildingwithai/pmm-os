@@ -330,6 +330,20 @@ def check_ig_reels_window() -> None:
           else [(r.stdout + r.stderr).strip()[:400]])
 
 
+def check_youtube_comments_free() -> None:
+    """YouTube comment enrichment was gated on a paid key for comments yt-dlp reads
+    free — and the documented `EXCLUDE_SOURCES=youtube_comments` off switch was a
+    no-op. Both matter more now the feature is default-on."""
+    t = ROOT / "scripts" / "test_youtube_comments_free.py"
+    if not t.is_file():
+        check("YouTube free-comments self-check", ["scripts/test_youtube_comments_free.py is missing"])
+        return
+    r = subprocess.run([sys.executable, str(t)], capture_output=True, text=True,
+                       env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+    check("YouTube free-comments self-check", [] if r.returncode == 0
+          else [(r.stdout + r.stderr).strip()[:400]])
+
+
 def check_policy_selftest() -> None:
     t = ROOT / "hooks" / "test_pre_tool_use_policy.py"
     if not t.is_file():
@@ -395,6 +409,7 @@ def main() -> None:
     check_receipt_gate_selftest()
     check_ig_fetch_selftest()
     check_ig_reels_window()
+    check_youtube_comments_free()
     check_health_synthesis()
     check_tt_fetch_selftest()
     check_launch_gate()

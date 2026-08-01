@@ -75,13 +75,19 @@ yt(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (agent-reach 
   cat "$d"/*.vtt | sed -E '/-->/d;/^WEBVTT/d;/^[0-9]+$/d;/^$/d' | awk '!seen[$0]++'; rm -rf "$d"; }
 v2ex(){ curl -fsS --max-time 15 -A "$UA" "https://www.v2ex.com/api/topics/hot.json"; }
 
-# YouTube COMMENTS — free, keyless. The engine gates comment enrichment behind
-# SCRAPECREATORS_API_KEY (lib/env.py:854), which is not a technical requirement:
-# yt-dlp reads the same comment API. Verified 2026-07-30 (5 comments, no key).
+# YouTube COMMENTS — free, keyless. yt-dlp reads the same comment API ScrapeCreators
+# resells; the engine's own gate on that key was never a technical requirement and is
+# gone as of scripts/patch-youtube-comments-free.py.
+#
+# max_comments is `total,max_parents,max_replies,max_replies_per_thread`, and the form
+# every guide copies — `N,all,N` — is a trap. Measured 2026-07-31 on dQw4w9WgXcQ:
+# `20,all,20` returned 20 comments of which exactly ONE was top-level, the rest replies
+# to it; `20,20,0` returned 20 genuine top-level comments. This verb promised "top
+# comments" and was handing back one thread's argument.
 yt_comments(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (agent-reach install --env=auto)" >&2; return 127; }
   local n="${2:-20}" d rc; d="$(mktemp -d)"
   yt-dlp --skip-download --write-comments --write-info-json --no-write-sub \
-    --extractor-args "youtube:comment_sort=top;max_comments=$n,all,$n" \
+    --extractor-args "youtube:comment_sort=top;max_comments=$n,$n,0" \
     -o "$d/c" "${1:?url required}" >/dev/null 2>"$d/.err"; rc=$?
   if [ "$rc" -ne 0 ] || [ ! -f "$d/c.info.json" ]; then
     echo "# YouTube comments: yt-dlp failed (exit $rc) — NOT 'no comments'." >&2
@@ -90,9 +96,12 @@ yt_comments(){ command -v yt-dlp >/dev/null || { echo "yt-dlp not installed (age
   "$(_py_any)" -c '
 import json,sys
 d=json.load(open(sys.argv[1])); c=d.get("comments") or []
-if not c: print("# YouTube: comments disabled or none on this video (yt-dlp succeeded)."); raise SystemExit(0)
-print("# YouTube comments on %s: %d (free, yt-dlp — no API key)" % (d.get("title","?")[:60], len(c)))
-for x in sorted(c, key=lambda k: k.get("like_count") or 0, reverse=True):
+# Second line of defence on the arg form above: a reply must never be printed as a
+# top comment, but replies beat nothing when a video has no top-level comments left.
+roots=[x for x in c if x.get("parent")=="root"] or c
+if not roots: print("# YouTube: comments disabled or none on this video (yt-dlp succeeded)."); raise SystemExit(0)
+print("# YouTube top comments on %s: %d (free, yt-dlp — no API key)" % (d.get("title","?")[:60], len(roots)))
+for x in sorted(roots, key=lambda k: k.get("like_count") or 0, reverse=True):
     print("- %sL: %s" % (x.get("like_count", 0), (x.get("text") or "").replace(chr(10)," ")[:180]))
 ' "$d/c.info.json"; rm -rf "$d"; }
 

@@ -160,8 +160,11 @@ export function enrichmentSources(doc, existing = null) {
   const fromFile = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
   const out = new Set(fromFile);
   if (scLive) {
-    // youtube_comments is gated on the SC key too (env.py:854), even though yt-dlp
-    // could read the same comments keylessly. Naming it without a live key is a no-op.
+    // youtube_comments is in this list for the machine with a key and no yt-dlp.
+    // Everywhere else it is now free: scripts/patch-youtube-comments-free.py made
+    // the engine read comments with yt-dlp, so the gate no longer consults
+    // INCLUDE_SOURCES at all when the binary is present. Naming it stays correct
+    // (it is what the no-yt-dlp fallback reads) and costs nothing.
     for (const s of ['threads', 'pinterest',
                      'instagram_comments', 'tiktok_comments', 'youtube_comments']) {
       out.add(s);
